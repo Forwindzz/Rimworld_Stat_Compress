@@ -7,71 +7,61 @@ namespace StatCompression
 {
     internal static class StatCompressionRuntime
     {
-        private static StatCompressionRuntimePlan activePlan =
-            new StatCompressionRuntimePlan(new CompiledStatConfig[0]);
+        private static CompiledStatConfig[] activeConfigsByIndex = new CompiledStatConfig[0];
+        private static int runtimePlanVersion;
 
         [ThreadStatic]
         private static int suppressCompressionDepth;
 
+        [ThreadStatic]
+        private static ExplanationContext currentExplanation;
+
+        [ThreadStatic]
+        private static ExplanationValueCache explanationValueCache;
+
         public static bool Suppressed => suppressCompressionDepth > 0;
 
-        internal static void BeginSuppression()
+        internal sealed class ExplanationContext
         {
-            suppressCompressionDepth++;
+            public ExplanationContext parent;
+            public StatDef stat;
+            public StatRequest request;
+            public bool rawCaptured;
+            public float rawValue;
         }
 
-        internal static void EndSuppression()
+        private sealed class ExplanationValueCache
         {
-            suppressCompressionDepth--;
+            public int statIndex;
+            public StatRequest request;
+            public float finalValue;
+            public int gameTick;
+            public int planVersion;
+            public float uncompressedValue;
         }
 
         public static void RebuildRuntimePlan(StatCompressionSettings settings)
         {
-            activePlan = StatCompressionRuntimeCompiler.Compile(settings);
+            activeConfigsByIndex = StatCompressionRuntimeCompiler.Compile(settings);
+            runtimePlanVersion++;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Compress(StatCompressionSettings settings, StatDef stat, ref float value)
+        public static void Compress(StatDef stat, ref float value)
         {
-            var plan = activePlan;
-            ref var config = ref plan.configsByIndex[stat.index];
+            var configs = activeConfigsByIndex;
+            ref var config = ref configs[stat.index];
             value = StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryComputeCompressedValue(StatCompressionSettings settings, StatCompressionStatConfig config, float original, out float compressed)
+        public static float ComputePreviewValue(
+            StatCompressionSettings settings,
+            StatCompressionStatConfig config,
+            float original)
         {
-            var baseline = config.baseline;
-            var threshold = config.thresholdFactor;
-            var actualParameter = GetActualParameter(
-                config.method,
-                settings.method,
-                settings.parameter,
-                config.tScale);
-            var relative = original / baseline;
-            if (config.direction == StatCompressionDirection.HigherIsBetter)
-            {
-                if (relative <= threshold)
-                {
-                    compressed = original;
-                    return false;
-                }
-
-                var compressedExcess = CompressExcess(relative - threshold, config.method, actualParameter);
-                compressed = baseline * (threshold + compressedExcess);
-                return true;
-            }
-
-            var inverseRelative = 1f / relative;
-            if (inverseRelative <= threshold)
-            {
-                compressed = original;
-                return false;
-            }
-
-            var compressedInverseExcess = CompressExcess(inverseRelative - threshold, config.method, actualParameter);
-            compressed = baseline / (threshold + compressedInverseExcess);
-            return true;
+            var compiled = StatCompressionRuntimeCompiler.CompileConfig(settings, config);
+            return StatCompressionRuntimeCompiler.ApplyStatic(ref compiled, original);
         }
 
         public static bool TryGetHumanBaselineForConfig(StatDef stat, out float baseline)
@@ -88,6 +78,58 @@ namespace StatCompression
             }
 
             return settings.enabled;
+        }
+
+        public static ExplanationContext BeginExplanation(
+            StatCompressionSettings settings,
+            StatDef stat,
+            StatRequest request)
+        {
+            if (settings == null || !settings.enabled || stat == null || Suppressed)
+            {
+                return null;
+            }
+
+            var config = settings.GetConfigFast(stat);
+            if (config == null || !config.enabled)
+            {
+                return null;
+            }
+
+            var context = new ExplanationContext
+            {
+                parent = currentExplanation,
+                stat = stat,
+                request = request
+            };
+            currentExplanation = context;
+            return context;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CaptureExplanationRaw(
+            StatDef stat,
+            StatRequest request,
+            bool applyPostProcess,
+            float value)
+        {
+            var context = currentExplanation;
+            if (context == null || applyPostProcess || context.rawCaptured || context.stat != stat ||
+                !context.request.Equals(request))
+            {
+                return;
+            }
+
+            context.rawValue = value;
+            context.rawCaptured = true;
+        }
+
+        public static void EndExplanation(ExplanationContext context)
+        {
+            if (context != null && currentExplanation == context)
+            {
+                currentExplanation = context.parent;
+            }
         }
 
         private static bool TryGetCalculatedHumanBaseline(StatDef stat, CompressionStage callStage, out float baseline)
@@ -127,8 +169,8 @@ namespace StatCompression
             StatCompressionSettings settings,
             StatDef stat,
             StatRequest req,
-            ToStringNumberSense numberSense,
             float finalVal,
+            ExplanationContext context,
             out string explanation)
         {
             explanation = null;
@@ -143,19 +185,9 @@ namespace StatCompression
                 return false;
             }
 
-            float original;
-            try
-            {
-                suppressCompressionDepth++;
-                original = stat.Worker.GetValue(req, true);
-            }
-            catch
+            if (!TryGetUncompressedFinal(stat, req, finalVal, out var original))
             {
                 return false;
-            }
-            finally
-            {
-                suppressCompressionDepth--;
             }
 
             if (Math.Abs(original - finalVal) < 0.000001f)
@@ -183,8 +215,10 @@ namespace StatCompression
                     StatCompressionText.MethodLabel(config.method),
                     actualParameter.ToString("0.###"),
                     baselineText);
-            if (usesRawCurveInput && TryGetRawCompressionPair(settings, stat, req, config, out var rawOriginal, out var rawCompressed))
+            if (usesRawCurveInput && context != null && context.rawCaptured)
             {
+                var rawOriginal = context.rawValue;
+                var rawCompressed = ComputePreviewValue(settings, config, rawOriginal);
                 text += "\n" + StatCompressionText.T(
                     "StatCompression_Explanation_RawValueLine",
                     rawOriginal.ToString("0.###"),
@@ -201,23 +235,33 @@ namespace StatCompression
             return true;
         }
 
-        private static bool TryGetRawCompressionPair(
-            StatCompressionSettings settings,
+        private static bool TryGetUncompressedFinal(
             StatDef stat,
             StatRequest req,
-            StatCompressionStatConfig config,
-            out float rawOriginal,
-            out float rawCompressed)
+            float finalValue,
+            out float uncompressedValue)
         {
-            rawOriginal = 0f;
-            rawCompressed = 0f;
+            var gameTick = Find.TickManager?.TicksGame ?? -1;
+            var cache = explanationValueCache;
+            if (cache != null &&
+                cache.statIndex == stat.index &&
+                cache.request.Equals(req) &&
+                cache.finalValue.Equals(finalValue) &&
+                cache.gameTick == gameTick &&
+                cache.planVersion == runtimePlanVersion)
+            {
+                uncompressedValue = cache.uncompressedValue;
+                return true;
+            }
+
             try
             {
                 suppressCompressionDepth++;
-                rawOriginal = stat.Worker.GetValue(req, false);
+                uncompressedValue = stat.Worker.GetValue(req, true);
             }
             catch
             {
+                uncompressedValue = 0f;
                 return false;
             }
             finally
@@ -225,10 +269,16 @@ namespace StatCompression
                 suppressCompressionDepth--;
             }
 
-            rawCompressed = TryComputeCompressedValue(settings, config, rawOriginal, out var compressed)
-                ? compressed
-                : rawOriginal;
-            return Math.Abs(rawOriginal - rawCompressed) >= 0.000001f;
+            explanationValueCache = new ExplanationValueCache
+            {
+                statIndex = stat.index,
+                request = req,
+                finalValue = finalValue,
+                gameTick = gameTick,
+                planVersion = runtimePlanVersion,
+                uncompressedValue = uncompressedValue
+            };
+            return true;
         }
 
         private static void FormatDisplayedValuePair(
@@ -286,45 +336,6 @@ namespace StatCompression
                 default:
                     return 2f;
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float CompressExcess(float excess, CompressionMethod method, float parameter)
-        {
-            if (excess <= 0f)
-            {
-                return 0f;
-            }
-
-            float compressed;
-            switch (method)
-            {
-                case CompressionMethod.Linear:
-                    compressed = excess * parameter;
-                    break;
-                case CompressionMethod.Exponential:
-                    compressed = (float)Math.Pow(excess + 1f, parameter) - 1f;
-                    break;
-                case CompressionMethod.Logarithmic:
-                    var logarithmicStrength = Math.Log(parameter);
-                    compressed = (float)(Math.Log(1d + logarithmicStrength * excess) / logarithmicStrength);
-                    break;
-                case CompressionMethod.SoftCap:
-                    compressed = CompressSoftCapExcess(excess, parameter);
-                    break;
-                default:
-                    compressed = excess;
-                    break;
-            }
-
-            return compressed;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float CompressSoftCapExcess(float excess, float parameter)
-        {
-            var cap = parameter;
-            return cap * excess / (excess + cap);
         }
 
         private static string GetMethodHint(CompressionMethod method)

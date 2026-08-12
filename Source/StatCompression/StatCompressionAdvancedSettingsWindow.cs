@@ -362,9 +362,7 @@ namespace StatCompression
             Widgets.Label(new Rect(inputRect.xMax + 4f, rect.y + 2f, 18f, 24f), "%");
 
             var original = config.baseline * (percents[index] / 100f);
-            var final = StatCompressionRuntime.TryComputeCompressedValue(settings, config, original, out var compressed)
-                ? compressed
-                : original;
+            var final = StatCompressionRuntime.ComputePreviewValue(settings, config, original);
             var mappedPercent = config.baseline == 0f ? 0f : final / config.baseline * 100f;
             Widgets.Label(
                 new Rect(inputRect.xMax + 28f, rect.y + 2f, rect.width - inputRect.width - 28f, 18f),

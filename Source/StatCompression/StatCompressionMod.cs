@@ -108,7 +108,7 @@ namespace StatCompression
                 if (Widgets.ButtonText(cell, StatCompressionText.MethodLabel(method)))
                 {
                     Settings.method = method;
-                    Settings.parameter = DefaultParameter(Settings.method);
+                    Settings.parameter = StatCompressionRuntime.DefaultParameter(Settings.method);
                     parameterBuffer = Settings.parameter.ToString();
                 }
             }
@@ -257,31 +257,7 @@ namespace StatCompression
                 1f,
                 Settings.thresholdFactor,
                 direction);
-            return StatCompressionRuntime.TryComputeCompressedValue(Settings, config, value, out var compressed)
-                ? compressed
-                : value;
-        }
-
-        private static int MethodIndex(CompressionMethod method)
-        {
-            switch (method)
-            {
-                case CompressionMethod.Linear:
-                    return 0;
-                case CompressionMethod.Exponential:
-                    return 1;
-                case CompressionMethod.Logarithmic:
-                    return 2;
-                case CompressionMethod.SoftCap:
-                    return 3;
-                default:
-                    return 2;
-            }
-        }
-
-        public static float DefaultParameter(CompressionMethod method)
-        {
-            return StatCompressionRuntime.DefaultParameter(method);
+            return StatCompressionRuntime.ComputePreviewValue(Settings, config, value);
         }
 
         private static FloatRange ParameterRange(CompressionMethod method)

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using RimWorld;
 using Verse;
 
@@ -28,19 +29,9 @@ namespace StatCompression
         public float parameter1;
     }
 
-    internal sealed class StatCompressionRuntimePlan
-    {
-        public readonly CompiledStatConfig[] configsByIndex;
-
-        public StatCompressionRuntimePlan(CompiledStatConfig[] configsByIndex)
-        {
-            this.configsByIndex = configsByIndex;
-        }
-    }
-
     internal static class StatCompressionRuntimeCompiler
     {
-        public static StatCompressionRuntimePlan Compile(StatCompressionSettings settings)
+        public static CompiledStatConfig[] Compile(StatCompressionSettings settings)
         {
             var allStats = DefDatabase<StatDef>.AllDefsListForReading;
             var count = allStats.NullOrEmpty() ? 0 : allStats.Count;
@@ -53,10 +44,10 @@ namespace StatCompression
                 compiled[stat.index] = CompileConfig(settings, config);
             }
 
-            return new StatCompressionRuntimePlan(compiled);
+            return compiled;
         }
 
-        private static CompiledStatConfig CompileConfig(
+        internal static CompiledStatConfig CompileConfig(
             StatCompressionSettings settings,
             StatCompressionStatConfig config)
         {
@@ -142,6 +133,7 @@ namespace StatCompression
             return CompressionKernel.Disabled;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool ShouldCompress(ref CompiledStatConfig config, float value)
         {
             if (config.kernel == CompressionKernel.Disabled)
@@ -194,7 +186,8 @@ namespace StatCompression
 
         private static float ApplyStaticLower(ref CompiledStatConfig config, float value)
         {
-            var excess = config.baseline / value - config.thresholdFactor;
+            var safeValue = value < 1e-10f ? 1e-10f : value;
+            var excess = config.baseline / safeValue - config.thresholdFactor;
             float compressedExcess;
             switch (config.kernel)
             {
