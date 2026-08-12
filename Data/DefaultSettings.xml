@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <StatCompressionSettings version="1">
   <Global enabled="true" showInfoCardSettingsButton="true" stage="BeforePostProcessCurve" autoFallbackToGlobalPostfix="true" method="Logarithmic" parameter="2" thresholdFactor="1" />
   <BodyPartHealth defName="[SP] BodyPartHealth" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
@@ -72,8 +72,8 @@
     <Stat defName="CleaningTimeFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="Cleanliness" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="Comfort" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="ComfyTemperatureMax" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="20" thresholdFactor="1.3" direction="HigherIsBetter" />
-    <Stat defName="ComfyTemperatureMin" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="20" thresholdFactor="0.8" direction="LowerDirect" />
+    <Stat defName="ComfyTemperatureMax" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="100" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Stat defName="ComfyTemperatureMin" enabled="true" method="SoftCap" method_t="2" tScale="4.65" baseline="100" thresholdFactor="-1" direction="LowerDirect" />
     <Stat defName="ConstructSuccessChance" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ConstructionSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1.5" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
     <Stat defName="ConstructionSpeedFactor" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
@@ -107,7 +107,7 @@
     <Stat defName="FlightCooldown" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="FoodPoisonChance" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="FoodPoisonChanceFixedHuman" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
-    <Stat defName="ForagedNutritionPerDay" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="ForagedNutritionPerDay" enabled="true" method="Logarithmic" method_t="2" tScale="2" baseline="3" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ForcedRecruitRelationshipDamage" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="GeneralLaborSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1.3" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
     <Stat defName="GeneticComplexityIncrease" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
@@ -119,7 +119,7 @@
     <Stat defName="HemogenGainFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="HuntingStealth" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="IcyCoreLoss" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
-    <Stat defName="ImmunityGainSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="8" baseline="1" thresholdFactor="1.25" direction="HigherIsBetter" />
+    <Stat defName="ImmunityGainSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="4" baseline="1" thresholdFactor="1.25" direction="HigherIsBetter" />
     <Stat defName="ImmunityGainSpeedFactor" enabled="false" method="Logarithmic" method_t="2" tScale="1.2" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="IncomingDamageFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1.1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="InjuryHealingFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="5" direction="HigherIsBetter" />
@@ -186,7 +186,7 @@
     <Stat defName="MeleeWeapon_AverageDPS" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeWeapon_CooldownMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="MeleeWeapon_DamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
-    <Stat defName="MentalBreakThreshold" enabled="true" method="SoftCap" method_t="2" tScale="1.5" baseline="0.125" thresholdFactor="1" direction="LowerDirect" />
+    <Stat defName="MentalBreakThreshold" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="0.125" thresholdFactor="1" direction="LowerDirect" />
     <Stat defName="MinimumHandlingSkill" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MiningSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MiningYield" enabled="true" method="SoftCap" method_t="2" tScale="40" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
@@ -197,7 +197,7 @@
     <Stat defName="Nivarian_TuningSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="Nutrition" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="PackRadius" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="PainShockThreshold" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="PainShockThreshold" enabled="true" method="SoftCap" method_t="2" tScale="40" baseline="0.8" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="PawnBeauty" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="PawnTrapSpringChance" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="PilotingAbility" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1.75" direction="HigherIsBetter" />
@@ -228,7 +228,7 @@
     <Stat defName="ResearchSpeed" enabled="true" method="Exponential" method_t="2" tScale="0.7" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
     <Stat defName="ResearchSpeedFactor" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="RestFallRateFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1.25" direction="LowerIsBetter" />
-    <Stat defName="RestRateMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Stat defName="RestRateMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1.3" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
     <Stat defName="RoomReadingBonus" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="RoyalFavorValue" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="SHGE_ExtraValueFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="3" direction="HigherIsBetter" />
