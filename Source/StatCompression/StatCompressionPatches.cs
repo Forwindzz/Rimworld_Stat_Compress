@@ -44,6 +44,7 @@ namespace StatCompression
             {
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldfld, StatField),
+                new CodeInstruction(OpCodes.Ldarg_1),
                 new CodeInstruction(OpCodes.Ldarg_2),
                 new CodeInstruction(OpCodes.Ldarg_3),
                 new CodeInstruction(OpCodes.Call, CompressMethod)
@@ -106,7 +107,11 @@ namespace StatCompression
             return false;
         }
 
-        public static void CompressBeforePostProcess(StatDef stat, ref float value, bool applyPostProcess)
+        public static void CompressBeforePostProcess(
+            StatDef stat,
+            StatRequest request,
+            ref float value,
+            bool applyPostProcess)
         {
             var settings = StatCompressionMod.Settings;
             if (!StatCompressionRuntime.CanRun(settings, applyPostProcess))
@@ -114,7 +119,7 @@ namespace StatCompression
                 return;
             }
 
-            StatCompressionRuntime.Compress(stat, ref value);
+            StatCompressionRuntime.CompressBeforePostProcess(stat, request, ref value);
         }
 
     }
@@ -124,7 +129,6 @@ namespace StatCompression
         [HarmonyPriority(Priority.Last)]
         public static void Postfix(StatDef ___stat, StatRequest req, bool applyPostProcess, ref float __result)
         {
-            StatCompressionRuntime.CaptureExplanationRaw(___stat, req, applyPostProcess, __result);
             var settings = StatCompressionMod.Settings;
             if (!StatCompressionRuntime.CanRun(settings, applyPostProcess))
             {

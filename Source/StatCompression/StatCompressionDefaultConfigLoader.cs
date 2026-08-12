@@ -29,6 +29,12 @@ namespace StatCompression
             settings.parameter = global.parameter;
             settings.thresholdFactor = global.thresholdFactor;
             settings.BodyPartHealthConfig.CopyFrom(preset.bodyPartHealthConfig);
+            var targetDamageConfigs = settings.SpecialDamageConfigs;
+            for (var i = 0; i < targetDamageConfigs.Count; i++)
+            {
+                var source = preset.specialDamageConfigs[i];
+                settings.GetAdvancedConfig(source.defName).CopyFrom(source);
+            }
         }
 
         private static void EnsureLoaded()
@@ -79,6 +85,9 @@ namespace StatCompression
             StatCompressionSettingsXml.ReadBodyPartHealth(
                 root.Element("BodyPartHealth"),
                 result.bodyPartHealthConfig);
+            _ = StatCompressionSettingsXml.ReadSpecialDamageConfigs(
+                root.Element("SpecialDamageConfigs"),
+                result.specialDamageConfigs);
             var statsElement = root.Element("Stats");
             if (statsElement != null)
             {
@@ -116,6 +125,8 @@ namespace StatCompression
         public readonly DefaultGlobalSettings global = new DefaultGlobalSettings();
         public readonly StatCompressionStatConfig bodyPartHealthConfig =
             SpecialCompressionConfigs.CreateBodyPartHealth();
+        public readonly List<StatCompressionStatConfig> specialDamageConfigs =
+            SpecialCompressionConfigs.CreateDamageConfigs();
         public readonly Dictionary<string, DefaultStatConfigRecord> recordsByDefName =
             new Dictionary<string, DefaultStatConfigRecord>(StringComparer.Ordinal);
     }

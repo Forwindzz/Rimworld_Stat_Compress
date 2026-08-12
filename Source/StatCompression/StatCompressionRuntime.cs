@@ -20,8 +20,11 @@ namespace StatCompression
             public StatDef stat;
             public StatRequest request;
             public StatCompressionStatConfig config;
-            public bool rawCaptured;
-            public float rawValue;
+            public bool captureCompressionInput;
+            public bool compressionInputCaptured;
+            public float compressionInput;
+            public float compressionOutput;
+            public CompiledStatConfig captureConfig;
         }
 
         private sealed class ExplanationValueCache
@@ -32,6 +35,9 @@ namespace StatCompression
             public int gameTick;
             public int planVersion;
             public float uncompressedValue;
+            public bool compressionInputCaptured;
+            public float compressionInput;
+            public float compressionOutput;
         }
 
         public static void RebuildRuntimePlan(StatCompressionSettings settings)
@@ -43,6 +49,24 @@ namespace StatCompression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Compress(StatDef stat, ref float value)
         {
+            var configs = activeConfigsByIndex;
+            ref var config = ref configs[stat.index];
+            value = StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CompressBeforePostProcess(StatDef stat, StatRequest request, ref float value)
+        {
+            var context = currentExplanation;
+            if (context != null && context.captureCompressionInput && !context.compressionInputCaptured &&
+                context.stat == stat && context.request.Equals(request))
+            {
+                context.compressionInput = value;
+                var captureConfig = context.captureConfig;
+                context.compressionOutput = StatCompressionRuntimeCompiler.ApplyStatic(ref captureConfig, value);
+                context.compressionInputCaptured = true;
+            }
+
             var configs = activeConfigsByIndex;
             ref var config = ref configs[stat.index];
             value = StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
@@ -91,24 +115,6 @@ namespace StatCompression
             return context;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void CaptureExplanationRaw(
-            StatDef stat,
-            StatRequest request,
-            bool applyPostProcess,
-            float value)
-        {
-            var context = currentExplanation;
-            if (context == null || applyPostProcess || context.rawCaptured || context.stat != stat ||
-                !context.request.Equals(request))
-            {
-                return;
-            }
-
-            context.rawValue = value;
-            context.rawCaptured = true;
-        }
-
         public static void EndExplanation(ExplanationContext context)
         {
             currentExplanation = context.parent;
@@ -125,7 +131,7 @@ namespace StatCompression
             var stat = context.stat;
             var config = context.config;
 
-            if (!TryGetUncompressedFinal(stat, context.request, finalVal, out var original))
+            if (!TryGetUncompressedFinal(context, finalVal, out var original))
             {
                 return false;
             }
@@ -135,9 +141,22 @@ namespace StatCompression
                 return false;
             }
 
-            FormatDisplayedValuePair(stat, original, finalVal, out var originalText, out var compressedText);
             var usesRawCurveInput = StatCompressionBootstrap.ActiveStage == CompressionStage.BeforePostProcessCurve &&
                                     stat.postProcessCurve != null;
+            var displayedOriginal = original;
+            var displayedCompressed = finalVal;
+            if (!usesRawCurveInput && context.compressionInputCaptured)
+            {
+                displayedOriginal = context.compressionInput;
+                displayedCompressed = context.compressionOutput;
+            }
+
+            FormatDisplayedValuePair(
+                stat,
+                displayedOriginal,
+                displayedCompressed,
+                out var originalText,
+                out var compressedText);
             var baselineText = usesRawCurveInput
                 ? StatCompressionText.T("StatCompression_Explanation_RawScore", config.baseline.ToString("0.###"))
                 : stat.ValueToString(config.baseline, stat.toStringNumberSense, true);
@@ -154,14 +173,12 @@ namespace StatCompression
                     StatCompressionText.MethodLabel(config.method),
                     actualParameter.ToString("0.###"),
                     baselineText);
-            if (usesRawCurveInput && context.rawCaptured)
+            if (usesRawCurveInput && context.compressionInputCaptured)
             {
-                var rawOriginal = context.rawValue;
-                var rawCompressed = ComputePreviewValue(settings, config, rawOriginal);
                 text += "\n" + StatCompressionText.T(
                     "StatCompression_Explanation_RawValueLine",
-                    rawOriginal.ToString("0.###"),
-                    rawCompressed.ToString("0.###"));
+                    context.compressionInput.ToString("0.###"),
+                    context.compressionOutput.ToString("0.###"));
             }
 
             var hint = GetMethodHint(config.method);
@@ -175,11 +192,12 @@ namespace StatCompression
         }
 
         private static bool TryGetUncompressedFinal(
-            StatDef stat,
-            StatRequest req,
+            ExplanationContext context,
             float finalValue,
             out float uncompressedValue)
         {
+            var stat = context.stat;
+            var req = context.request;
             var gameTick = Find.TickManager?.TicksGame ?? -1;
             var cache = explanationValueCache;
             if (cache != null &&
@@ -190,14 +208,21 @@ namespace StatCompression
                 cache.planVersion == runtimePlanVersion)
             {
                 uncompressedValue = cache.uncompressedValue;
+                context.compressionInputCaptured = cache.compressionInputCaptured;
+                context.compressionInput = cache.compressionInput;
+                context.compressionOutput = cache.compressionOutput;
                 return true;
             }
 
             var configs = activeConfigsByIndex;
             ref var config = ref configs[stat.index];
-            var previousKernel = config.kernel;
+            var previousConfig = config;
             try
             {
+                context.captureConfig = previousConfig;
+                context.captureCompressionInput =
+                    StatCompressionBootstrap.ActiveStage == CompressionStage.BeforePostProcessCurve;
+                context.compressionInputCaptured = false;
                 config.kernel = CompressionKernel.Disabled;
                 uncompressedValue = stat.Worker.GetValue(req, true);
             }
@@ -208,7 +233,8 @@ namespace StatCompression
             }
             finally
             {
-                config.kernel = previousKernel;
+                context.captureCompressionInput = false;
+                config = previousConfig;
             }
 
             explanationValueCache = new ExplanationValueCache
@@ -218,7 +244,10 @@ namespace StatCompression
                 finalValue = finalValue,
                 gameTick = gameTick,
                 planVersion = runtimePlanVersion,
-                uncompressedValue = uncompressedValue
+                uncompressedValue = uncompressedValue,
+                compressionInputCaptured = context.compressionInputCaptured,
+                compressionInput = context.compressionInput,
+                compressionOutput = context.compressionOutput
             };
             return true;
         }

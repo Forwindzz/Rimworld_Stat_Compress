@@ -82,6 +82,33 @@ namespace StatCompression
             target.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
         }
 
+        public static int ReadSpecialDamageConfigs(
+            XElement element,
+            System.Collections.Generic.IList<StatCompressionStatConfig> targets)
+        {
+            if (element == null || targets == null)
+            {
+                return 0;
+            }
+
+            var updated = 0;
+            var byName = targets.ToDictionary(config => config.defName, StringComparer.Ordinal);
+            foreach (var configElement in element.Elements("Config"))
+            {
+                var defName = SpecialCompressionConfigs.CanonicalizeId(Attr(configElement, "defName"));
+                if (!byName.TryGetValue(defName, out var config))
+                {
+                    continue;
+                }
+
+                ApplyStatElement(configElement, config);
+                config.direction = StatCompressionDirection.HigherIsBetter;
+                updated++;
+            }
+
+            return updated;
+        }
+
         public static bool TryReadDefaultStat(
             XElement element,
             out DefaultStatConfigRecord record,
@@ -177,6 +204,10 @@ namespace StatCompression
                     new XElement(
                         "BodyPartHealth",
                         ConfigAttributes(settings.BodyPartHealthConfig)),
+                    new XElement(
+                        "SpecialDamageConfigs",
+                        settings.SpecialDamageConfigs.Select(config =>
+                            new XElement("Config", ConfigAttributes(config)))),
                     new XElement(
                         "Stats",
                         settings.statConfigs

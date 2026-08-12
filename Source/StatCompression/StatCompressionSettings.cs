@@ -23,6 +23,7 @@ namespace StatCompression
         public float parameter = 2f;
         public float thresholdFactor = 1f;
         public StatCompressionStatConfig bodyPartHealthConfig = SpecialCompressionConfigs.CreateBodyPartHealth();
+        public List<StatCompressionStatConfig> specialDamageConfigs = SpecialCompressionConfigs.CreateDamageConfigs();
         public List<StatCompressionStatConfig> statConfigs = new List<StatCompressionStatConfig>();
 
         public StatCompressionStatConfig BodyPartHealthConfig
@@ -43,6 +44,15 @@ namespace StatCompression
             }
         }
 
+        public IReadOnlyList<StatCompressionStatConfig> SpecialDamageConfigs
+        {
+            get
+            {
+                EnsureSpecialDamageConfigs();
+                return specialDamageConfigs;
+            }
+        }
+
         public override void ExposeData()
         {
             Scribe_Values.Look(ref enabled, "enabled", true);
@@ -54,6 +64,7 @@ namespace StatCompression
             var legacyBodyPartHealthEnabled = bodyPartHealthConfig?.enabled ?? false;
             Scribe_Values.Look(ref legacyBodyPartHealthEnabled, "bodyPartHealthEnabled", false);
             Scribe_Deep.Look(ref bodyPartHealthConfig, "bodyPartHealthConfig");
+            Scribe_Collections.Look(ref specialDamageConfigs, "specialDamageConfigs", LookMode.Deep);
             Scribe_Collections.Look(ref statConfigs, "statConfigs", LookMode.Deep);
 
             if (bodyPartHealthConfig == null)
@@ -63,6 +74,7 @@ namespace StatCompression
             }
 
             bodyPartHealthConfig.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
+            EnsureSpecialDamageConfigs();
 
             if (statConfigs == null)
             {
@@ -119,6 +131,12 @@ namespace StatCompression
 
             EnsureBodyPartHealthConfig();
             NormalizeConfig(bodyPartHealthConfig);
+            EnsureSpecialDamageConfigs();
+            for (var i = 0; i < specialDamageConfigs.Count; i++)
+            {
+                specialDamageConfigs[i].direction = StatCompressionDirection.HigherIsBetter;
+                NormalizeConfig(specialDamageConfigs[i]);
+            }
 
             return Math.Abs(oldParameter - parameter) > 0.000001f ||
                    Math.Abs(oldThresholdFactor - thresholdFactor) > 0.000001f;
@@ -155,6 +173,25 @@ namespace StatCompression
                 bodyPartHealth.thresholdFactor = thresholdFactor;
                 NormalizeConfig(bodyPartHealth);
             }
+
+            EnsureSpecialDamageConfigs();
+            for (var i = 0; i < specialDamageConfigs.Count; i++)
+            {
+                var config = specialDamageConfigs[i];
+                if (!config.enabled)
+                {
+                    continue;
+                }
+
+                if (applyMethod)
+                {
+                    config.method = method;
+                }
+
+                config.thresholdFactor = thresholdFactor;
+                config.direction = StatCompressionDirection.HigherIsBetter;
+                NormalizeConfig(config);
+            }
         }
 
         public void RebuildLookup()
@@ -163,12 +200,18 @@ namespace StatCompression
             configByIndex = BuildIndex(statConfigs);
             StatCompressionRuntime.RebuildRuntimePlan(this);
             BodyPartHealthCompressionModule.NotifySettingsChanged(this);
+            BaseDamageCompressionModule.NotifySettingsChanged(this);
         }
 
         public IEnumerable<StatCompressionStatConfig> AdvancedConfigs()
         {
             EnsureStatConfigs();
             yield return BodyPartHealthConfig;
+            EnsureSpecialDamageConfigs();
+            for (var i = 0; i < specialDamageConfigs.Count; i++)
+            {
+                yield return specialDamageConfigs[i];
+            }
             for (var i = 0; i < statConfigs.Count; i++)
             {
                 yield return statConfigs[i];
@@ -177,9 +220,19 @@ namespace StatCompression
 
         public StatCompressionStatConfig GetAdvancedConfig(string defName)
         {
+            defName = SpecialCompressionConfigs.CanonicalizeId(defName);
             if (defName == SpecialCompressionConfigs.BodyPartHealthDefName)
             {
                 return BodyPartHealthConfig;
+            }
+
+            EnsureSpecialDamageConfigs();
+            for (var i = 0; i < specialDamageConfigs.Count; i++)
+            {
+                if (specialDamageConfigs[i].defName == defName)
+                {
+                    return specialDamageConfigs[i];
+                }
             }
 
             return statConfigs.FirstOrDefault(config => config.defName == defName);
@@ -193,6 +246,64 @@ namespace StatCompression
             }
 
             bodyPartHealthConfig.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
+        }
+
+        private void EnsureSpecialDamageConfigs()
+        {
+            if (specialDamageConfigs != null)
+            {
+                for (var i = 0; i < specialDamageConfigs.Count; i++)
+                {
+                    var config = specialDamageConfigs[i];
+                    if (config != null)
+                    {
+                        config.defName = SpecialCompressionConfigs.CanonicalizeId(config.defName);
+                    }
+                }
+            }
+
+            if (specialDamageConfigs != null &&
+                specialDamageConfigs.Count == SpecialCompressionConfigs.DamageDefNames.Length)
+            {
+                var completeAndOrdered = true;
+                for (var i = 0; i < specialDamageConfigs.Count; i++)
+                {
+                    var config = specialDamageConfigs[i];
+                    if (config == null || config.defName != SpecialCompressionConfigs.DamageDefNames[i])
+                    {
+                        completeAndOrdered = false;
+                        break;
+                    }
+
+                    config.direction = StatCompressionDirection.HigherIsBetter;
+                }
+
+                if (completeAndOrdered)
+                {
+                    return;
+                }
+            }
+
+            var defaults = SpecialCompressionConfigs.CreateDamageConfigs();
+            var existing = (specialDamageConfigs ?? new List<StatCompressionStatConfig>())
+                .Where(config => config != null && !config.defName.NullOrEmpty())
+                .GroupBy(config => config.defName, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+            specialDamageConfigs = new List<StatCompressionStatConfig>(defaults.Count);
+            for (var i = 0; i < defaults.Count; i++)
+            {
+                var defaultConfig = defaults[i];
+                if (existing.TryGetValue(defaultConfig.defName, out var config))
+                {
+                    config.direction = StatCompressionDirection.HigherIsBetter;
+                    specialDamageConfigs.Add(config);
+                }
+                else
+                {
+                    specialDamageConfigs.Add(defaultConfig);
+                }
+            }
         }
 
         private bool InitializeDefaultStatConfigs(bool clearExisting)
@@ -295,6 +406,7 @@ namespace StatCompression
             configByIndex = newIndex;
             StatCompressionRuntime.RebuildRuntimePlan(this);
             BodyPartHealthCompressionModule.NotifySettingsChanged(this);
+            BaseDamageCompressionModule.NotifySettingsChanged(this);
             Log.Message($"[{StatCompressionConstants.DisplayName}] Default stat configs initialized: total={newConfigs.Count}, added={added}, fromDefaultXml={fromDefaultPreset}, missingDefaultXml={missingDefaultPreset}, xmlBaselineFallbacks={normalizedInvalidPresetBaseline}, autoEnabled={enabledByDefault}, keptExisting={skippedExisting}, skippedStaticRules={skippedStaticRules}, skippedShouldShow={skippedShouldShow}.");
             return true;
         }
@@ -418,6 +530,10 @@ namespace StatCompression
             };
             StatCompressionSettingsXml.ReadGlobal(root.Element("Global"), importedGlobal);
             StatCompressionSettingsXml.ReadBodyPartHealth(root.Element("BodyPartHealth"), BodyPartHealthConfig);
+            EnsureSpecialDamageConfigs();
+            updated += StatCompressionSettingsXml.ReadSpecialDamageConfigs(
+                root.Element("SpecialDamageConfigs"),
+                specialDamageConfigs);
             enabled = importedGlobal.enabled;
             stage = importedGlobal.stage;
             autoFallbackToGlobalPostfix = importedGlobal.autoFallbackToGlobalPostfix;

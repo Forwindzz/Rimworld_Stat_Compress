@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
   <StatCompression_Enable>Enable stat compression</StatCompression_Enable>
-  <StatCompression_BodyPartHealth_Enable>Compress body-part maximum health</StatCompression_BodyPartHealth_Enable>
-  <StatCompression_BodyPartHealth_EnableTooltip>Special compatibility module. Compresses maximum body-part health above each pawn's natural racial and life-stage baseline. Requires a restart after adding or removing Elite Bionics Framework.</StatCompression_BodyPartHealth_EnableTooltip>
   <StatCompression_SP_BodyPartHealth_Label>Body-part HP</StatCompression_SP_BodyPartHealth_Label>
   <StatCompression_SP_BodyPartHealth_BaselineTooltip>For body-part HP, Baseline is a multiplier of the pawn's natural racial, life-stage, and part HP. 1 means 100% of natural HP.</StatCompression_SP_BodyPartHealth_BaselineTooltip>
+  <StatCompression_SP_MeleeBaseDamage_Label>Melee base damage</StatCompression_SP_MeleeBaseDamage_Label>
+  <StatCompression_SP_RangedBaseDamage_Label>Ranged base damage</StatCompression_SP_RangedBaseDamage_Label>
+  <StatCompression_SP_MeleeExtraDamage_Label>Melee extra damage</StatCompression_SP_MeleeExtraDamage_Label>
+  <StatCompression_SP_RangedExtraDamage_Label>Ranged extra damage</StatCompression_SP_RangedExtraDamage_Label>
+  <StatCompression_SP_ExplosionDamage_Label>Explosion damage</StatCompression_SP_ExplosionDamage_Label>
+  <StatCompression_SP_OtherDamage_Label>Other base damage</StatCompression_SP_OtherDamage_Label>
+  <StatCompression_SP_Damage_BaselineTooltip>For base-damage modules, Baseline is an absolute amount of damage before equipment, pawn, material, and other runtime factors.</StatCompression_SP_Damage_BaselineTooltip>
+  <StatCompression_SP_Damage_DirectionTooltip>Base damage only supports compressing values above the threshold.</StatCompression_SP_Damage_DirectionTooltip>
   <StatCompression_Tooltip_SpecialModule>Special module</StatCompression_Tooltip_SpecialModule>
   <StatCompression_CompressionType>Compression type</StatCompression_CompressionType>
   <StatCompression_Method_Linear>Linear</StatCompression_Method_Linear>
@@ -17,7 +23,7 @@
   <StatCompression_Formula_Power>Power: f(x) = h + ((x - h) + 1)^t - 1</StatCompression_Formula_Power>
   <StatCompression_Formula_Logarithmic>Logarithmic: f(x) = h + ln(1 + ln(t)(x - h)) / ln(t)</StatCompression_Formula_Logarithmic>
   <StatCompression_Formula_SoftCap>Soft cap: f(x) = h + t(x - h) / ((x - h) + t)</StatCompression_Formula_SoftCap>
-  <StatCompression_ParameterT>Parameter t</StatCompression_ParameterT>
+  <StatCompression_ParameterT>Compression coefficient t</StatCompression_ParameterT>
   <StatCompression_ParameterTooltip>Adjust this value to change compression strength. The slider provides a convenient range; values outside it can be entered manually.</StatCompression_ParameterTooltip>
   <StatCompression_CompressAbove>Compress above</StatCompression_CompressAbove>
   <StatCompression_CompressAboveTooltip>Higher-is-better stats are compressed when they exceed this relative baseline. Default: 100%.&#10;Lower-is-better stats are compressed when they fall below the inverse threshold.</StatCompression_CompressAboveTooltip>
@@ -40,7 +46,12 @@
   <StatCompression_AdvancedPreviewSummary>Direction: {0}&#10;Baseline: {1}&#10;Trigger value: {2}</StatCompression_AdvancedPreviewSummary>
   <StatCompression_AdvancedPreviewFormulaHigher>x = value / baseline; h = threshold; e = x - h&#10;x &lt;= h: result = value&#10;x &gt; h: result = baseline * (h + C(e))&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
   <StatCompression_AdvancedPreviewFormulaLower>x = value / baseline; r = 1 / x; h = threshold; e = r - h&#10;r &lt;= h: result = value&#10;r &gt; h: result = baseline / (h + C(e))&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaLower>
-  <StatCompression_AdvancedPreviewValues>Editable input (% of baseline) and mapped stat value</StatCompression_AdvancedPreviewValues>
+  <StatCompression_AdvancedPreviewValues>Numeric preview</StatCompression_AdvancedPreviewValues>
+  <StatCompression_AdvancedPreviewPercentColumn>Baseline percentage</StatCompression_AdvancedPreviewPercentColumn>
+  <StatCompression_AdvancedPreviewActualColumn>Actual value</StatCompression_AdvancedPreviewActualColumn>
+  <StatCompression_AdvancedPreviewGraph>Compression mapping curve</StatCompression_AdvancedPreviewGraph>
+  <StatCompression_AdvancedPreviewGraphXAxis>Input % (log)</StatCompression_AdvancedPreviewGraphXAxis>
+  <StatCompression_AdvancedPreviewGraphYAxis>Output % (linear)</StatCompression_AdvancedPreviewGraphYAxis>
   <StatCompression_AdvancedHelp>Configure compression for each stat. Method selects the mapping function. Let x = stat value / baseline and h = Threshold. If x is below h, f(x)=x; above h, only the excess x-h is compressed.</StatCompression_AdvancedHelp>
   <StatCompression_AdvancedFormulaHelp>Linear: h+(x-h)t; Power: h+((x-h)+1)^t-1; Logarithmic: h+ln(1+ln(t)(x-h))/ln(t); Soft cap: h+t(x-h)/((x-h)+t)</StatCompression_AdvancedFormulaHelp>
   <StatCompression_DirectionHelp>Direction: Higher compresses values above the threshold; Lower compresses values below the inverse threshold.</StatCompression_DirectionHelp>
@@ -75,4 +86,12 @@
   <StatCompression_Explanation_Hint_SoftCap>Soft cap compression keeps the compressed value below a fixed upper limit.</StatCompression_Explanation_Hint_SoftCap>
   <StatCompression_BodyPartHealth_Explanation_ValueLine>Stat compression: {0} HP -> {1} HP</StatCompression_BodyPartHealth_Explanation_ValueLine>
   <StatCompression_BodyPartHealth_Explanation_MethodLine>Method: {0} t={1}, natural baseline {2} HP</StatCompression_BodyPartHealth_Explanation_MethodLine>
+  <StatCompression_BaseDamage_Info_Count>{0} base-damage fields compressed</StatCompression_BaseDamage_Info_Count>
+  <StatCompression_BaseDamage_Info_Header>Stat compression</StatCompression_BaseDamage_Info_Header>
+  <StatCompression_BaseDamage_Info_Value>{0}: {1} -> {2}</StatCompression_BaseDamage_Info_Value>
+  <StatCompression_BaseDamage_Info_Method>Method: {0} t={1}, baseline {2}, threshold {3}</StatCompression_BaseDamage_Info_Method>
+  <StatCompression_BaseDamage_Info_AfterFactors>Only the base damage is shown here. Equipment, pawn, material, and other factors are applied afterward.</StatCompression_BaseDamage_Info_AfterFactors>
+  <StatCompression_BaseDamage_Source_NonTool>Non-tool melee attack</StatCompression_BaseDamage_Source_NonTool>
+  <StatCompression_BaseDamage_Source_Beam>Beam total damage</StatCompression_BaseDamage_Source_Beam>
+  <StatCompression_BaseDamage_Source_Surprise>Surprise attack</StatCompression_BaseDamage_Source_Surprise>
 </LanguageData>

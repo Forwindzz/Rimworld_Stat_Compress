@@ -25,6 +25,10 @@ namespace StatCompression
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             PatchCompressionEntry(harmony);
             BodyPartHealthCompressionModule.Initialize();
+            if (StaticConstructorOnStartupUtility.coreStaticAssetsLoaded)
+            {
+                BaseDamageCompressionModule.Initialize();
+            }
 
             Log.Message($"[{StatCompressionConstants.DisplayName}] {StatCompressionConstants.Version} loaded.");
         }
