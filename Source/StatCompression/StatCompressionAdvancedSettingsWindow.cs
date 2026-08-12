@@ -106,7 +106,7 @@ namespace StatCompression
             HandleColumnResize(headerRect);
             DrawHeader(headerRect);
 
-            var configs = settings.StatConfigs.Where(MatchesSearch).ToList();
+            var configs = settings.AdvancedConfigs().Where(MatchesSearch).ToList();
             SortConfigs(configs);
             if (selectedDefName.NullOrEmpty() && configs.Count > 0)
             {
@@ -238,13 +238,14 @@ namespace StatCompression
             }
 
             var stat = DefDatabase<StatDef>.GetNamedSilentFail(config.defName);
+            var label = LabelFor(config);
             var enabled = config.enabled;
             Widgets.Checkbox(Col(rect, 0).position + new Vector2(2f, 3f), ref enabled);
             config.enabled = enabled;
 
             Text.Font = GameFont.Tiny;
             Widgets.Label(Col(rect, 1), config.defName);
-            Widgets.Label(Col(rect, 2), stat == null ? string.Empty : stat.LabelCap.ToString());
+            Widgets.Label(Col(rect, 2), label);
             Text.Font = GameFont.Small;
 
             if (Widgets.ButtonText(Col(rect, 3), StatCompressionText.MethodShortLabel(config.method)))
@@ -285,7 +286,7 @@ namespace StatCompression
             var inner = rect.ContractedBy(10f);
             var config = selectedDefName.NullOrEmpty()
                 ? null
-                : settings.StatConfigs.FirstOrDefault(item => item.defName == selectedDefName);
+                : settings.GetAdvancedConfig(selectedDefName);
             if (config == null)
             {
                 Widgets.Label(inner, StatCompressionText.T("StatCompression_SelectStatForPreview"));
@@ -295,7 +296,7 @@ namespace StatCompression
             var stat = DefDatabase<StatDef>.GetNamedSilentFail(config.defName);
             Text.Font = GameFont.Medium;
             Widgets.Label(new Rect(inner.x, inner.y, inner.width, 30f),
-                stat == null ? config.defName : stat.LabelCap.ToString());
+                LabelFor(config));
             Text.Font = GameFont.Tiny;
             Widgets.Label(new Rect(inner.x, inner.y + 30f, inner.width, 22f), config.defName);
             Text.Font = GameFont.Small;
@@ -481,6 +482,11 @@ namespace StatCompression
 
         private static string LabelFor(StatCompressionStatConfig config)
         {
+            if (SpecialCompressionConfigs.IsSpecial(config.defName))
+            {
+                return SpecialCompressionConfigs.LabelFor(config.defName);
+            }
+
             var stat = DefDatabase<StatDef>.GetNamedSilentFail(config.defName);
             return stat?.LabelCap.ToString() ?? string.Empty;
         }
@@ -496,6 +502,13 @@ namespace StatCompression
             if (!config.defName.NullOrEmpty() && config.defName.ToLowerInvariant().Contains(needle))
             {
                 return true;
+            }
+
+            if (SpecialCompressionConfigs.IsSpecial(config.defName))
+            {
+                return SpecialCompressionConfigs.LabelFor(config.defName)
+                    .ToLowerInvariant()
+                    .Contains(needle);
             }
 
             var stat = DefDatabase<StatDef>.GetNamedSilentFail(config.defName);
@@ -562,7 +575,14 @@ namespace StatCompression
                    "\n" + StatCompressionText.T("StatCompression_Tooltip_Method", StatCompressionText.MethodLabel(config.method)) +
                    "\n" + StatCompressionText.T("StatCompression_Tooltip_TScale", config.tScale) +
                    "\n" + StatCompressionText.T("StatCompression_Tooltip_Direction", StatCompressionText.DirectionShortLabel(config.direction)) +
-                   (stat == null ? string.Empty : "\n" + StatCompressionText.T("StatCompression_Tooltip_Category", stat.category?.defName));
+                   (SpecialCompressionConfigs.IsSpecial(config.defName)
+                       ? "\n" + StatCompressionText.T("StatCompression_Tooltip_SpecialModule") +
+                         (config.defName == SpecialCompressionConfigs.BodyPartHealthDefName
+                             ? "\n" + StatCompressionText.T("StatCompression_SP_BodyPartHealth_BaselineTooltip")
+                             : string.Empty)
+                       : stat == null
+                           ? string.Empty
+                           : "\n" + StatCompressionText.T("StatCompression_Tooltip_Category", stat.category?.defName));
         }
     }
 }

@@ -71,6 +71,17 @@ namespace StatCompression
             }
         }
 
+        public static void ReadBodyPartHealth(XElement element, StatCompressionStatConfig target)
+        {
+            if (element == null)
+            {
+                return;
+            }
+
+            ApplyStatElement(element, target);
+            target.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
+        }
+
         public static bool TryReadDefaultStat(
             XElement element,
             out DefaultStatConfigRecord record,
@@ -164,6 +175,9 @@ namespace StatCompression
                         new XAttribute("parameter", FormatFloat(settings.parameter)),
                         new XAttribute("thresholdFactor", FormatFloat(settings.thresholdFactor))),
                     new XElement(
+                        "BodyPartHealth",
+                        ConfigAttributes(settings.BodyPartHealthConfig)),
+                    new XElement(
                         "Stats",
                         settings.statConfigs
                             .Where(config => config != null && !config.defName.NullOrEmpty())
@@ -180,6 +194,13 @@ namespace StatCompression
         {
             return new XElement(
                 "Stat",
+                ConfigAttributes(config));
+        }
+
+        private static object[] ConfigAttributes(StatCompressionStatConfig config)
+        {
+            return new object[]
+            {
                 new XAttribute("defName", config.defName),
                 new XAttribute("enabled", config.enabled),
                 new XAttribute("method", config.method),
@@ -187,7 +208,8 @@ namespace StatCompression
                 new XAttribute("tScale", FormatFloat(config.tScale)),
                 new XAttribute("baseline", FormatFloat(config.baseline)),
                 new XAttribute("thresholdFactor", FormatFloat(config.thresholdFactor)),
-                new XAttribute("direction", config.direction));
+                new XAttribute("direction", config.direction)
+            };
         }
 
         private static bool TryParseFloat(string value, out float result)

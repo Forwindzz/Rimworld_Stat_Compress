@@ -28,6 +28,7 @@ namespace StatCompression
             settings.method = global.method;
             settings.parameter = global.parameter;
             settings.thresholdFactor = global.thresholdFactor;
+            settings.BodyPartHealthConfig.CopyFrom(preset.bodyPartHealthConfig);
         }
 
         private static void EnsureLoaded()
@@ -75,6 +76,9 @@ namespace StatCompression
             }
 
             StatCompressionSettingsXml.ReadGlobal(root.Element("Global"), result.global);
+            StatCompressionSettingsXml.ReadBodyPartHealth(
+                root.Element("BodyPartHealth"),
+                result.bodyPartHealthConfig);
             var statsElement = root.Element("Stats");
             if (statsElement != null)
             {
@@ -110,6 +114,8 @@ namespace StatCompression
     internal sealed class DefaultSettingsPreset
     {
         public readonly DefaultGlobalSettings global = new DefaultGlobalSettings();
+        public readonly StatCompressionStatConfig bodyPartHealthConfig =
+            SpecialCompressionConfigs.CreateBodyPartHealth();
         public readonly Dictionary<string, DefaultStatConfigRecord> recordsByDefName =
             new Dictionary<string, DefaultStatConfigRecord>(StringComparer.Ordinal);
     }

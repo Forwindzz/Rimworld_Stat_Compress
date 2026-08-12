@@ -40,11 +40,20 @@ namespace StatCompression
             var oldMethod = Settings.method;
             var oldParameter = Settings.parameter;
             var oldThreshold = Settings.thresholdFactor;
+            var oldEnabled = Settings.enabled;
+            var bodyPartHealthConfig = Settings.BodyPartHealthConfig;
+            var oldBodyPartHealthEnabled = bodyPartHealthConfig.enabled;
 
             var listing = new Listing_Standard();
             listing.Begin(inRect);
 
             listing.CheckboxLabeled(StatCompressionText.T("StatCompression_Enable"), ref Settings.enabled);
+            var bodyPartHealthEnabled = bodyPartHealthConfig.enabled;
+            listing.CheckboxLabeled(
+                StatCompressionText.T("StatCompression_BodyPartHealth_Enable"),
+                ref bodyPartHealthEnabled,
+                StatCompressionText.T("StatCompression_BodyPartHealth_EnableTooltip"));
+            bodyPartHealthConfig.enabled = bodyPartHealthEnabled;
             DrawMethodRow(listing);
             DrawParameterRow(listing);
             DrawThresholdRow(listing);
@@ -65,11 +74,19 @@ namespace StatCompression
             listing.End();
 
             Settings.NormalizeParameters();
-            if (oldMethod != Settings.method ||
+            var compressionShapeChanged =
+                oldMethod != Settings.method ||
                 Math.Abs(oldParameter - Settings.parameter) > 0.000001f ||
-                Math.Abs(oldThreshold - Settings.thresholdFactor) > 0.000001f)
+                Math.Abs(oldThreshold - Settings.thresholdFactor) > 0.000001f;
+            if (compressionShapeChanged)
             {
                 Settings.ApplyGlobalCompressionToEnabled(oldMethod != Settings.method);
+            }
+
+            if (compressionShapeChanged ||
+                oldEnabled != Settings.enabled ||
+                oldBodyPartHealthEnabled != bodyPartHealthConfig.enabled)
+            {
                 Settings.RebuildLookup();
             }
         }

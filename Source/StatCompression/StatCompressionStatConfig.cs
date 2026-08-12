@@ -55,5 +55,17 @@ namespace StatCompression
                 baseline = legacyManualBaseline;
             }
         }
+
+        public void CopyFrom(StatCompressionStatConfig source)
+        {
+            defName = source.defName;
+            enabled = source.enabled;
+            method = source.method;
+            method_t = source.method_t;
+            tScale = source.tScale;
+            baseline = source.baseline;
+            thresholdFactor = source.thresholdFactor;
+            direction = source.direction;
+        }
     }
 }

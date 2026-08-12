@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
   <StatCompression_Enable>启用数值压缩</StatCompression_Enable>
+  <StatCompression_BodyPartHealth_Enable>压缩身体部位最大血量</StatCompression_BodyPartHealth_Enable>
+  <StatCompression_BodyPartHealth_EnableTooltip>特殊兼容模块。超过角色自然种族与生命阶段基准的部位最大血量会被压缩。添加或移除 Elite Bionics Framework 后需要重启游戏。</StatCompression_BodyPartHealth_EnableTooltip>
+  <StatCompression_SP_BodyPartHealth_Label>部位血量</StatCompression_SP_BodyPartHealth_Label>
+  <StatCompression_SP_BodyPartHealth_BaselineTooltip>对于部位血量，Baseline 是角色自然种族、生命阶段和部位血量的倍率；1 表示自然血量的 100%。</StatCompression_SP_BodyPartHealth_BaselineTooltip>
+  <StatCompression_Tooltip_SpecialModule>特殊模块</StatCompression_Tooltip_SpecialModule>
   <StatCompression_CompressionType>压缩类型</StatCompression_CompressionType>
   <StatCompression_Method_Linear>线性</StatCompression_Method_Linear>
   <StatCompression_Method_Power>指数</StatCompression_Method_Power>
@@ -68,4 +73,6 @@
   <StatCompression_Explanation_Hint_Power>指数压缩等价于将乘法增益按比例削弱。</StatCompression_Explanation_Hint_Power>
   <StatCompression_Explanation_Hint_Logarithmic>对数压缩等价于将乘法增益变为加法。</StatCompression_Explanation_Hint_Logarithmic>
   <StatCompression_Explanation_Hint_SoftCap>软上限压缩会让压缩后的数值永远不超过某个固定上限。</StatCompression_Explanation_Hint_SoftCap>
+  <StatCompression_BodyPartHealth_Explanation_ValueLine>数值压缩：{0} HP -> {1} HP</StatCompression_BodyPartHealth_Explanation_ValueLine>
+  <StatCompression_BodyPartHealth_Explanation_MethodLine>压缩方式：{0} t={1}，自然基准值 {2} HP</StatCompression_BodyPartHealth_Explanation_MethodLine>
 </LanguageData>

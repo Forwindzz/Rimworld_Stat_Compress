@@ -10,22 +10,16 @@ namespace StatCompression
         private static CompiledStatConfig[] activeConfigsByIndex = new CompiledStatConfig[0];
         private static int runtimePlanVersion;
 
-        [ThreadStatic]
-        private static int suppressCompressionDepth;
-
-        [ThreadStatic]
         private static ExplanationContext currentExplanation;
 
-        [ThreadStatic]
         private static ExplanationValueCache explanationValueCache;
-
-        public static bool Suppressed => suppressCompressionDepth > 0;
 
         internal sealed class ExplanationContext
         {
             public ExplanationContext parent;
             public StatDef stat;
             public StatRequest request;
+            public StatCompressionStatConfig config;
             public bool rawCaptured;
             public float rawValue;
         }
@@ -64,34 +58,24 @@ namespace StatCompression
             return StatCompressionRuntimeCompiler.ApplyStatic(ref compiled, original);
         }
 
-        public static bool TryGetHumanBaselineForConfig(StatDef stat, out float baseline)
-        {
-            return TryGetCalculatedHumanBaseline(stat, CompressionStage.BeforePostProcessCurve, out baseline);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool CanRun(StatCompressionSettings settings, bool applyPostProcess)
         {
-            if (!applyPostProcess || Suppressed)
-            {
-                return false;
-            }
-
-            return settings.enabled;
+            return applyPostProcess && settings.enabled;
         }
 
         public static ExplanationContext BeginExplanation(
-            StatCompressionSettings settings,
             StatDef stat,
             StatRequest request)
         {
-            if (settings == null || !settings.enabled || stat == null || Suppressed)
+            var settings = StatCompressionMod.Settings;
+            if (!settings.enabled)
             {
                 return null;
             }
 
             var config = settings.GetConfigFast(stat);
-            if (config == null || !config.enabled)
+            if (!config.enabled)
             {
                 return null;
             }
@@ -100,7 +84,8 @@ namespace StatCompression
             {
                 parent = currentExplanation,
                 stat = stat,
-                request = request
+                request = request,
+                config = config
             };
             currentExplanation = context;
             return context;
@@ -126,66 +111,21 @@ namespace StatCompression
 
         public static void EndExplanation(ExplanationContext context)
         {
-            if (context != null && currentExplanation == context)
-            {
-                currentExplanation = context.parent;
-            }
-        }
-
-        private static bool TryGetCalculatedHumanBaseline(StatDef stat, CompressionStage callStage, out float baseline)
-        {
-            baseline = 0f;
-            if (stat == null || ThingDefOf.Human == null)
-            {
-                return false;
-            }
-
-            try
-            {
-                suppressCompressionDepth++;
-                var req = StatRequest.For(ThingDefOf.Human, null, QualityCategory.Normal);
-                var applyPostProcess = callStage == CompressionStage.GlobalPostfix;
-                baseline = stat.Worker.GetValue(req, applyPostProcess);
-                if (IsUsablePositiveNumber(baseline))
-                {
-                    return true;
-                }
-
-                baseline = 0f;
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
-            finally
-            {
-                suppressCompressionDepth--;
-            }
+            currentExplanation = context.parent;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryBuildExplanation(
-            StatCompressionSettings settings,
-            StatDef stat,
-            StatRequest req,
-            float finalVal,
             ExplanationContext context,
+            float finalVal,
             out string explanation)
         {
             explanation = null;
-            if (settings == null || !settings.enabled || stat == null || Suppressed)
-            {
-                return false;
-            }
+            var settings = StatCompressionMod.Settings;
+            var stat = context.stat;
+            var config = context.config;
 
-            var config = settings.GetConfigFast(stat);
-            if (!config.enabled)
-            {
-                return false;
-            }
-
-            if (!TryGetUncompressedFinal(stat, req, finalVal, out var original))
+            if (!TryGetUncompressedFinal(stat, context.request, finalVal, out var original))
             {
                 return false;
             }
@@ -196,8 +136,7 @@ namespace StatCompression
             }
 
             FormatDisplayedValuePair(stat, original, finalVal, out var originalText, out var compressedText);
-            var usesRawCurveInput = settings.stage == CompressionStage.BeforePostProcessCurve &&
-                                    StatWorker_FinalizeValue_Patch.BeforePostProcessPatchApplied &&
+            var usesRawCurveInput = StatCompressionBootstrap.ActiveStage == CompressionStage.BeforePostProcessCurve &&
                                     stat.postProcessCurve != null;
             var baselineText = usesRawCurveInput
                 ? StatCompressionText.T("StatCompression_Explanation_RawScore", config.baseline.ToString("0.###"))
@@ -215,7 +154,7 @@ namespace StatCompression
                     StatCompressionText.MethodLabel(config.method),
                     actualParameter.ToString("0.###"),
                     baselineText);
-            if (usesRawCurveInput && context != null && context.rawCaptured)
+            if (usesRawCurveInput && context.rawCaptured)
             {
                 var rawOriginal = context.rawValue;
                 var rawCompressed = ComputePreviewValue(settings, config, rawOriginal);
@@ -254,9 +193,12 @@ namespace StatCompression
                 return true;
             }
 
+            var configs = activeConfigsByIndex;
+            ref var config = ref configs[stat.index];
+            var previousKernel = config.kernel;
             try
             {
-                suppressCompressionDepth++;
+                config.kernel = CompressionKernel.Disabled;
                 uncompressedValue = stat.Worker.GetValue(req, true);
             }
             catch
@@ -266,7 +208,7 @@ namespace StatCompression
             }
             finally
             {
-                suppressCompressionDepth--;
+                config.kernel = previousKernel;
             }
 
             explanationValueCache = new ExplanationValueCache
@@ -353,9 +295,5 @@ namespace StatCompression
             }
         }
 
-        private static bool IsUsablePositiveNumber(float value)
-        {
-            return value > 0f && !float.IsNaN(value) && !float.IsInfinity(value);
-        }
     }
 }

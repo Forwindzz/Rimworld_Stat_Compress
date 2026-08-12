@@ -9,7 +9,6 @@ using Verse;
 
 namespace StatCompression
 {
-    [HarmonyPatch(typeof(StatWorker), nameof(StatWorker.FinalizeValue))]
     internal static class StatWorker_FinalizeValue_Patch
     {
         public static bool BeforePostProcessPatchApplied { get; private set; }
@@ -110,8 +109,7 @@ namespace StatCompression
         public static void CompressBeforePostProcess(StatDef stat, ref float value, bool applyPostProcess)
         {
             var settings = StatCompressionMod.Settings;
-            if (settings.stage != CompressionStage.BeforePostProcessCurve ||
-                !StatCompressionRuntime.CanRun(settings, applyPostProcess))
+            if (!StatCompressionRuntime.CanRun(settings, applyPostProcess))
             {
                 return;
             }
@@ -121,8 +119,6 @@ namespace StatCompression
 
     }
 
-    [HarmonyPatch(typeof(StatWorker), nameof(StatWorker.GetValue), new[] { typeof(StatRequest), typeof(bool) })]
-    [HarmonyAfter("VR.MissileGirl", "VR.MissileGirl.rocketpatch", "JellyCreative.IsekaiLeveling")]
     internal static class StatWorker_GetValue_Patch
     {
         [HarmonyPriority(Priority.Last)]
@@ -130,13 +126,7 @@ namespace StatCompression
         {
             StatCompressionRuntime.CaptureExplanationRaw(___stat, req, applyPostProcess, __result);
             var settings = StatCompressionMod.Settings;
-            var shouldRun =
-                settings.stage == CompressionStage.GlobalPostfix ||
-                (settings.stage == CompressionStage.BeforePostProcessCurve &&
-                 settings.autoFallbackToGlobalPostfix &&
-                 !StatWorker_FinalizeValue_Patch.BeforePostProcessPatchApplied);
-
-            if (!shouldRun || !StatCompressionRuntime.CanRun(settings, applyPostProcess))
+            if (!StatCompressionRuntime.CanRun(settings, applyPostProcess))
             {
                 return;
             }
@@ -153,33 +143,23 @@ namespace StatCompression
             StatRequest req,
             out StatCompressionRuntime.ExplanationContext __state)
         {
-            __state = StatCompressionRuntime.BeginExplanation(StatCompressionMod.Settings, ___stat, req);
+            __state = StatCompressionRuntime.BeginExplanation(___stat, req);
         }
 
         [HarmonyPriority(Priority.Last)]
         public static void Postfix(
-            StatDef ___stat,
-            StatRequest req,
             float finalVal,
             StatCompressionRuntime.ExplanationContext __state,
             ref string __result)
         {
-            try
+            if (__state == null)
             {
-                if (StatCompressionRuntime.TryBuildExplanation(
-                        StatCompressionMod.Settings,
-                        ___stat,
-                        req,
-                        finalVal,
-                        __state,
-                        out var explanation))
-                {
-                    __result += "\n" + explanation;
-                }
+                return;
             }
-            finally
+
+            if (StatCompressionRuntime.TryBuildExplanation(__state, finalVal, out var explanation))
             {
-                StatCompressionRuntime.EndExplanation(__state);
+                __result += "\n" + explanation;
             }
         }
 
@@ -187,7 +167,11 @@ namespace StatCompression
             Exception __exception,
             StatCompressionRuntime.ExplanationContext __state)
         {
-            StatCompressionRuntime.EndExplanation(__state);
+            if (__state != null)
+            {
+                StatCompressionRuntime.EndExplanation(__state);
+            }
+
             return __exception;
         }
     }

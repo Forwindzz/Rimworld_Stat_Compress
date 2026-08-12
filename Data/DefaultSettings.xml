@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <StatCompressionSettings version="1">
   <Global enabled="true" stage="BeforePostProcessCurve" autoFallbackToGlobalPostfix="true" method="Logarithmic" parameter="2" thresholdFactor="1" />
+  <BodyPartHealth defName="[SP] 部位HP" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1.25" direction="HigherIsBetter" />
   <Stats>
     <Stat defName="Ability_CastingTime" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="Ability_DetectChancePerEntropy" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
@@ -35,7 +36,7 @@
     <Stat defName="BiosculpterOccupantSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
     <Stat defName="BiosculpterPodSpeedFactor" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="BirthRitualQualityOffset" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="BluntDamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="BluntDamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="2.5" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="BodyPart" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="BondAnimalChanceFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ButcheryFleshEfficiency" enabled="true" method="Logarithmic" method_t="2" tScale="2" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
@@ -140,7 +141,7 @@
     <Stat defName="MeleeArmorPenetration" enabled="true" method="SoftCap" method_t="2" tScale="33" baseline="1" thresholdFactor="0.7" direction="HigherIsBetter" />
     <Stat defName="MeleeCooldownFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="MeleeDPS" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="MeleeDamageFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="MeleeDamageFactor" enabled="true" method="Logarithmic" method_t="2" tScale="2.5" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeDodgeChance" enabled="true" method="SoftCap" method_t="2" tScale="5" baseline="20.0000019" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeDodgeChanceIndoorsDarkOffset" enabled="false" method="Logarithmic" method_t="2" tScale="4" baseline="20" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeDodgeChanceIndoorsLitOffset" enabled="false" method="Logarithmic" method_t="2" tScale="4" baseline="20" thresholdFactor="1" direction="HigherIsBetter" />
@@ -154,8 +155,8 @@
     <Stat defName="MeleeHitChanceOutdoorsLitOffset" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeWeapon_AverageArmorPenetration" enabled="true" method="SoftCap" method_t="2" tScale="33" baseline="1" thresholdFactor="0.7" direction="HigherIsBetter" />
     <Stat defName="MeleeWeapon_AverageDPS" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="MeleeWeapon_CooldownMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
-    <Stat defName="MeleeWeapon_DamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="MeleeWeapon_CooldownMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
+    <Stat defName="MeleeWeapon_DamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="2.5" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MentalBreakThreshold" enabled="true" method="Logarithmic" method_t="2" tScale="1.75" baseline="0.25" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="MinimumHandlingSkill" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MiningSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
@@ -184,11 +185,11 @@
     <Stat defName="PsychicSensitivityFactor" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="PsychicSensitivityOffset" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="RangedCooldownFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
-    <Stat defName="RangedWeapon_ArmorPenetrationMultiplier" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="RangedWeapon_Cooldown" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
-    <Stat defName="RangedWeapon_DamageMultiplier" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="RangedWeapon_ArmorPenetrationMultiplier" enabled="true" method="SoftCap" method_t="2" tScale="33" baseline="1" thresholdFactor="0.7" direction="HigherIsBetter" />
+    <Stat defName="RangedWeapon_Cooldown" enabled="false" method="Logarithmic" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
+    <Stat defName="RangedWeapon_DamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="2.5" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="RangedWeapon_RangeMultiplier" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="RangedWeapon_WarmupMultiplier" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
+    <Stat defName="RangedWeapon_WarmupMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="RawNutritionFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ReadingSpeed" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="0.8" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="RecruitEffectivity" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
@@ -200,7 +201,7 @@
     <Stat defName="RoomReadingBonus" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="RoyalFavorValue" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="SellPriceFactor" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="SharpDamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="SharpDamageMultiplier" enabled="true" method="Logarithmic" method_t="2" tScale="2.5" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ShootingAccuracyChildFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ShootingAccuracyFactor_Long" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ShootingAccuracyFactor_Medium" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />

@@ -22,7 +22,17 @@ namespace StatCompression
         public CompressionMethod method = CompressionMethod.Logarithmic;
         public float parameter = 2f;
         public float thresholdFactor = 1f;
+        public StatCompressionStatConfig bodyPartHealthConfig = SpecialCompressionConfigs.CreateBodyPartHealth();
         public List<StatCompressionStatConfig> statConfigs = new List<StatCompressionStatConfig>();
+
+        public StatCompressionStatConfig BodyPartHealthConfig
+        {
+            get
+            {
+                EnsureBodyPartHealthConfig();
+                return bodyPartHealthConfig;
+            }
+        }
 
         public IReadOnlyList<StatCompressionStatConfig> StatConfigs
         {
@@ -41,7 +51,18 @@ namespace StatCompression
             Scribe_Values.Look(ref method, "method", CompressionMethod.Logarithmic);
             Scribe_Values.Look(ref parameter, "parameter", 2f);
             Scribe_Values.Look(ref thresholdFactor, "thresholdFactor", 1f);
+            var legacyBodyPartHealthEnabled = bodyPartHealthConfig?.enabled ?? false;
+            Scribe_Values.Look(ref legacyBodyPartHealthEnabled, "bodyPartHealthEnabled", false);
+            Scribe_Deep.Look(ref bodyPartHealthConfig, "bodyPartHealthConfig");
             Scribe_Collections.Look(ref statConfigs, "statConfigs", LookMode.Deep);
+
+            if (bodyPartHealthConfig == null)
+            {
+                bodyPartHealthConfig = SpecialCompressionConfigs.CreateBodyPartHealth();
+                bodyPartHealthConfig.enabled = legacyBodyPartHealthEnabled;
+            }
+
+            bodyPartHealthConfig.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
 
             if (statConfigs == null)
             {
@@ -96,6 +117,9 @@ namespace StatCompression
                 }
             }
 
+            EnsureBodyPartHealthConfig();
+            NormalizeConfig(bodyPartHealthConfig);
+
             return Math.Abs(oldParameter - parameter) > 0.000001f ||
                    Math.Abs(oldThresholdFactor - thresholdFactor) > 0.000001f;
         }
@@ -119,12 +143,56 @@ namespace StatCompression
                 config.thresholdFactor = thresholdFactor;
                 NormalizeConfig(config);
             }
+
+            var bodyPartHealth = BodyPartHealthConfig;
+            if (bodyPartHealth.enabled)
+            {
+                if (applyMethod)
+                {
+                    bodyPartHealth.method = method;
+                }
+
+                bodyPartHealth.thresholdFactor = thresholdFactor;
+                NormalizeConfig(bodyPartHealth);
+            }
         }
 
         public void RebuildLookup()
         {
+            EnsureBodyPartHealthConfig();
             configByIndex = BuildIndex(statConfigs);
             StatCompressionRuntime.RebuildRuntimePlan(this);
+            BodyPartHealthCompressionModule.NotifySettingsChanged(this);
+        }
+
+        public IEnumerable<StatCompressionStatConfig> AdvancedConfigs()
+        {
+            EnsureStatConfigs();
+            yield return BodyPartHealthConfig;
+            for (var i = 0; i < statConfigs.Count; i++)
+            {
+                yield return statConfigs[i];
+            }
+        }
+
+        public StatCompressionStatConfig GetAdvancedConfig(string defName)
+        {
+            if (defName == SpecialCompressionConfigs.BodyPartHealthDefName)
+            {
+                return BodyPartHealthConfig;
+            }
+
+            return statConfigs.FirstOrDefault(config => config.defName == defName);
+        }
+
+        private void EnsureBodyPartHealthConfig()
+        {
+            if (bodyPartHealthConfig == null)
+            {
+                bodyPartHealthConfig = SpecialCompressionConfigs.CreateBodyPartHealth();
+            }
+
+            bodyPartHealthConfig.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
         }
 
         private bool InitializeDefaultStatConfigs(bool clearExisting)
@@ -152,10 +220,9 @@ namespace StatCompression
             var skippedExisting = 0;
             var skippedStaticRules = 0;
             var skippedShouldShow = 0;
-            var skippedInvalidBaseline = 0;
             var fromDefaultPreset = 0;
             var missingDefaultPreset = 0;
-            var disabledInvalidPresetBaseline = 0;
+            var normalizedInvalidPresetBaseline = 0;
 
             foreach (var stat in allStats)
             {
@@ -175,14 +242,13 @@ namespace StatCompression
                     fromDefaultPreset++;
                     var tableEnabled = tableRecord.enabled;
                     var tableBaseline = tableRecord.baseline;
-                    if (tableEnabled && tableBaseline <= 0f)
+                    if (tableBaseline <= 0f)
                     {
-                        if (!StatCompressionRuntime.TryGetHumanBaselineForConfig(stat, out tableBaseline))
-                        {
-                            tableEnabled = false;
-                            disabledInvalidPresetBaseline++;
-                            Log.Warning($"[{StatCompressionConstants.DisplayName}] Default XML enables {stat.defName}, but baseline is not usable and Human baseline probing failed. Disabled this stat config.");
-                        }
+                        tableBaseline = 1f;
+                        normalizedInvalidPresetBaseline++;
+                        Log.Warning(
+                            $"[{StatCompressionConstants.DisplayName}] Default XML baseline for {stat.defName} " +
+                            "is not positive. Using baseline=1.");
                     }
 
                     existing[stat.defName] = new StatCompressionStatConfig(
@@ -203,20 +269,18 @@ namespace StatCompression
                     stat,
                     humanReq,
                     out var defaultEnabled,
-                    out var baseline,
                     ref enabledByDefault,
                     ref skippedStaticRules,
-                    ref skippedShouldShow,
-                    ref skippedInvalidBaseline);
+                    ref skippedShouldShow);
 
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] StatDef {stat.defName} is not in default settings XML. Using auto default: enabled={defaultEnabled}, baseline={baseline}.");
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] StatDef {stat.defName} is not in default settings XML. Using auto default: enabled={defaultEnabled}, baseline=1.");
                 existing[stat.defName] = new StatCompressionStatConfig(
                     stat.defName,
                     defaultEnabled,
                     method,
                     parameter,
                     1f,
-                    baseline,
+                    1f,
                     thresholdFactor,
                     StatCompressionDirection.HigherIsBetter);
                 added++;
@@ -230,7 +294,8 @@ namespace StatCompression
             statConfigs = newConfigs;
             configByIndex = newIndex;
             StatCompressionRuntime.RebuildRuntimePlan(this);
-            Log.Message($"[{StatCompressionConstants.DisplayName}] Default stat configs initialized: total={newConfigs.Count}, added={added}, fromDefaultXml={fromDefaultPreset}, missingDefaultXml={missingDefaultPreset}, xmlDisabledInvalidBaseline={disabledInvalidPresetBaseline}, autoEnabled={enabledByDefault}, keptExisting={skippedExisting}, skippedStaticRules={skippedStaticRules}, skippedShouldShow={skippedShouldShow}, skippedInvalidBaseline={skippedInvalidBaseline}.");
+            BodyPartHealthCompressionModule.NotifySettingsChanged(this);
+            Log.Message($"[{StatCompressionConstants.DisplayName}] Default stat configs initialized: total={newConfigs.Count}, added={added}, fromDefaultXml={fromDefaultPreset}, missingDefaultXml={missingDefaultPreset}, xmlBaselineFallbacks={normalizedInvalidPresetBaseline}, autoEnabled={enabledByDefault}, keptExisting={skippedExisting}, skippedStaticRules={skippedStaticRules}, skippedShouldShow={skippedShouldShow}.");
             return true;
         }
 
@@ -238,14 +303,11 @@ namespace StatCompression
             StatDef stat,
             StatRequest humanReq,
             out bool enabled,
-            out float baseline,
             ref int enabledByDefault,
             ref int skippedStaticRules,
-            ref int skippedShouldShow,
-            ref int skippedInvalidBaseline)
+            ref int skippedShouldShow)
         {
             enabled = false;
-            baseline = 0f;
             try
             {
                 if (!PassesStaticDefaultRules(stat))
@@ -260,19 +322,11 @@ namespace StatCompression
                     return;
                 }
 
-                if (!StatCompressionRuntime.TryGetHumanBaselineForConfig(stat, out baseline))
-                {
-                    skippedInvalidBaseline++;
-                    return;
-                }
-
                 enabled = true;
                 enabledByDefault++;
             }
             catch (Exception ex)
             {
-                baseline = 0f;
-                skippedInvalidBaseline++;
                 Log.Message(
                     $"[{StatCompressionConstants.DisplayName}] Auto configuration disabled for unknown StatDef " +
                     $"{stat.defName}: {ex.GetType().Name}: {ex.Message}");
@@ -363,6 +417,7 @@ namespace StatCompression
                 thresholdFactor = thresholdFactor
             };
             StatCompressionSettingsXml.ReadGlobal(root.Element("Global"), importedGlobal);
+            StatCompressionSettingsXml.ReadBodyPartHealth(root.Element("BodyPartHealth"), BodyPartHealthConfig);
             enabled = importedGlobal.enabled;
             stage = importedGlobal.stage;
             autoFallbackToGlobalPostfix = importedGlobal.autoFallbackToGlobalPostfix;

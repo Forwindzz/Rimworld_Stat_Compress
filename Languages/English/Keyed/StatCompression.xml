@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
   <StatCompression_Enable>Enable stat compression</StatCompression_Enable>
+  <StatCompression_BodyPartHealth_Enable>Compress body-part maximum health</StatCompression_BodyPartHealth_Enable>
+  <StatCompression_BodyPartHealth_EnableTooltip>Special compatibility module. Compresses maximum body-part health above each pawn's natural racial and life-stage baseline. Requires a restart after adding or removing Elite Bionics Framework.</StatCompression_BodyPartHealth_EnableTooltip>
+  <StatCompression_SP_BodyPartHealth_Label>Body-part HP</StatCompression_SP_BodyPartHealth_Label>
+  <StatCompression_SP_BodyPartHealth_BaselineTooltip>For body-part HP, Baseline is a multiplier of the pawn's natural racial, life-stage, and part HP. 1 means 100% of natural HP.</StatCompression_SP_BodyPartHealth_BaselineTooltip>
+  <StatCompression_Tooltip_SpecialModule>Special module</StatCompression_Tooltip_SpecialModule>
   <StatCompression_CompressionType>Compression type</StatCompression_CompressionType>
   <StatCompression_Method_Linear>Linear</StatCompression_Method_Linear>
   <StatCompression_Method_Power>Power</StatCompression_Method_Power>
@@ -68,4 +73,6 @@
   <StatCompression_Explanation_Hint_Power>Power compression is equivalent to reducing multiplicative gains proportionally.</StatCompression_Explanation_Hint_Power>
   <StatCompression_Explanation_Hint_Logarithmic>Logarithmic compression is equivalent to converting multiplicative gains into additive growth.</StatCompression_Explanation_Hint_Logarithmic>
   <StatCompression_Explanation_Hint_SoftCap>Soft cap compression keeps the compressed value below a fixed upper limit.</StatCompression_Explanation_Hint_SoftCap>
+  <StatCompression_BodyPartHealth_Explanation_ValueLine>Stat compression: {0} HP -> {1} HP</StatCompression_BodyPartHealth_Explanation_ValueLine>
+  <StatCompression_BodyPartHealth_Explanation_MethodLine>Method: {0} t={1}, natural baseline {2} HP</StatCompression_BodyPartHealth_Explanation_MethodLine>
 </LanguageData>
