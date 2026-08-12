@@ -2,152 +2,189 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Xml.Linq;
 using Verse;
 
 namespace StatCompression
 {
     internal static class StatCompressionDefaultConfigLoader
     {
-        private const string RelativePath = "Data/DefaultStatConfigs.tsv";
+        private const string RelativePath = "Data/DefaultSettings.xml";
 
-        private static Dictionary<string, DefaultStatConfigRecord> recordsByDefName;
+        private static DefaultSettingsPreset preset;
 
         public static bool TryGet(string defName, out DefaultStatConfigRecord record)
         {
             EnsureLoaded();
-            return recordsByDefName.TryGetValue(defName, out record);
+            return preset.recordsByDefName.TryGetValue(defName, out record);
+        }
+
+        public static void ApplyGlobalDefaults(StatCompressionSettings settings)
+        {
+            EnsureLoaded();
+            var global = preset.global;
+            settings.enabled = global.enabled;
+            settings.stage = global.stage;
+            settings.autoFallbackToGlobalPostfix = global.autoFallbackToGlobalPostfix;
+            settings.method = global.method;
+            settings.parameter = global.parameter;
+            settings.thresholdFactor = global.thresholdFactor;
         }
 
         private static void EnsureLoaded()
         {
-            if (recordsByDefName != null)
+            if (preset != null)
             {
                 return;
             }
 
-            recordsByDefName = LoadRecords();
+            preset = LoadPreset();
         }
 
-        private static Dictionary<string, DefaultStatConfigRecord> LoadRecords()
+        private static DefaultSettingsPreset LoadPreset()
         {
-            var records = new Dictionary<string, DefaultStatConfigRecord>(StringComparer.Ordinal);
+            var result = DefaultSettingsPreset.CreateFallback();
             var contentPack = StatCompressionMod.ContentPack;
             if (contentPack == null)
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Cannot load default stat config table before ModContentPack is available.");
-                return records;
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] Cannot load default settings before ModContentPack is available.");
+                return result;
             }
 
             var path = Path.Combine(contentPack.RootDir, RelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(path))
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Default stat config table not found: {path}");
-                return records;
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] Default settings XML not found: {path}");
+                return result;
             }
 
-            string[] lines;
+            XDocument document;
             try
             {
-                lines = File.ReadAllLines(path);
+                document = XDocument.Load(path);
             }
             catch (Exception ex)
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Failed to read default stat config table: {path}\n{ex}");
-                return records;
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] Failed to read default settings XML: {path}\n{ex}");
+                return result;
             }
 
-            if (lines.Length == 0)
+            var root = document.Root;
+            if (root == null || root.Name != "StatCompressionSettings")
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Default stat config table is empty: {path}");
-                return records;
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] Invalid default settings XML root: {path}");
+                return result;
             }
 
-            var headers = BuildHeaderIndex(lines[0]);
-            for (var i = 1; i < lines.Length; i++)
+            ParseGlobal(root.Element("Global"), result.global);
+            var statsElement = root.Element("Stats");
+            if (statsElement != null)
             {
-                if (lines[i].NullOrEmpty())
+                foreach (var element in statsElement.Elements("Stat"))
                 {
-                    continue;
-                }
+                    if (!TryParseRecord(element, out var record, out var error))
+                    {
+                        Log.Warning($"[{StatCompressionConstants.DisplayName}] Skipping invalid default stat config: {error}");
+                        continue;
+                    }
 
-                if (!TryParseRecord(lines[i], headers, out var record, out var error))
-                {
-                    Log.Warning($"[{StatCompressionConstants.DisplayName}] Skipping invalid default stat config line {i + 1}: {error}");
-                    continue;
+                    result.recordsByDefName[record.defName] = record;
                 }
-
-                records[record.defName] = record;
             }
 
-            Log.Message($"[{StatCompressionConstants.DisplayName}] Loaded default stat config table: rows={records.Count}, path={path}");
-            return records;
-        }
-
-        private static Dictionary<string, int> BuildHeaderIndex(string headerLine)
-        {
-            var headers = headerLine.Split('\t');
-            var result = new Dictionary<string, int>(StringComparer.Ordinal);
-            for (var i = 0; i < headers.Length; i++)
-            {
-                result[headers[i].Trim('\ufeff')] = i;
-            }
-
+            Log.Message($"[{StatCompressionConstants.DisplayName}] Loaded default settings XML: stats={result.recordsByDefName.Count}, path={path}");
             return result;
         }
 
+        private static void ParseGlobal(XElement element, DefaultGlobalSettings global)
+        {
+            if (element == null)
+            {
+                return;
+            }
+
+            if (bool.TryParse(Attr(element, "enabled"), out var enabled))
+            {
+                global.enabled = enabled;
+            }
+
+            if (Enum.TryParse(Attr(element, "stage"), out CompressionStage stage))
+            {
+                global.stage = stage;
+            }
+
+            if (bool.TryParse(Attr(element, "autoFallbackToGlobalPostfix"), out var fallback))
+            {
+                global.autoFallbackToGlobalPostfix = fallback;
+            }
+
+            if (Enum.TryParse(Attr(element, "method"), out CompressionMethod method))
+            {
+                global.method = method;
+            }
+
+            if (TryParseFloat(Attr(element, "parameter"), out var parameter))
+            {
+                global.parameter = parameter;
+            }
+
+            if (TryParseFloat(Attr(element, "thresholdFactor"), out var thresholdFactor))
+            {
+                global.thresholdFactor = thresholdFactor;
+            }
+        }
+
         private static bool TryParseRecord(
-            string line,
-            Dictionary<string, int> headers,
+            XElement element,
             out DefaultStatConfigRecord record,
             out string error)
         {
             record = null;
             error = null;
-            var columns = line.Split('\t');
-            var defName = Get(columns, headers, "defName");
+            var defName = Attr(element, "defName");
             if (defName.NullOrEmpty())
             {
                 error = "missing defName";
                 return false;
             }
 
-            if (!bool.TryParse(Get(columns, headers, "enabled"), out var enabled))
+            if (!bool.TryParse(Attr(element, "enabled"), out var enabled))
             {
                 error = $"invalid enabled for {defName}";
                 return false;
             }
 
-            if (!Enum.TryParse(Get(columns, headers, "method"), out CompressionMethod method))
+            if (!Enum.TryParse(Attr(element, "method"), out CompressionMethod method))
             {
                 error = $"invalid method for {defName}";
                 return false;
             }
 
-            if (!TryParseFloat(Get(columns, headers, "method_t"), out var methodT))
-            {
-                methodT = 2f;
-            }
-
-            if (!TryParseFloat(Get(columns, headers, "tScale"), out var tScale))
-            {
-                tScale = 1f;
-            }
-
-            if (!TryParseFloat(Get(columns, headers, "baseline"), out var baseline))
+            if (!TryParseFloat(Attr(element, "baseline"), out var baseline))
             {
                 error = $"invalid baseline for {defName}";
                 return false;
             }
 
-            if (!TryParseFloat(Get(columns, headers, "thresholdFactor"), out var thresholdFactor))
-            {
-                thresholdFactor = 1f;
-            }
-
-            if (!Enum.TryParse(Get(columns, headers, "direction"), out StatCompressionDirection direction))
+            if (!Enum.TryParse(Attr(element, "direction"), out StatCompressionDirection direction))
             {
                 error = $"invalid direction for {defName}";
                 return false;
+            }
+
+            if (!TryParseFloat(Attr(element, "method_t"), out var methodT))
+            {
+                methodT = 2f;
+            }
+
+            if (!TryParseFloat(Attr(element, "tScale"), out var tScale))
+            {
+                tScale = 1f;
+            }
+
+            if (!TryParseFloat(Attr(element, "thresholdFactor"), out var thresholdFactor))
+            {
+                thresholdFactor = 1f;
             }
 
             record = new DefaultStatConfigRecord
@@ -159,27 +196,42 @@ namespace StatCompression
                 tScale = tScale,
                 baseline = baseline,
                 thresholdFactor = thresholdFactor,
-                direction = direction,
-                source = Get(columns, headers, "source"),
-                note = Get(columns, headers, "note")
+                direction = direction
             };
             return true;
         }
 
-        private static string Get(string[] columns, Dictionary<string, int> headers, string name)
+        private static string Attr(XElement element, string name)
         {
-            if (!headers.TryGetValue(name, out var index) || index < 0 || index >= columns.Length)
-            {
-                return string.Empty;
-            }
-
-            return columns[index];
+            return element.Attribute(name)?.Value ?? string.Empty;
         }
 
         private static bool TryParseFloat(string value, out float result)
         {
             return float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
         }
+    }
+
+    internal sealed class DefaultSettingsPreset
+    {
+        public readonly DefaultGlobalSettings global = new DefaultGlobalSettings();
+        public readonly Dictionary<string, DefaultStatConfigRecord> recordsByDefName =
+            new Dictionary<string, DefaultStatConfigRecord>(StringComparer.Ordinal);
+
+        public static DefaultSettingsPreset CreateFallback()
+        {
+            return new DefaultSettingsPreset();
+        }
+    }
+
+    internal sealed class DefaultGlobalSettings
+    {
+        public bool enabled = true;
+        public CompressionStage stage = CompressionStage.BeforePostProcessCurve;
+        public bool autoFallbackToGlobalPostfix = true;
+        public CompressionMethod method = CompressionMethod.Logarithmic;
+        public float parameter = 2f;
+        public float thresholdFactor = 1f;
     }
 
     internal sealed class DefaultStatConfigRecord
@@ -192,7 +244,5 @@ namespace StatCompression
         public float baseline;
         public float thresholdFactor;
         public StatCompressionDirection direction;
-        public string source;
-        public string note;
     }
 }

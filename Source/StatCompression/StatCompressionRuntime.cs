@@ -8,9 +8,7 @@ namespace StatCompression
     internal static class StatCompressionRuntime
     {
         private static StatCompressionRuntimePlan activePlan =
-            new StatCompressionRuntimePlan(new CompiledStatConfig[0], new StatCompressor[0]);
-
-        private static CompressionBackend activeBackend = CompressionBackend.CompiledStatic;
+            new StatCompressionRuntimePlan(new CompiledStatConfig[0]);
 
         [ThreadStatic]
         private static int suppressCompressionDepth;
@@ -27,96 +25,17 @@ namespace StatCompression
             suppressCompressionDepth--;
         }
 
-        public static CompressionBackend ActiveBackend => activeBackend;
-
-        public static void RebuildRuntimePlan(StatCompressionSettings settings, bool buildDynamicMethods)
+        public static void RebuildRuntimePlan(StatCompressionSettings settings)
         {
-            var shouldBuildDynamicMethods = buildDynamicMethods &&
-                (settings.runtimeBackend == CompressionBackend.DynamicMethod || settings.benchmarkOnGameLoad);
-            var newPlan = StatCompressionRuntimeCompiler.Compile(settings, shouldBuildDynamicMethods);
-            activePlan = newPlan;
-            activeBackend = settings.runtimeBackend;
+            activePlan = StatCompressionRuntimeCompiler.Compile(settings);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Compress(StatCompressionSettings settings, StatDef stat, ref float value)
         {
-            switch (activeBackend)
-            {
-                case CompressionBackend.Generic:
-                    CompressGeneric(settings, stat, ref value);
-                    return;
-                case CompressionBackend.DynamicMethod:
-                    value = ComputeDynamic(stat.index, value);
-                    return;
-                default:
-                    value = ComputeStatic(stat.index, value);
-                    return;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void CompressGeneric(StatCompressionSettings settings, StatDef stat, ref float value)
-        {
-            var config = settings.GetConfigFast(stat);
-            if (!config.enabled)
-            {
-                return;
-            }
-
-            if (TryComputeCompressedValue(settings, config, value, out var compressed))
-            {
-                value = compressed;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float ComputeStatic(int statIndex, float value)
-        {
             var plan = activePlan;
-            ref var config = ref plan.configsByIndex[statIndex];
-            return StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float ComputeDynamic(int statIndex, float value)
-        {
-            var plan = activePlan;
-            ref var config = ref plan.configsByIndex[statIndex];
-            if (!StatCompressionRuntimeCompiler.ShouldCompress(ref config, value))
-            {
-                return value;
-            }
-
-            var compressor = plan.dynamicCompressorsByIndex[statIndex];
-            return compressor != null
-                ? compressor(value)
-                : StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
-        }
-
-        public static float ComputeForBackend(
-            StatCompressionSettings settings,
-            CompressionBackend backend,
-            int statIndex,
-            float value)
-        {
-            switch (backend)
-            {
-                case CompressionBackend.Generic:
-                    var config = settings.GetConfigFast(statIndex);
-                    return config.enabled && TryComputeCompressedValue(settings, config, value, out var compressed)
-                        ? compressed
-                        : value;
-                case CompressionBackend.DynamicMethod:
-                    return ComputeDynamic(statIndex, value);
-                default:
-                    return ComputeStatic(statIndex, value);
-            }
-        }
-
-        public static void SetActiveBackend(CompressionBackend backend)
-        {
-            activeBackend = backend;
+            ref var config = ref plan.configsByIndex[stat.index];
+            value = StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,7 +43,11 @@ namespace StatCompression
         {
             var baseline = config.baseline;
             var threshold = config.thresholdFactor;
-            var actualParameter = GetActualParameter(config.method, settings.parameter, config.tScale);
+            var actualParameter = GetActualParameter(
+                config.method,
+                settings.method,
+                settings.parameter,
+                config.tScale);
             var relative = original / baseline;
             if (config.direction == StatCompressionDirection.HigherIsBetter)
             {
@@ -205,6 +128,7 @@ namespace StatCompression
             StatDef stat,
             StatRequest req,
             ToStringNumberSense numberSense,
+            float finalVal,
             out string explanation)
         {
             explanation = null;
@@ -234,16 +158,23 @@ namespace StatCompression
                 suppressCompressionDepth--;
             }
 
-            if (!TryComputeCompressedValue(settings, config, original, out var compressed) ||
-                Math.Abs(original - compressed) < 0.000001f)
+            if (Math.Abs(original - finalVal) < 0.000001f)
             {
                 return false;
             }
 
-            var originalText = stat.ValueToString(original, stat.toStringNumberSense, true);
-            var compressedText = stat.ValueToString(compressed, stat.toStringNumberSense, true);
-            var baselineText = stat.ValueToString(config.baseline, stat.toStringNumberSense, true);
-            var actualParameter = GetActualParameter(config.method, settings.parameter, config.tScale);
+            FormatDisplayedValuePair(stat, original, finalVal, out var originalText, out var compressedText);
+            var usesRawCurveInput = settings.stage == CompressionStage.BeforePostProcessCurve &&
+                                    StatWorker_FinalizeValue_Patch.BeforePostProcessPatchApplied &&
+                                    stat.postProcessCurve != null;
+            var baselineText = usesRawCurveInput
+                ? StatCompressionText.T("StatCompression_Explanation_RawScore", config.baseline.ToString("0.###"))
+                : stat.ValueToString(config.baseline, stat.toStringNumberSense, true);
+            var actualParameter = GetActualParameter(
+                config.method,
+                settings.method,
+                settings.parameter,
+                config.tScale);
             var text =
                 StatCompressionText.T("StatCompression_Explanation_Separator") + "\n" +
                 StatCompressionText.T("StatCompression_Explanation_ValueLine", originalText, compressedText) + "\n" +
@@ -252,6 +183,14 @@ namespace StatCompression
                     StatCompressionText.MethodLabel(config.method),
                     actualParameter.ToString("0.###"),
                     baselineText);
+            if (usesRawCurveInput && TryGetRawCompressionPair(settings, stat, req, config, out var rawOriginal, out var rawCompressed))
+            {
+                text += "\n" + StatCompressionText.T(
+                    "StatCompression_Explanation_RawValueLine",
+                    rawOriginal.ToString("0.###"),
+                    rawCompressed.ToString("0.###"));
+            }
+
             var hint = GetMethodHint(config.method);
             if (!hint.NullOrEmpty())
             {
@@ -262,15 +201,91 @@ namespace StatCompression
             return true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetActualParameter(CompressionMethod method, float globalParameter, float tScale)
+        private static bool TryGetRawCompressionPair(
+            StatCompressionSettings settings,
+            StatDef stat,
+            StatRequest req,
+            StatCompressionStatConfig config,
+            out float rawOriginal,
+            out float rawCompressed)
         {
-            if (method == CompressionMethod.Logarithmic)
+            rawOriginal = 0f;
+            rawCompressed = 0f;
+            try
             {
-                return StatCompressionSettings.NormalizeParameter(method, globalParameter * tScale);
+                suppressCompressionDepth++;
+                rawOriginal = stat.Worker.GetValue(req, false);
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                suppressCompressionDepth--;
             }
 
-            return StatCompressionSettings.NormalizeParameter(method, globalParameter / tScale);
+            rawCompressed = TryComputeCompressedValue(settings, config, rawOriginal, out var compressed)
+                ? compressed
+                : rawOriginal;
+            return Math.Abs(rawOriginal - rawCompressed) >= 0.000001f;
+        }
+
+        private static void FormatDisplayedValuePair(
+            StatDef stat,
+            float original,
+            float compressed,
+            out string originalText,
+            out string compressedText)
+        {
+            originalText = stat.ValueToString(original, stat.toStringNumberSense, true);
+            compressedText = stat.ValueToString(compressed, stat.toStringNumberSense, true);
+            if (originalText != compressedText || Math.Abs(original - compressed) < 0.000001f)
+            {
+                return;
+            }
+
+            if (stat.toStringStyle == ToStringStyle.PercentZero ||
+                stat.toStringStyle == ToStringStyle.PercentOne)
+            {
+                originalText = (original * 100f).ToString("0.###") + "%";
+                compressedText = (compressed * 100f).ToString("0.###") + "%";
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float GetActualParameter(
+            CompressionMethod method,
+            CompressionMethod globalMethod,
+            float globalParameter,
+            float tScale)
+        {
+            var baseParameter = method == globalMethod
+                ? globalParameter
+                : DefaultParameter(method);
+            if (method == CompressionMethod.Logarithmic)
+            {
+                return StatCompressionSettings.NormalizeParameter(method, baseParameter * tScale);
+            }
+
+            return StatCompressionSettings.NormalizeParameter(method, baseParameter / tScale);
+        }
+
+        public static float DefaultParameter(CompressionMethod method)
+        {
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return 0.1f;
+                case CompressionMethod.Exponential:
+                    return 0.5f;
+                case CompressionMethod.Logarithmic:
+                    return 2f;
+                case CompressionMethod.SoftCap:
+                    return 10f;
+                default:
+                    return 2f;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

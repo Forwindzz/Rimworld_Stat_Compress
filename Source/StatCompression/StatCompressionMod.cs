@@ -69,8 +69,8 @@ namespace StatCompression
                 Math.Abs(oldParameter - Settings.parameter) > 0.000001f ||
                 Math.Abs(oldThreshold - Settings.thresholdFactor) > 0.000001f)
             {
-                Settings.ApplyGlobalCompressionToEnabled();
-                Settings.RebuildLookup(buildDynamicMethods: false);
+                Settings.ApplyGlobalCompressionToEnabled(oldMethod != Settings.method);
+                Settings.RebuildLookup();
             }
         }
 
@@ -124,14 +124,20 @@ namespace StatCompression
             TooltipHandler.TipRegion(rect, StatCompressionText.T("StatCompression_ParameterTooltip"));
 
             var sliderRect = new Rect(rect.x + rect.width * 0.28f, rect.y, rect.width * 0.52f - 8f, 24f);
-            var newValue = Widgets.HorizontalSlider(sliderRect, Settings.parameter, range.min, range.max, false, null, null, null, SliderRoundTo(Settings.method));
-            if (Math.Abs(newValue - Settings.parameter) > 0.000001f)
+            var sliderValue = Math.Max(range.min, Math.Min(range.max, Settings.parameter));
+            var newValue = Widgets.HorizontalSlider(sliderRect, sliderValue, range.min, range.max, false, null, null, null, SliderRoundTo(Settings.method));
+            if (Math.Abs(newValue - sliderValue) > 0.000001f)
             {
                 Settings.parameter = newValue;
                 parameterBuffer = Settings.parameter.ToString("0.###");
             }
 
-            Widgets.TextFieldNumeric(new Rect(rect.x + rect.width * 0.8f, rect.y, rect.width * 0.2f, 24f), ref Settings.parameter, ref parameterBuffer, range.min, range.max);
+            Widgets.TextFieldNumeric(
+                new Rect(rect.x + rect.width * 0.8f, rect.y, rect.width * 0.2f, 24f),
+                ref Settings.parameter,
+                ref parameterBuffer,
+                ParameterSafetyMinimum(Settings.method),
+                float.MaxValue);
             Settings.parameter = StatCompressionSettings.NormalizeParameter(Settings.method, Settings.parameter);
         }
 
@@ -235,8 +241,6 @@ namespace StatCompression
             if (listing.ButtonText(StatCompressionText.T("StatCompression_ResetSettings")))
             {
                 Settings.ResetToDefaults();
-                Settings.ApplyGlobalCompressionToEnabled();
-                Settings.RebuildLookup();
                 parameterBuffer = Settings.parameter.ToString();
                 thresholdPercentBuffer = (Settings.thresholdFactor * 100f).ToString();
             }
@@ -277,19 +281,7 @@ namespace StatCompression
 
         public static float DefaultParameter(CompressionMethod method)
         {
-            switch (method)
-            {
-                case CompressionMethod.Linear:
-                    return 0.1f;
-                case CompressionMethod.Exponential:
-                    return 0.5f;
-                case CompressionMethod.Logarithmic:
-                    return 2f;
-                case CompressionMethod.SoftCap:
-                    return 10f;
-                default:
-                    return 2f;
-            }
+            return StatCompressionRuntime.DefaultParameter(method);
         }
 
         private static FloatRange ParameterRange(CompressionMethod method)
@@ -312,6 +304,23 @@ namespace StatCompression
         private static float SliderRoundTo(CompressionMethod method)
         {
             return method == CompressionMethod.SoftCap ? 0.5f : 0.01f;
+        }
+
+        private static float ParameterSafetyMinimum(CompressionMethod method)
+        {
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return 0f;
+                case CompressionMethod.Exponential:
+                    return 0.001f;
+                case CompressionMethod.Logarithmic:
+                    return 1.001f;
+                case CompressionMethod.SoftCap:
+                    return 0.001f;
+                default:
+                    return 0.001f;
+            }
         }
 
         private static string FormulaText(CompressionMethod method)

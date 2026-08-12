@@ -13,7 +13,7 @@
   <StatCompression_Formula_Logarithmic>Logarithmic: f(x) = h + ln(1 + ln(t)(x - h)) / ln(t)</StatCompression_Formula_Logarithmic>
   <StatCompression_Formula_SoftCap>Soft cap: f(x) = h + t(x - h) / ((x - h) + t)</StatCompression_Formula_SoftCap>
   <StatCompression_ParameterT>Parameter t</StatCompression_ParameterT>
-  <StatCompression_ParameterTooltip>Linear: 0 &lt;= t &lt;= 1, default 0.1&#10;Power: 0 &lt; t &lt; 1, default 0.5&#10;Logarithmic: t &gt; 1, default 2&#10;Soft cap: t &gt; 1, default 10</StatCompression_ParameterTooltip>
+  <StatCompression_ParameterTooltip>Adjust this value to change compression strength. The slider provides a convenient range; values outside it can be entered manually.</StatCompression_ParameterTooltip>
   <StatCompression_CompressAbove>Compress above</StatCompression_CompressAbove>
   <StatCompression_CompressAboveTooltip>Higher-is-better stats are compressed when they exceed this relative baseline. Default: 100%.&#10;Lower-is-better stats are compressed when they fall below the inverse threshold.</StatCompression_CompressAboveTooltip>
   <StatCompression_Preview>Preview</StatCompression_Preview>
@@ -30,13 +30,12 @@
   <StatCompression_ExportedMessage>Stat Compression exported settings XML: {0}</StatCompression_ExportedMessage>
   <StatCompression_ImportedMessage>Imported settings XML: updated={0}, skipped={1}, path={2}</StatCompression_ImportedMessage>
   <StatCompression_AdvancedTitle>Advanced stat settings</StatCompression_AdvancedTitle>
-  <StatCompression_RuntimeBackend>Runtime backend</StatCompression_RuntimeBackend>
-  <StatCompression_Backend_Generic>Generic</StatCompression_Backend_Generic>
-  <StatCompression_Backend_CompiledStatic>Compiled static</StatCompression_Backend_CompiledStatic>
-  <StatCompression_Backend_DynamicMethod>DynamicMethod</StatCompression_Backend_DynamicMethod>
-  <StatCompression_BenchmarkOnGameLoad>Run a 10,000-call backend benchmark after loading a map</StatCompression_BenchmarkOnGameLoad>
-  <StatCompression_BenchmarkTooltip>After a map loads, use the first spawned free colonist and randomly select an enabled visible stat. Each backend is warmed up, then measured for 10,000 direct compression calls and 10,000 complete StatWorker calls. Results are written to Player.log.</StatCompression_BenchmarkTooltip>
-  <StatCompression_BenchmarkCompleted>Stat Compression benchmark completed for {0}. See Player.log for results.</StatCompression_BenchmarkCompleted>
+  <StatCompression_ResizeColumnTooltip>Drag to resize this column. Click the header to sort.</StatCompression_ResizeColumnTooltip>
+  <StatCompression_SelectStatForPreview>Select a stat row to preview its compression mapping.</StatCompression_SelectStatForPreview>
+  <StatCompression_AdvancedPreviewSummary>Direction: {0}&#10;Baseline: {1}&#10;Trigger value: {2}</StatCompression_AdvancedPreviewSummary>
+  <StatCompression_AdvancedPreviewFormulaHigher>x = value / baseline; h = threshold; e = x - h&#10;x &lt;= h: result = value&#10;x &gt; h: result = baseline * (h + C(e))&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
+  <StatCompression_AdvancedPreviewFormulaLower>x = value / baseline; r = 1 / x; h = threshold; e = r - h&#10;r &lt;= h: result = value&#10;r &gt; h: result = baseline / (h + C(e))&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaLower>
+  <StatCompression_AdvancedPreviewValues>Editable input (% of baseline) and mapped stat value</StatCompression_AdvancedPreviewValues>
   <StatCompression_AdvancedHelp>Configure compression for each stat. Method selects the mapping function. Let x = stat value / baseline and h = Threshold. If x is below h, f(x)=x; above h, only the excess x-h is compressed.</StatCompression_AdvancedHelp>
   <StatCompression_AdvancedFormulaHelp>Linear: h+(x-h)t; Power: h+((x-h)+1)^t-1; Logarithmic: h+ln(1+ln(t)(x-h))/ln(t); Soft cap: h+t(x-h)/((x-h)+t)</StatCompression_AdvancedFormulaHelp>
   <StatCompression_DirectionHelp>Direction: Higher compresses values above the threshold; Lower compresses values below the inverse threshold.</StatCompression_DirectionHelp>
@@ -60,10 +59,12 @@
   <StatCompression_Tooltip_TScale>t scale: {0}</StatCompression_Tooltip_TScale>
   <StatCompression_Tooltip_Direction>Direction: {0}</StatCompression_Tooltip_Direction>
   <StatCompression_Tooltip_Category>Category: {0}</StatCompression_Tooltip_Category>
-  <StatCompression_TScaleTooltip>t scale adjusts this stat's compression strength. Larger means stronger compression. The final method parameter is derived from global t and this scale.</StatCompression_TScaleTooltip>
+  <StatCompression_TScaleTooltip>Adjust this value to change compression strength.</StatCompression_TScaleTooltip>
   <StatCompression_Explanation_Separator>----------</StatCompression_Explanation_Separator>
-  <StatCompression_Explanation_ValueLine>Stat compression: {0} -> {1}</StatCompression_Explanation_ValueLine>
+  <StatCompression_Explanation_ValueLine>Stat compression (displayed value): {0} -> {1}</StatCompression_Explanation_ValueLine>
+  <StatCompression_Explanation_RawValueLine>Compressed input (pre-curve score): {0} -> {1}</StatCompression_Explanation_RawValueLine>
   <StatCompression_Explanation_MethodLine>Method: {0} t={1}, baseline {2}</StatCompression_Explanation_MethodLine>
+  <StatCompression_Explanation_RawScore>raw score {0}</StatCompression_Explanation_RawScore>
   <StatCompression_Explanation_Hint_Power>Power compression is equivalent to reducing multiplicative gains proportionally.</StatCompression_Explanation_Hint_Power>
   <StatCompression_Explanation_Hint_Logarithmic>Logarithmic compression is equivalent to converting multiplicative gains into additive growth.</StatCompression_Explanation_Hint_Logarithmic>
   <StatCompression_Explanation_Hint_SoftCap>Soft cap compression keeps the compressed value below a fixed upper limit.</StatCompression_Explanation_Hint_SoftCap>

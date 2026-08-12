@@ -130,6 +130,7 @@ namespace StatCompression
             StatDef ___stat,
             StatRequest req,
             ToStringNumberSense numberSense,
+            float finalVal,
             ref string __result)
         {
             if (StatCompressionRuntime.TryBuildExplanation(
@@ -137,6 +138,7 @@ namespace StatCompression
                     ___stat,
                     req,
                     numberSense,
+                    finalVal,
                     out var explanation))
             {
                 __result += "\n" + explanation;

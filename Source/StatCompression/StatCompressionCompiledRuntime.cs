@@ -1,13 +1,9 @@
 using System;
-using System.Reflection;
-using System.Reflection.Emit;
 using RimWorld;
 using Verse;
 
 namespace StatCompression
 {
-    internal delegate float StatCompressor(float value);
-
     internal enum CompressionKernel : byte
     {
         Disabled,
@@ -35,65 +31,29 @@ namespace StatCompression
     internal sealed class StatCompressionRuntimePlan
     {
         public readonly CompiledStatConfig[] configsByIndex;
-        public readonly StatCompressor[] dynamicCompressorsByIndex;
 
-        public StatCompressionRuntimePlan(
-            CompiledStatConfig[] configsByIndex,
-            StatCompressor[] dynamicCompressorsByIndex)
+        public StatCompressionRuntimePlan(CompiledStatConfig[] configsByIndex)
         {
             this.configsByIndex = configsByIndex;
-            this.dynamicCompressorsByIndex = dynamicCompressorsByIndex;
         }
     }
 
     internal static class StatCompressionRuntimeCompiler
     {
-        private static readonly MethodInfo MathLogMethod =
-            typeof(Math).GetMethod(nameof(Math.Log), new[] { typeof(double) });
-
-        private static readonly MethodInfo MathPowMethod =
-            typeof(Math).GetMethod(nameof(Math.Pow), new[] { typeof(double), typeof(double) });
-
-        public static StatCompressionRuntimePlan Compile(
-            StatCompressionSettings settings,
-            bool buildDynamicMethods)
+        public static StatCompressionRuntimePlan Compile(StatCompressionSettings settings)
         {
             var allStats = DefDatabase<StatDef>.AllDefsListForReading;
             var count = allStats.NullOrEmpty() ? 0 : allStats.Count;
             var compiled = new CompiledStatConfig[count];
-            var dynamicCompressors = new StatCompressor[count];
-            var generated = 0;
-            var failed = 0;
 
             for (var i = 0; i < count; i++)
             {
                 var stat = allStats[i];
                 var config = settings.GetConfigFast(stat);
                 compiled[stat.index] = CompileConfig(settings, config);
-
-                if (!buildDynamicMethods || compiled[stat.index].kernel == CompressionKernel.Disabled)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    dynamicCompressors[stat.index] = CreateDynamicCompressor(stat, ref compiled[stat.index]);
-                    generated++;
-                }
-                catch (Exception ex)
-                {
-                    failed++;
-                    Log.Warning($"[{StatCompressionConstants.DisplayName}] DynamicMethod generation failed for {stat.defName}; using compiled static fallback. {ex.GetType().Name}: {ex.Message}");
-                }
             }
 
-            if (buildDynamicMethods)
-            {
-                Log.Message($"[{StatCompressionConstants.DisplayName}] Runtime plan compiled: stats={count}, dynamicMethods={generated}, dynamicFallbacks={failed}.");
-            }
-
-            return new StatCompressionRuntimePlan(compiled, dynamicCompressors);
+            return new StatCompressionRuntimePlan(compiled);
         }
 
         private static CompiledStatConfig CompileConfig(
@@ -109,6 +69,7 @@ namespace StatCompression
             var threshold = config.thresholdFactor;
             var actualParameter = StatCompressionRuntime.GetActualParameter(
                 config.method,
+                settings.method,
                 settings.parameter,
                 config.tScale);
             var higher = config.direction == StatCompressionDirection.HigherIsBetter;
@@ -256,166 +217,5 @@ namespace StatCompression
             return config.baseline / (config.thresholdFactor + compressedExcess);
         }
 
-        private static StatCompressor CreateDynamicCompressor(StatDef stat, ref CompiledStatConfig config)
-        {
-            var method = new DynamicMethod(
-                "StatCompression_" + stat.index + "_" + config.kernel,
-                typeof(float),
-                new[] { typeof(float) },
-                typeof(StatCompressionRuntimeCompiler).Module,
-                true);
-            var il = method.GetILGenerator();
-
-            if (config.kernel <= CompressionKernel.HigherSoftCap)
-            {
-                EmitHigherFormula(il, ref config);
-            }
-            else
-            {
-                EmitLowerFormula(il, ref config);
-            }
-
-            return (StatCompressor)method.CreateDelegate(typeof(StatCompressor));
-        }
-
-        private static void EmitHigherFormula(ILGenerator il, ref CompiledStatConfig config)
-        {
-            switch (config.kernel)
-            {
-                case CompressionKernel.HigherLinear:
-                    EmitFloat(il, config.thresholdValue);
-                    il.Emit(OpCodes.Ldarg_0);
-                    EmitFloat(il, config.thresholdValue);
-                    il.Emit(OpCodes.Sub);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Ret);
-                    return;
-                case CompressionKernel.HigherPower:
-                    EmitFloat(il, config.thresholdValue);
-                    EmitFloat(il, config.baseline);
-                    il.Emit(OpCodes.Ldc_R8, 1d);
-                    il.Emit(OpCodes.Ldarg_0);
-                    EmitFloat(il, config.thresholdValue);
-                    il.Emit(OpCodes.Sub);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Conv_R8);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Ldc_R8, (double)config.parameter1);
-                    il.Emit(OpCodes.Call, MathPowMethod);
-                    il.Emit(OpCodes.Ldc_R8, 1d);
-                    il.Emit(OpCodes.Sub);
-                    il.Emit(OpCodes.Conv_R4);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Ret);
-                    return;
-                case CompressionKernel.HigherLogarithmic:
-                    EmitFloat(il, config.thresholdValue);
-                    EmitFloat(il, config.parameter1);
-                    il.Emit(OpCodes.Ldc_R8, 1d);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Ldarg_0);
-                    EmitFloat(il, config.thresholdValue);
-                    il.Emit(OpCodes.Sub);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Conv_R8);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Call, MathLogMethod);
-                    il.Emit(OpCodes.Conv_R4);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Ret);
-                    return;
-                case CompressionKernel.HigherSoftCap:
-                    EmitFloat(il, config.thresholdValue);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Ldarg_0);
-                    EmitFloat(il, config.thresholdValue);
-                    il.Emit(OpCodes.Sub);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Ldarg_0);
-                    EmitFloat(il, config.thresholdValue);
-                    il.Emit(OpCodes.Sub);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Div);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Ret);
-                    return;
-                default:
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ret);
-                    return;
-            }
-        }
-
-        private static void EmitLowerFormula(ILGenerator il, ref CompiledStatConfig config)
-        {
-            var excess = il.DeclareLocal(typeof(float));
-            EmitFloat(il, config.baseline);
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Div);
-            EmitFloat(il, config.thresholdFactor);
-            il.Emit(OpCodes.Sub);
-            il.Emit(OpCodes.Stloc, excess);
-
-            EmitFloat(il, config.baseline);
-            EmitFloat(il, config.thresholdFactor);
-            switch (config.kernel)
-            {
-                case CompressionKernel.LowerLinear:
-                    il.Emit(OpCodes.Ldloc, excess);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Mul);
-                    break;
-                case CompressionKernel.LowerPower:
-                    il.Emit(OpCodes.Ldc_R8, 1d);
-                    il.Emit(OpCodes.Ldloc, excess);
-                    il.Emit(OpCodes.Conv_R8);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Ldc_R8, (double)config.parameter1);
-                    il.Emit(OpCodes.Call, MathPowMethod);
-                    il.Emit(OpCodes.Ldc_R8, 1d);
-                    il.Emit(OpCodes.Sub);
-                    il.Emit(OpCodes.Conv_R4);
-                    break;
-                case CompressionKernel.LowerLogarithmic:
-                    il.Emit(OpCodes.Ldc_R8, 1d);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Ldloc, excess);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Conv_R8);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Call, MathLogMethod);
-                    il.Emit(OpCodes.Conv_R4);
-                    EmitFloat(il, config.parameter1);
-                    il.Emit(OpCodes.Mul);
-                    break;
-                case CompressionKernel.LowerSoftCap:
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Ldloc, excess);
-                    il.Emit(OpCodes.Mul);
-                    il.Emit(OpCodes.Ldloc, excess);
-                    EmitFloat(il, config.parameter0);
-                    il.Emit(OpCodes.Add);
-                    il.Emit(OpCodes.Div);
-                    break;
-                default:
-                    il.Emit(OpCodes.Ldc_R4, 0f);
-                    break;
-            }
-
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Div);
-            il.Emit(OpCodes.Ret);
-        }
-
-        private static void EmitFloat(ILGenerator il, float value)
-        {
-            il.Emit(OpCodes.Ldc_R4, value);
-        }
     }
 }

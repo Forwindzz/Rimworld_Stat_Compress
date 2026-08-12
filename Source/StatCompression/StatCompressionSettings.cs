@@ -23,8 +23,6 @@ namespace StatCompression
         public CompressionMethod method = CompressionMethod.Logarithmic;
         public float parameter = 2f;
         public float thresholdFactor = 1f;
-        public CompressionBackend runtimeBackend = CompressionBackend.CompiledStatic;
-        public bool benchmarkOnGameLoad;
         public List<StatCompressionStatConfig> statConfigs = new List<StatCompressionStatConfig>();
 
         public IReadOnlyList<StatCompressionStatConfig> StatConfigs
@@ -44,8 +42,6 @@ namespace StatCompression
             Scribe_Values.Look(ref method, "method", CompressionMethod.Logarithmic);
             Scribe_Values.Look(ref parameter, "parameter", 2f);
             Scribe_Values.Look(ref thresholdFactor, "thresholdFactor", 1f);
-            Scribe_Values.Look(ref runtimeBackend, "runtimeBackend", CompressionBackend.CompiledStatic);
-            Scribe_Values.Look(ref benchmarkOnGameLoad, "benchmarkOnGameLoad", false);
             Scribe_Collections.Look(ref statConfigs, "statConfigs", LookMode.Deep);
 
             if (statConfigs == null)
@@ -76,6 +72,11 @@ namespace StatCompression
                 return;
             }
 
+            if (statConfigs == null || statConfigs.Count == 0)
+            {
+                StatCompressionDefaultConfigLoader.ApplyGlobalDefaults(this);
+            }
+
             initialized = InitializeDefaultStatConfigs(clearExisting: false);
         }
 
@@ -87,14 +88,7 @@ namespace StatCompression
 
         public void ResetToDefaults()
         {
-            enabled = true;
-            stage = CompressionStage.BeforePostProcessCurve;
-            autoFallbackToGlobalPostfix = true;
-            method = CompressionMethod.Logarithmic;
-            parameter = 2f;
-            thresholdFactor = 1f;
-            runtimeBackend = CompressionBackend.CompiledStatic;
-            benchmarkOnGameLoad = false;
+            StatCompressionDefaultConfigLoader.ApplyGlobalDefaults(this);
             NormalizeParameters();
             initialized = InitializeDefaultStatConfigs(clearExisting: true);
         }
@@ -119,7 +113,7 @@ namespace StatCompression
                    Math.Abs(oldThresholdFactor - thresholdFactor) > 0.000001f;
         }
 
-        public void ApplyGlobalCompressionToEnabled()
+        public void ApplyGlobalCompressionToEnabled(bool applyMethod)
         {
             NormalizeParameters();
             for (var i = 0; i < statConfigs.Count; i++)
@@ -130,16 +124,20 @@ namespace StatCompression
                     continue;
                 }
 
-                config.method = method;
+                if (applyMethod)
+                {
+                    config.method = method;
+                }
+
                 config.thresholdFactor = thresholdFactor;
                 NormalizeConfig(config);
             }
         }
 
-        public void RebuildLookup(bool buildDynamicMethods = true)
+        public void RebuildLookup()
         {
             configByIndex = BuildIndex(statConfigs);
-            StatCompressionRuntime.RebuildRuntimePlan(this, buildDynamicMethods);
+            StatCompressionRuntime.RebuildRuntimePlan(this);
         }
 
         private bool InitializeDefaultStatConfigs(bool clearExisting)
@@ -168,9 +166,9 @@ namespace StatCompression
             var skippedStaticRules = 0;
             var skippedShouldShow = 0;
             var skippedInvalidBaseline = 0;
-            var fromDefaultTable = 0;
-            var missingDefaultTable = 0;
-            var disabledInvalidTableBaseline = 0;
+            var fromDefaultPreset = 0;
+            var missingDefaultPreset = 0;
+            var disabledInvalidPresetBaseline = 0;
 
             foreach (var stat in allStats)
             {
@@ -187,7 +185,7 @@ namespace StatCompression
 
                 if (StatCompressionDefaultConfigLoader.TryGet(stat.defName, out var tableRecord))
                 {
-                    fromDefaultTable++;
+                    fromDefaultPreset++;
                     var tableEnabled = tableRecord.enabled;
                     var tableBaseline = tableRecord.baseline;
                     if (tableEnabled && tableBaseline <= 0f)
@@ -195,8 +193,8 @@ namespace StatCompression
                         if (!StatCompressionRuntime.TryGetHumanBaselineForConfig(stat, out tableBaseline))
                         {
                             tableEnabled = false;
-                            disabledInvalidTableBaseline++;
-                            Log.Warning($"[{StatCompressionConstants.DisplayName}] Default table enables {stat.defName}, but baseline is not usable and Human baseline probing failed. Disabled this stat config.");
+                            disabledInvalidPresetBaseline++;
+                            Log.Warning($"[{StatCompressionConstants.DisplayName}] Default XML enables {stat.defName}, but baseline is not usable and Human baseline probing failed. Disabled this stat config.");
                         }
                     }
 
@@ -213,7 +211,7 @@ namespace StatCompression
                     continue;
                 }
 
-                missingDefaultTable++;
+                missingDefaultPreset++;
                 var baseline = 0f;
                 var defaultEnabled = false;
 
@@ -235,7 +233,7 @@ namespace StatCompression
                     enabledByDefault++;
                 }
 
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] StatDef {stat.defName} is not in default config table. Using auto default: enabled={defaultEnabled}, baseline={baseline}.");
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] StatDef {stat.defName} is not in default settings XML. Using auto default: enabled={defaultEnabled}, baseline={baseline}.");
                 existing[stat.defName] = new StatCompressionStatConfig(
                     stat.defName,
                     defaultEnabled,
@@ -255,8 +253,8 @@ namespace StatCompression
 
             statConfigs = newConfigs;
             configByIndex = newIndex;
-            StatCompressionRuntime.RebuildRuntimePlan(this, buildDynamicMethods: true);
-            Log.Message($"[{StatCompressionConstants.DisplayName}] Default stat configs initialized: total={newConfigs.Count}, added={added}, fromDefaultTable={fromDefaultTable}, missingDefaultTable={missingDefaultTable}, tableDisabledInvalidBaseline={disabledInvalidTableBaseline}, autoEnabled={enabledByDefault}, keptExisting={skippedExisting}, skippedStaticRules={skippedStaticRules}, skippedShouldShow={skippedShouldShow}, skippedInvalidBaseline={skippedInvalidBaseline}.");
+            StatCompressionRuntime.RebuildRuntimePlan(this);
+            Log.Message($"[{StatCompressionConstants.DisplayName}] Default stat configs initialized: total={newConfigs.Count}, added={added}, fromDefaultXml={fromDefaultPreset}, missingDefaultXml={missingDefaultPreset}, xmlDisabledInvalidBaseline={disabledInvalidPresetBaseline}, autoEnabled={enabledByDefault}, keptExisting={skippedExisting}, skippedStaticRules={skippedStaticRules}, skippedShouldShow={skippedShouldShow}, skippedInvalidBaseline={skippedInvalidBaseline}.");
             return true;
         }
 
@@ -372,9 +370,7 @@ namespace StatCompression
                         new XAttribute("autoFallbackToGlobalPostfix", autoFallbackToGlobalPostfix),
                         new XAttribute("method", method),
                         new XAttribute("parameter", FormatFloat(parameter)),
-                        new XAttribute("thresholdFactor", FormatFloat(thresholdFactor)),
-                        new XAttribute("runtimeBackend", runtimeBackend),
-                        new XAttribute("benchmarkOnGameLoad", benchmarkOnGameLoad)),
+                        new XAttribute("thresholdFactor", FormatFloat(thresholdFactor))),
                     new XElement(
                         "Stats",
                         statConfigs
@@ -556,13 +552,13 @@ namespace StatCompression
             switch (method)
             {
                 case CompressionMethod.Linear:
-                    return Math.Max(0f, Math.Min(1f, parameter));
+                    return Math.Max(0f, parameter);
                 case CompressionMethod.Exponential:
-                    return Math.Max(0.001f, Math.Min(0.999f, parameter));
+                    return Math.Max(0.001f, parameter);
                 case CompressionMethod.Logarithmic:
                     return Math.Max(1.001f, parameter);
                 case CompressionMethod.SoftCap:
-                    return Math.Max(1.001f, parameter);
+                    return Math.Max(0.001f, parameter);
                 default:
                     return parameter;
             }
@@ -644,15 +640,6 @@ namespace StatCompression
                 thresholdFactor = thresholdValue;
             }
 
-            if (Enum.TryParse(Attr(element, "runtimeBackend"), out CompressionBackend backendValue))
-            {
-                runtimeBackend = backendValue;
-            }
-
-            if (bool.TryParse(Attr(element, "benchmarkOnGameLoad"), out var benchmarkValue))
-            {
-                benchmarkOnGameLoad = benchmarkValue;
-            }
         }
 
         private static void ImportStatConfig(XElement element, StatCompressionStatConfig config)
