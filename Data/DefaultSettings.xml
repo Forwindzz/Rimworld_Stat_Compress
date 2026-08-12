@@ -38,9 +38,9 @@
     <Stat defName="AnimalGatherYield" enabled="false" method="Logarithmic" method_t="2" tScale="2" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
     <Stat defName="AnimalProductsSellImprovement" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="AnimalsLearningFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="ArmorRating_Blunt" enabled="true" method="Logarithmic" method_t="2" tScale="20" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="ArmorRating_Heat" enabled="true" method="Logarithmic" method_t="2" tScale="20" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="ArmorRating_Sharp" enabled="true" method="Logarithmic" method_t="2" tScale="20" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="ArmorRating_Blunt" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="ArmorRating_Heat" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="ArmorRating_Sharp" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="ArrestSuccessChance" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="AssemblySpeedFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="AttackTool" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
@@ -165,7 +165,7 @@
     <Stat defName="MeditationFocusGain" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="0.5" thresholdFactor="2" direction="HigherIsBetter" />
     <Stat defName="MeditationFocusStrength" enabled="true" method="Logarithmic" method_t="2" tScale="1.4" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeditationPlantGrowthOffset" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="MeleeArmorPenetration" enabled="true" method="Logarithmic" method_t="2" tScale="33" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="MeleeArmorPenetration" enabled="true" method="SoftCap" method_t="2" tScale="33" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeCooldownFactor" enabled="true" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
     <Stat defName="MeleeDPS" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="MeleeDamageFactor" enabled="true" method="Logarithmic" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
@@ -257,9 +257,9 @@
     <Stat defName="StuffEffectMultiplierArmor" enabled="false" method="Logarithmic" method_t="2" tScale="3" baseline="1.75" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="StuffEffectMultiplierInsulation_Cold" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="StuffEffectMultiplierInsulation_Heat" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="StuffPower_Armor_Blunt" enabled="false" method="Logarithmic" method_t="2" tScale="3" baseline="1.75" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="StuffPower_Armor_Heat" enabled="false" method="Logarithmic" method_t="2" tScale="3" baseline="1.75" thresholdFactor="1" direction="HigherIsBetter" />
-    <Stat defName="StuffPower_Armor_Sharp" enabled="false" method="Logarithmic" method_t="2" tScale="3" baseline="1.75" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="StuffPower_Armor_Blunt" enabled="false" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="StuffPower_Armor_Heat" enabled="false" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Stat defName="StuffPower_Armor_Sharp" enabled="false" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="StuffPower_Insulation_Cold" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="StuffPower_Insulation_Heat" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Stat defName="StyleDominance" enabled="false" method="Logarithmic" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />

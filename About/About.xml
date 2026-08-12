@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>数值压缩 Stat Compression</name>
+  <name>Stat Compression</name>
   <author>f⑨</author>
-  <packageId>f9.statcompression</packageId>
-  <modVersion>v0.1</modVersion>
+  <packageId>forwindz.statcompression</packageId>
+  <modVersion>1.0</modVersion>
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>
@@ -18,8 +18,7 @@
     <li>brrainz.harmony</li>
   </loadAfter>
   <description>
-数值压缩 Stat Compression
-
-将高于智人基准线的可见属性按配置函数压缩，避免多 Mod 环境下数值爆炸。
+Compress the stat of the pawn or weapons, avoid numerical explosions 
+压缩数值来避免过于超模。
   </description>
 </ModMetaData>

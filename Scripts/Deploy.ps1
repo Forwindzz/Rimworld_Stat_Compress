@@ -33,7 +33,21 @@ if (-not $ResolvedDeployRoot.StartsWith($ResolvedModsPath, [System.StringCompari
 }
 
 if (Test-Path -LiteralPath $DeployRoot) {
-    Remove-Item -LiteralPath $DeployRoot -Recurse -Force
+    $PublishedFileIdPath = [System.IO.Path]::GetFullPath(
+        (Join-Path $DeployRoot 'About\PublishedFileId.txt'))
+
+    Get-ChildItem -LiteralPath $DeployRoot -Recurse -File -Force |
+        Where-Object {
+            -not [System.IO.Path]::GetFullPath($_.FullName).Equals(
+                $PublishedFileIdPath,
+                [System.StringComparison]::OrdinalIgnoreCase)
+        } |
+        Remove-Item -Force
+
+    Get-ChildItem -LiteralPath $DeployRoot -Recurse -Directory -Force |
+        Sort-Object { $_.FullName.Length } -Descending |
+        Where-Object { (Get-ChildItem -LiteralPath $_.FullName -Force).Count -eq 0 } |
+        Remove-Item -Force
 }
 
 New-Item -ItemType Directory -Force -Path $DeployRoot | Out-Null

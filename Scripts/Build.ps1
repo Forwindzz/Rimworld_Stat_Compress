@@ -52,20 +52,16 @@ if (Test-Path -LiteralPath $StageRoot) {
     Remove-Item -LiteralPath $StageRoot -Recurse -Force
 }
 
-New-Item -ItemType Directory -Force -Path (Join-Path $StageRoot 'About') | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $StageRoot 'Defs') | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $StageRoot 'Data') | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $StageRoot 'Languages') | Out-Null
+New-Item -ItemType Directory -Force -Path $StageRoot | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $StageRoot '1.6\Assemblies') | Out-Null
 
-Copy-Item -LiteralPath (Join-Path $RepoRoot 'About\About.xml') -Destination (Join-Path $StageRoot 'About\About.xml') -Force
-Copy-Item -LiteralPath (Join-Path $RepoRoot 'About\LoadFolders.xml') -Destination (Join-Path $StageRoot 'About\LoadFolders.xml') -Force
-$DefsPath = Join-Path $RepoRoot 'Defs'
-if (Test-Path -LiteralPath $DefsPath) {
-    Copy-Item -LiteralPath $DefsPath -Destination $StageRoot -Recurse -Force
+$ContentDirectories = @('About', 'Defs', 'Data', 'Languages')
+foreach ($DirectoryName in $ContentDirectories) {
+    $SourceDirectory = Join-Path $RepoRoot $DirectoryName
+    if (Test-Path -LiteralPath $SourceDirectory) {
+        Copy-Item -LiteralPath $SourceDirectory -Destination $StageRoot -Recurse -Force
+    }
 }
-Copy-Item -LiteralPath (Join-Path $RepoRoot 'Data') -Destination $StageRoot -Recurse -Force
-Copy-Item -LiteralPath (Join-Path $RepoRoot 'Languages') -Destination $StageRoot -Recurse -Force
 
 $BuildOutput = Join-Path $RepoRoot "Source\StatCompression\bin\$Configuration"
 Copy-Item -LiteralPath (Join-Path $BuildOutput 'StatCompression.dll') -Destination (Join-Path $StageRoot '1.6\Assemblies\StatCompression.dll') -Force

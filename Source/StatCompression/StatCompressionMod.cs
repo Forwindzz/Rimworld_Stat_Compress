@@ -28,7 +28,7 @@ namespace StatCompression
 
         public override string SettingsCategory()
         {
-            return StatCompressionConstants.DisplayName;
+            return StatCompressionText.T("StatCompression_SettingsTitle");
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
