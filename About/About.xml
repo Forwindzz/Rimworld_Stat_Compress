@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>数值压缩 Stat Compression</name>
+  <author>f⑨</author>
+  <packageId>f9.statcompression</packageId>
+  <modVersion>v0.1</modVersion>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+  </loadAfter>
+  <description>
+数值压缩 Stat Compression
+
+将高于智人基准线的可见属性按配置函数压缩，避免多 Mod 环境下数值爆炸。
+  </description>
+</ModMetaData>

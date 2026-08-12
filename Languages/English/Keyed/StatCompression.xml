@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <StatCompression_Enable>Enable stat compression</StatCompression_Enable>
+  <StatCompression_CompressionType>Compression type</StatCompression_CompressionType>
+  <StatCompression_Method_Linear>Linear</StatCompression_Method_Linear>
+  <StatCompression_Method_Power>Power</StatCompression_Method_Power>
+  <StatCompression_Method_Logarithmic>Logarithmic</StatCompression_Method_Logarithmic>
+  <StatCompression_Method_Log>Log</StatCompression_Method_Log>
+  <StatCompression_Method_SoftCap>Soft cap</StatCompression_Method_SoftCap>
+  <StatCompression_MethodTooltip>Left to right: stronger compression for extreme high values.</StatCompression_MethodTooltip>
+  <StatCompression_Formula_Linear>Linear: f(x) = h + (x - h) * t</StatCompression_Formula_Linear>
+  <StatCompression_Formula_Power>Power: f(x) = h + ((x - h) + 1)^t - 1</StatCompression_Formula_Power>
+  <StatCompression_Formula_Logarithmic>Logarithmic: f(x) = h + log_t((x - h) + 1)</StatCompression_Formula_Logarithmic>
+  <StatCompression_Formula_SoftCap>Soft cap: f(x) = h + t(x - h) / ((x - h) + t)</StatCompression_Formula_SoftCap>
+  <StatCompression_ParameterT>Parameter t</StatCompression_ParameterT>
+  <StatCompression_ParameterTooltip>Linear: 0 &lt;= t &lt;= 1, default 0.1&#10;Power: 0 &lt; t &lt; 1, default 0.5&#10;Logarithmic: t &gt; 1, default 2&#10;Soft cap: t &gt; 1, default 10</StatCompression_ParameterTooltip>
+  <StatCompression_CompressAbove>Compress above</StatCompression_CompressAbove>
+  <StatCompression_CompressAboveTooltip>Higher-is-better stats are compressed when they exceed this relative baseline. Default: 100%.&#10;Lower-is-better stats are compressed when they fall below the inverse threshold.</StatCompression_CompressAboveTooltip>
+  <StatCompression_Preview>Preview</StatCompression_Preview>
+  <StatCompression_GlobalWorkSpeed>Global Work Speed</StatCompression_GlobalWorkSpeed>
+  <StatCompression_CompressedGlobalWorkSpeed>Compressed Global Work Speed</StatCompression_CompressedGlobalWorkSpeed>
+  <StatCompression_IncomingDamageFactor>Incoming Damage Factor</StatCompression_IncomingDamageFactor>
+  <StatCompression_CompressedIncomingDamageFactor>Compressed Incoming Damage Factor</StatCompression_CompressedIncomingDamageFactor>
+  <StatCompression_AdvancedSettings>Advanced settings</StatCompression_AdvancedSettings>
+  <StatCompression_ExportXml>Export settings XML</StatCompression_ExportXml>
+  <StatCompression_ImportXml>Import settings XML</StatCompression_ImportXml>
+  <StatCompression_ResetSettings>Reset settings</StatCompression_ResetSettings>
+  <StatCompression_LastExport>Last export: {0}</StatCompression_LastExport>
+  <StatCompression_LastImport>Last import: {0}</StatCompression_LastImport>
+  <StatCompression_ExportedMessage>Stat Compression exported settings XML: {0}</StatCompression_ExportedMessage>
+  <StatCompression_ImportedMessage>Imported settings XML: updated={0}, skipped={1}, path={2}</StatCompression_ImportedMessage>
+  <StatCompression_AdvancedTitle>Advanced stat settings</StatCompression_AdvancedTitle>
+  <StatCompression_AdvancedHelp>Configure compression for each stat. Method selects the mapping function. Let x = stat value / baseline and h = Threshold. If x is below h, f(x)=x; above h, only the excess x-h is compressed.</StatCompression_AdvancedHelp>
+  <StatCompression_AdvancedFormulaHelp>Linear: h+(x-h)t; Power: h+((x-h)+1)^t-1; Logarithmic: h+log_t((x-h)+1); Soft cap: h+t(x-h)/((x-h)+t)</StatCompression_AdvancedFormulaHelp>
+  <StatCompression_DirectionHelp>Direction: Higher compresses values above the threshold; Lower compresses values below the inverse threshold.</StatCompression_DirectionHelp>
+  <StatCompression_Search>Search</StatCompression_Search>
+  <StatCompression_Column_On>On</StatCompression_Column_On>
+  <StatCompression_Column_DefName>DefName</StatCompression_Column_DefName>
+  <StatCompression_Column_Method>Method</StatCompression_Column_Method>
+  <StatCompression_Column_T>t</StatCompression_Column_T>
+  <StatCompression_Column_TScale>t scale</StatCompression_Column_TScale>
+  <StatCompression_Column_Baseline>Baseline</StatCompression_Column_Baseline>
+  <StatCompression_Column_Threshold>Threshold</StatCompression_Column_Threshold>
+  <StatCompression_Column_Direction>Direction</StatCompression_Column_Direction>
+  <StatCompression_Column_Label>Label</StatCompression_Column_Label>
+  <StatCompression_Direction_Higher>Higher</StatCompression_Direction_Higher>
+  <StatCompression_Direction_Lower>Lower</StatCompression_Direction_Lower>
+  <StatCompression_DirectionTooltip>Higher: compress values above the threshold.&#10;Lower: compress values below the inverse threshold.</StatCompression_DirectionTooltip>
+  <StatCompression_Tooltip_Baseline>Baseline: {0}</StatCompression_Tooltip_Baseline>
+  <StatCompression_Tooltip_Threshold>Threshold: {0}%</StatCompression_Tooltip_Threshold>
+  <StatCompression_Tooltip_Method>Method: {0}</StatCompression_Tooltip_Method>
+  <StatCompression_Tooltip_T>t: {0}</StatCompression_Tooltip_T>
+  <StatCompression_Tooltip_TScale>t scale: {0}</StatCompression_Tooltip_TScale>
+  <StatCompression_Tooltip_Direction>Direction: {0}</StatCompression_Tooltip_Direction>
+  <StatCompression_Tooltip_Category>Category: {0}</StatCompression_Tooltip_Category>
+  <StatCompression_TScaleTooltip>t scale adjusts this stat's compression strength. Larger means stronger compression. The final method parameter is derived from global t and this scale.</StatCompression_TScaleTooltip>
+  <StatCompression_Explanation_Separator>----------</StatCompression_Explanation_Separator>
+  <StatCompression_Explanation_ValueLine>Stat compression: {0} -> {1}</StatCompression_Explanation_ValueLine>
+  <StatCompression_Explanation_MethodLine>Method: {0} t={1}, baseline {2}</StatCompression_Explanation_MethodLine>
+  <StatCompression_Explanation_Hint_Power>Power compression is equivalent to reducing multiplicative gains proportionally.</StatCompression_Explanation_Hint_Power>
+  <StatCompression_Explanation_Hint_Logarithmic>Logarithmic compression is equivalent to converting multiplicative gains into additive growth.</StatCompression_Explanation_Hint_Logarithmic>
+  <StatCompression_Explanation_Hint_SoftCap>Soft cap compression keeps the compressed value below a fixed upper limit.</StatCompression_Explanation_Hint_SoftCap>
+</LanguageData>

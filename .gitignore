@@ -1,0 +1,21 @@
+# Build outputs
+Build/
+bin/
+obj/
+
+# Temporary workspace
+temp/
+
+# Local project notes and environment docs
+Doc/
+
+# IDE/editor state
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# Debug symbols and logs
+*.pdb
+*.log

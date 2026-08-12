@@ -1,0 +1,250 @@
+defName	enabled	method	method_t	tScale	baseline	thresholdFactor	direction	source	note
+Ability_CastingTime	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_DetectChancePerEntropy	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_Duration	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_EffectRadius	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_EntropyGain	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_GoodwillImpact	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_PsyfocusCost	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_Range	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Ability_RequiredPsylink	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+AccuracyLong	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+AccuracyMedium	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+AccuracyShort	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+AccuracyTouch	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+AimingDelayFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	wiki/default multiplier 100%
+AnimalGatherSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+AnimalGatherYield	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	wiki baseline 100%
+AnimalProductsSellImprovement	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+AnimalsLearningFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ArmorRating_Blunt	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; wiki default is 0 without armor; user armor baseline 175%; user tScale 3
+ArmorRating_Heat	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; wiki default is 0 without armor; user armor baseline 175%; user tScale 3
+ArmorRating_Sharp	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; wiki default is 0 without armor; user armor baseline 175%; user tScale 3
+ArrestSuccessChance	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+AssemblySpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+AttackTool	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+BabyPlayGainFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+BandwidthCost	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+Beauty	True	Logarithmic	2	1	2000	1	HigherIsBetter	whitelist	whitelist overrides blacklist candidate; baseline override
+BeautyOutdoors	True	Logarithmic	2	1	2000	1	HigherIsBetter	whitelist	whitelist overrides blacklist candidate; baseline override
+BedHungerRateFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+BedRestEffectiveness	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki/default multiplier 100%
+BiosculpterOccupantSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+BiosculpterPodSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+BirthRitualQualityOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+BluntDamageMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+BodyPart	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+BondAnimalChanceFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ButcheryFleshEfficiency	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+ButcheryFleshSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ButcheryMechanoidEfficiency	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+ButcheryMechanoidSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+CancerRate	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+CaravanBonusSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+CaravanRidingSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+CarryingCapacity	True	Logarithmic	2	1	200	1	HigherIsBetter	auto	fallback baseline 100%; user baseline 200
+CertaintyLossFactor	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+CleaningSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki/default multiplier 100%
+CleaningTimeFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	whitelist	fallback baseline 100%
+Cleanliness	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Comfort	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ComfyTemperatureMax	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ComfyTemperatureMin	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ConstructionSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ConstructionSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ConstructSuccessChance	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+ControlTakingTime	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+ConversionPower	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+CookSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+CrawlSpeed	True	Logarithmic	2	4	1	1	HigherIsBetter	auto	fallback baseline 100%; user tScale 4
+DeepDrillingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+DeteriorationRate	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+DoorOpenSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+DrugCookingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+DrugHarvestYield	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+DrugSellPriceImprovement	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+DrugSynthesisSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+EatingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+EliteRaidPlus_BodyPartMaxHealthFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+EMPResistance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+EnergyShieldEnergyMax	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+EnergyShieldRechargeRate	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+EquipDelay	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+FacilityBonusReminder	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Fertility	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+FilthMultiplier	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+FilthRate	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+FishingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+FishingYield	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+FixBrokenDownBuildingSuccessChance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Flammability	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+FlightCooldown	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+FoodPoisonChance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+FoodPoisonChanceFixedHuman	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+ForagedNutritionPerDay	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+ForcedRecruitRelationshipDamage	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+GeneralLaborSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+GeneticComplexityIncrease	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+GlobalLearningFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+GravshipRange	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+GrowthVatOccupantSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+HackingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+HackingStealth	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%; user baseline 100%
+HemogenGainFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+HuntingStealth	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+IcyCoreLoss	False	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%; user disabled compression
+ImmunityGainSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ImmunityGainSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+IncomingDamageFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+InjuryHealingFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+Insulation_Cold	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Insulation_Heat	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Isekai_CreatureLevel	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Isekai_CreatureRank	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+JoyFallRateFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+JoyGainFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+JumpRange	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+LearningRateFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+LeatherAmount	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+LifespanFactor	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MarketValue	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MarketValueIgnoreHp	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Mass	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MaxFlightTime	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MaxHitPoints	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MaxInstallCount	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MaxNutrition	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeatAmount	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechBandwidth	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechControlGroups	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechEnergyLossPerHP	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechEnergyUsageFactor	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechFormingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MechRemoteRepairDistance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechRemoteShieldDistance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MechRemoteShieldEnergy	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+MechRepairSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MedicalOperationSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+MedicalPotency	True	Logarithmic	2	1	2	1	HigherIsBetter	whitelist	baseline override
+MedicalQualityMax	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MedicalSurgerySuccessChance	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+MedicalTendQuality	True	Logarithmic	2	1	2	1	HigherIsBetter	whitelist	baseline override
+MedicalTendQualityOffset	False	Logarithmic	2	1	2	1	HigherIsBetter	blacklist	baseline override
+MedicalTendSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+MeditationFocusGain	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MeditationFocusStrength	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%; user baseline 100%
+MeditationPlantGrowthOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeArmorPenetration	True	Logarithmic	2	3	0.75	1	HigherIsBetter	whitelist	fallback baseline 100%; user baseline 75%; user tScale 3
+MeleeCooldownFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+MeleeDamageFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MeleeDodgeChance	True	Logarithmic	2	1	30	1	HigherIsBetter	whitelist	fallback baseline 100%; user baseline 30
+MeleeDodgeChanceIndoorsDarkOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeDodgeChanceIndoorsLitOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeDodgeChanceOutdoorsDarkOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeDodgeChanceOutdoorsLitOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeDoorDamageFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MeleeDPS	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeHitChance	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+MeleeHitChanceIndoorsDarkOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeHitChanceIndoorsLitOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeHitChanceOutdoorsDarkOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeHitChanceOutdoorsLitOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeWeapon_AverageArmorPenetration	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MeleeWeapon_AverageDPS	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MeleeWeapon_CooldownMultiplier	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+MeleeWeapon_DamageMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+MentalBreakThreshold	True	Logarithmic	2	1	1	1	LowerIsBetter	whitelist	fallback baseline 100%
+MinimumHandlingSkill	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+MiningSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+MiningYield	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+MortarMissRadiusFactor	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	wiki baseline 100%; lower is better
+MoveSpeed	True	Logarithmic	2	4	4.6	1.30435	HigherIsBetter	auto	wiki human base move speed 4.6 c/s; user threshold absolute 6.0; user tScale 4
+NegotiationAbility	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+Nivarian_MechEnergyUsageFactorOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Nivarian_TuningSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+Nutrition	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+PackRadius	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+PainShockThreshold	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+PawnBeauty	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+PawnTrapSpringChance	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+PilotingAbility	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+PlantHarvestYield	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki baseline 100%
+PlantWorkSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+PowerPlantMaxPowerOuput	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+PruningSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+PsychicEntropyGain	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+PsychicEntropyMax	True	Logarithmic	2	1	50	1	HigherIsBetter	auto	fallback baseline 100%; user baseline 50
+PsychicEntropyMaxOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+PsychicEntropyRecoveryRate	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+PsychicEntropyRecoveryRateOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+PsychicSensitivity	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki/default multiplier 100%
+PsychicSensitivityFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	wiki/default multiplier 100%
+PsychicSensitivityOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+RangedCooldownFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+RangedWeapon_ArmorPenetrationMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+RangedWeapon_Cooldown	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+RangedWeapon_DamageMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+RangedWeapon_RangeMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+RangedWeapon_WarmupMultiplier	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+RawNutritionFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ReadingSpeed	True	Logarithmic	2	1	0.8	1	HigherIsBetter	auto	wiki default 80%
+RecruitEffectivity	False	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%; user disabled compression
+RecruitRelationshipDamage	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+ResearchSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ResearchSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+RestFallRateFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+RestRateMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+RoomReadingBonus	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+RoyalFavorValue	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+SellPriceFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+SharpDamageMultiplier	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ShootingAccuracyChildFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+ShootingAccuracyFactor_Long	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ShootingAccuracyFactor_Medium	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ShootingAccuracyFactor_Short	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ShootingAccuracyFactor_Touch	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+ShootingAccuracyIndoorsDarkOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ShootingAccuracyIndoorsLitOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ShootingAccuracyOutdoorsDarkOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ShootingAccuracyOutdoorsLitOffset	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ShootingAccuracyPawn	True	Logarithmic	2	1	30	1	HigherIsBetter	whitelist	fallback baseline 100%; user baseline 30
+ShootingAccuracyTurret	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+SlaveSuppressionFallRate	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+SlaveSuppressionOffset	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+SmeltingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+SmoothingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki/default multiplier 100%
+SocialIdeoSpreadFrequencyFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+SocialImpact	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+StaggerDurationFactor	True	Logarithmic	2	1	1	1	LowerIsBetter	auto	fallback baseline 100%
+StuffEffectMultiplierArmor	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; user armor baseline 175%; user tScale 3
+StuffEffectMultiplierInsulation_Cold	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+StuffEffectMultiplierInsulation_Heat	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+StuffPower_Armor_Blunt	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; user armor baseline 175%; user tScale 3
+StuffPower_Armor_Heat	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; user armor baseline 175%; user tScale 3
+StuffPower_Armor_Sharp	True	Logarithmic	2	3	1.75	1	HigherIsBetter	whitelist	manual reasonable threshold 100%; user armor baseline 175%; user tScale 3
+StuffPower_Insulation_Cold	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+StuffPower_Insulation_Heat	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+StyleDominance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+SubcoreEncodingSpeed	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	wiki baseline 100%
+SubstructureSupport	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+SuppressionPower	True	Logarithmic	2	1	1	1	HigherIsBetter	whitelist	fallback baseline 100%
+SurgerySuccessChanceFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+TameAnimalChance	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+Terror	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+TerrorSource	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ToxicEnvironmentResistance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+ToxicResistance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+TradePriceImprovement	True	Logarithmic	2	2	0.1	1	HigherIsBetter	blacklist	fallback baseline 100%; user baseline 10%; user tScale 2
+TrainAnimalChance	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+TrapMeleeDamage	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+TrapSpringChance	False	Logarithmic	2	1	1	1	LowerIsBetter	blacklist	fallback baseline 100%
+Turn_Stat_TerrifiedFaintingInterval	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+VacuumResistance	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+WastepacksPerRecharge	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+Wildness	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+WorkSpeedGlobal	True	Logarithmic	2	2	1	1	HigherIsBetter	auto	wiki baseline 100%; user tScale 2
+WorkSpeedGlobalOffsetMech	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+WorkTableEfficiencyFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+WorkTableWorkSpeedFactor	True	Logarithmic	2	1	1	1	HigherIsBetter	auto	fallback baseline 100%
+WorkToBuild	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%
+WorkToMake	False	Logarithmic	2	1	1	1	HigherIsBetter	blacklist	fallback baseline 100%

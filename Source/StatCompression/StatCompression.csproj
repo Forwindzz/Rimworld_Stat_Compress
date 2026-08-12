@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>StatCompression</AssemblyName>
+    <RootNamespace>StatCompression</RootNamespace>
+    <Version>0.1.0</Version>
+    <Deterministic>true</Deterministic>
+    <DebugType>portable</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RimWorldPath Condition="'$(RimWorldPath)' == ''">E:\Program Files\Steam\steamapps\common\RimWorld</RimWorldPath>
+    <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == ''">$(RimWorldPath)\RimWorldWin64_Data\Managed</RimWorldManagedPath>
+    <HarmonyModPath Condition="'$(HarmonyModPath)' == ''">E:\Program Files\Steam\steamapps\workshop\content\294100\2009463077</HarmonyModPath>
+    <HarmonyAssembliesPath Condition="'$(HarmonyAssembliesPath)' == ''">$(HarmonyModPath)\Current\Assemblies</HarmonyAssembliesPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorldManagedPath)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RimWorldManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(RimWorldManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RimWorldManagedPath)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyAssembliesPath)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
