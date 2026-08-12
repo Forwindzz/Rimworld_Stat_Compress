@@ -7,17 +7,56 @@ namespace StatCompression
 {
     internal static class StatCompressionRuntime
     {
+        private static StatCompressionRuntimePlan activePlan =
+            new StatCompressionRuntimePlan(new CompiledStatConfig[0], new StatCompressor[0]);
+
+        private static CompressionBackend activeBackend = CompressionBackend.CompiledStatic;
+
         [ThreadStatic]
         private static int suppressCompressionDepth;
 
         public static bool Suppressed => suppressCompressionDepth > 0;
 
-        public static void ClearRuntimeCaches()
+        internal static void BeginSuppression()
         {
+            suppressCompressionDepth++;
+        }
+
+        internal static void EndSuppression()
+        {
+            suppressCompressionDepth--;
+        }
+
+        public static CompressionBackend ActiveBackend => activeBackend;
+
+        public static void RebuildRuntimePlan(StatCompressionSettings settings, bool buildDynamicMethods)
+        {
+            var shouldBuildDynamicMethods = buildDynamicMethods &&
+                (settings.runtimeBackend == CompressionBackend.DynamicMethod || settings.benchmarkOnGameLoad);
+            var newPlan = StatCompressionRuntimeCompiler.Compile(settings, shouldBuildDynamicMethods);
+            activePlan = newPlan;
+            activeBackend = settings.runtimeBackend;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Compress(StatCompressionSettings settings, StatDef stat, ref float value)
+        {
+            switch (activeBackend)
+            {
+                case CompressionBackend.Generic:
+                    CompressGeneric(settings, stat, ref value);
+                    return;
+                case CompressionBackend.DynamicMethod:
+                    value = ComputeDynamic(stat.index, value);
+                    return;
+                default:
+                    value = ComputeStatic(stat.index, value);
+                    return;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void CompressGeneric(StatCompressionSettings settings, StatDef stat, ref float value)
         {
             var config = settings.GetConfigFast(stat);
             if (!config.enabled)
@@ -29,6 +68,55 @@ namespace StatCompression
             {
                 value = compressed;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float ComputeStatic(int statIndex, float value)
+        {
+            var plan = activePlan;
+            ref var config = ref plan.configsByIndex[statIndex];
+            return StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float ComputeDynamic(int statIndex, float value)
+        {
+            var plan = activePlan;
+            ref var config = ref plan.configsByIndex[statIndex];
+            if (!StatCompressionRuntimeCompiler.ShouldCompress(ref config, value))
+            {
+                return value;
+            }
+
+            var compressor = plan.dynamicCompressorsByIndex[statIndex];
+            return compressor != null
+                ? compressor(value)
+                : StatCompressionRuntimeCompiler.ApplyStatic(ref config, value);
+        }
+
+        public static float ComputeForBackend(
+            StatCompressionSettings settings,
+            CompressionBackend backend,
+            int statIndex,
+            float value)
+        {
+            switch (backend)
+            {
+                case CompressionBackend.Generic:
+                    var config = settings.GetConfigFast(statIndex);
+                    return config.enabled && TryComputeCompressedValue(settings, config, value, out var compressed)
+                        ? compressed
+                        : value;
+                case CompressionBackend.DynamicMethod:
+                    return ComputeDynamic(statIndex, value);
+                default:
+                    return ComputeStatic(statIndex, value);
+            }
+        }
+
+        public static void SetActiveBackend(CompressionBackend backend)
+        {
+            activeBackend = backend;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -203,7 +291,8 @@ namespace StatCompression
                     compressed = (float)Math.Pow(excess + 1f, parameter) - 1f;
                     break;
                 case CompressionMethod.Logarithmic:
-                    compressed = (float)(Math.Log(excess + 1f) / Math.Log(parameter));
+                    var logarithmicStrength = Math.Log(parameter);
+                    compressed = (float)(Math.Log(1d + logarithmicStrength * excess) / logarithmicStrength);
                     break;
                 case CompressionMethod.SoftCap:
                     compressed = CompressSoftCapExcess(excess, parameter);
@@ -213,7 +302,7 @@ namespace StatCompression
                     break;
             }
 
-            return Math.Min(excess, compressed);
+            return compressed;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

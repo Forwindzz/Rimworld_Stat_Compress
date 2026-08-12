@@ -42,7 +42,10 @@ namespace StatCompression
             Widgets.Label(new Rect(helpRect.x, helpRect.y + 48f, helpRect.width, 24f), StatCompressionText.T("StatCompression_DirectionHelp"));
             Text.Font = GameFont.Small;
 
-            var searchRect = new Rect(inRect.x, helpRect.yMax + 8f, inRect.width, 30f);
+            var runtimeRect = new Rect(inRect.x, helpRect.yMax + 8f, inRect.width, 62f);
+            DrawRuntimeOptions(runtimeRect);
+
+            var searchRect = new Rect(inRect.x, runtimeRect.yMax + 8f, inRect.width, 30f);
             Widgets.Label(new Rect(searchRect.x, searchRect.y, 90f, searchRect.height), StatCompressionText.T("StatCompression_Search"));
             searchText = Widgets.TextField(new Rect(searchRect.x + 96f, searchRect.y, searchRect.width - 96f, searchRect.height), searchText ?? string.Empty);
 
@@ -70,8 +73,43 @@ namespace StatCompression
         {
             settings.NormalizeParameters();
             settings.RebuildLookup();
-            StatCompressionRuntime.ClearRuntimeCaches();
             base.PostClose();
+        }
+
+        private void DrawRuntimeOptions(Rect rect)
+        {
+            var labelWidth = 150f;
+            Widgets.Label(new Rect(rect.x, rect.y, labelWidth, 28f), StatCompressionText.T("StatCompression_RuntimeBackend"));
+            var buttonsRect = new Rect(rect.x + labelWidth, rect.y, rect.width - labelWidth, 28f);
+            var backends = new[]
+            {
+                CompressionBackend.Generic,
+                CompressionBackend.CompiledStatic,
+                CompressionBackend.DynamicMethod
+            };
+            var buttonWidth = buttonsRect.width / backends.Length;
+            for (var i = 0; i < backends.Length; i++)
+            {
+                var backend = backends[i];
+                var buttonRect = new Rect(buttonsRect.x + i * buttonWidth + 2f, buttonsRect.y, buttonWidth - 4f, buttonsRect.height);
+                if (settings.runtimeBackend == backend)
+                {
+                    Widgets.DrawBoxSolid(buttonRect, new Color(0.32f, 0.38f, 0.42f, 1f));
+                }
+
+                if (Widgets.ButtonText(buttonRect, StatCompressionText.BackendLabel(backend)))
+                {
+                    settings.runtimeBackend = backend;
+                    StatCompressionRuntime.SetActiveBackend(backend);
+                }
+            }
+
+            var benchmarkRect = new Rect(rect.x, rect.y + 32f, rect.width, 28f);
+            Widgets.CheckboxLabeled(
+                benchmarkRect,
+                StatCompressionText.T("StatCompression_BenchmarkOnGameLoad"),
+                ref settings.benchmarkOnGameLoad);
+            TooltipHandler.TipRegion(benchmarkRect, StatCompressionText.T("StatCompression_BenchmarkTooltip"));
         }
 
         private void DrawHeader(Rect rect)

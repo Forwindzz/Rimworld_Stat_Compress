@@ -70,8 +70,7 @@ namespace StatCompression
                 Math.Abs(oldThreshold - Settings.thresholdFactor) > 0.000001f)
             {
                 Settings.ApplyGlobalCompressionToEnabled();
-                Settings.RebuildLookup();
-                StatCompressionRuntime.ClearRuntimeCaches();
+                Settings.RebuildLookup(buildDynamicMethods: false);
             }
         }
 
@@ -79,7 +78,6 @@ namespace StatCompression
         {
             Settings.NormalizeParameters();
             Settings.RebuildLookup();
-            StatCompressionRuntime.ClearRuntimeCaches();
             base.WriteSettings();
         }
 
@@ -238,7 +236,7 @@ namespace StatCompression
             {
                 Settings.ResetToDefaults();
                 Settings.ApplyGlobalCompressionToEnabled();
-                StatCompressionRuntime.ClearRuntimeCaches();
+                Settings.RebuildLookup();
                 parameterBuffer = Settings.parameter.ToString();
                 thresholdPercentBuffer = (Settings.thresholdFactor * 100f).ToString();
             }

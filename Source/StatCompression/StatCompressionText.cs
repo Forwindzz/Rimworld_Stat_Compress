@@ -48,5 +48,20 @@ namespace StatCompression
                 ? T("StatCompression_Direction_Higher")
                 : T("StatCompression_Direction_Lower");
         }
+
+        public static string BackendLabel(CompressionBackend backend)
+        {
+            switch (backend)
+            {
+                case CompressionBackend.Generic:
+                    return T("StatCompression_Backend_Generic");
+                case CompressionBackend.CompiledStatic:
+                    return T("StatCompression_Backend_CompiledStatic");
+                case CompressionBackend.DynamicMethod:
+                    return T("StatCompression_Backend_DynamicMethod");
+                default:
+                    return backend.ToString();
+            }
+        }
     }
 }
