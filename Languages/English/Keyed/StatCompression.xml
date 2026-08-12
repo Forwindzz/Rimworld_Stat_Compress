@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
   <StatCompression_Enable>Enable stat compression</StatCompression_Enable>
+  <StatCompression_ShowInfoCardSettingsButton>Show compression settings button on info cards</StatCompression_ShowInfoCardSettingsButton>
   <StatCompression_SP_BodyPartHealth_Label>Body-part HP</StatCompression_SP_BodyPartHealth_Label>
   <StatCompression_SP_BodyPartHealth_BaselineTooltip>For body-part HP, Baseline is a multiplier of the pawn's natural racial, life-stage, and part HP. 1 means 100% of natural HP.</StatCompression_SP_BodyPartHealth_BaselineTooltip>
   <StatCompression_SP_MeleeBaseDamage_Label>Melee base damage</StatCompression_SP_MeleeBaseDamage_Label>
@@ -11,6 +12,15 @@
   <StatCompression_SP_OtherDamage_Label>Other base damage</StatCompression_SP_OtherDamage_Label>
   <StatCompression_SP_Damage_BaselineTooltip>For base-damage modules, Baseline is an absolute amount of damage before equipment, pawn, material, and other runtime factors.</StatCompression_SP_Damage_BaselineTooltip>
   <StatCompression_SP_Damage_DirectionTooltip>Base damage only supports compressing values above the threshold.</StatCompression_SP_Damage_DirectionTooltip>
+  <StatCompression_SP_NaturalHealingFactor_Label>Natural healing factor</StatCompression_SP_NaturalHealingFactor_Label>
+  <StatCompression_SP_RegenerationRate_Label>Regeneration rate</StatCompression_SP_RegenerationRate_Label>
+  <StatCompression_SP_TotalBleedFactor_Label>Total bleed factor</StatCompression_SP_TotalBleedFactor_Label>
+  <StatCompression_SP_HungerRateFactor_Label>Hunger rate factor</StatCompression_SP_HungerRateFactor_Label>
+  <StatCompression_SP_RestFallFactor_Label>Rest fall factor</StatCompression_SP_RestFallFactor_Label>
+  <StatCompression_SP_FoodPoisoningChanceFactor_Label>Food poisoning chance factor</StatCompression_SP_FoodPoisoningChanceFactor_Label>
+  <StatCompression_SP_HediffStageFactor_BaselineTooltip>For this HediffStage field, Baseline 1 is the neutral x100% multiplier.</StatCompression_SP_HediffStageFactor_BaselineTooltip>
+  <StatCompression_SP_RegenerationRate_BaselineTooltip>For vanilla regeneration, Baseline is an absolute regeneration rate measured in HP per day.</StatCompression_SP_RegenerationRate_BaselineTooltip>
+  <StatCompression_SP_HediffStage_DirectionTooltip>The direction is fixed by the field's game semantics: high healing/regeneration values are compressed, while low bleed, hunger, rest-fall, and food-poisoning factors are compressed.</StatCompression_SP_HediffStage_DirectionTooltip>
   <StatCompression_Tooltip_SpecialModule>Special module</StatCompression_Tooltip_SpecialModule>
   <StatCompression_CompressionType>Compression type</StatCompression_CompressionType>
   <StatCompression_Method_Linear>Linear</StatCompression_Method_Linear>
@@ -33,6 +43,7 @@
   <StatCompression_IncomingDamageFactor>Incoming Damage Factor</StatCompression_IncomingDamageFactor>
   <StatCompression_CompressedIncomingDamageFactor>Compressed Incoming Damage Factor</StatCompression_CompressedIncomingDamageFactor>
   <StatCompression_AdvancedSettings>Advanced settings</StatCompression_AdvancedSettings>
+  <StatCompression_OpenStatSettings>Compression settings</StatCompression_OpenStatSettings>
   <StatCompression_ExportXml>Export settings XML</StatCompression_ExportXml>
   <StatCompression_ImportXml>Import settings XML</StatCompression_ImportXml>
   <StatCompression_ResetSettings>Reset settings</StatCompression_ResetSettings>
@@ -43,18 +54,20 @@
   <StatCompression_AdvancedTitle>Advanced stat settings</StatCompression_AdvancedTitle>
   <StatCompression_ResizeColumnTooltip>Drag to resize this column. Click the header to sort.</StatCompression_ResizeColumnTooltip>
   <StatCompression_SelectStatForPreview>Select a stat row to preview its compression mapping.</StatCompression_SelectStatForPreview>
-  <StatCompression_AdvancedPreviewSummary>Direction: {0}&#10;Baseline: {1}&#10;Trigger value: {2}</StatCompression_AdvancedPreviewSummary>
-  <StatCompression_AdvancedPreviewFormulaHigher>x = value / baseline; h = threshold; e = x - h&#10;x &lt;= h: result = value&#10;x &gt; h: result = baseline * (h + C(e))&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
+  <StatCompression_AdvancedPreviewSummary>Direction: {0}&#10;Positive baseline: {1}&#10;Trigger value: {2}</StatCompression_AdvancedPreviewSummary>
+  <StatCompression_AdvancedPreviewFormulaHigher>B = positive baseline; T = B * threshold; e = (value - T) / B&#10;value &lt;= T: result = value&#10;value &gt; T: result = T + B * C(e)&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
   <StatCompression_AdvancedPreviewFormulaLower>x = value / baseline; r = 1 / x; h = threshold; e = r - h&#10;r &lt;= h: result = value&#10;r &gt; h: result = baseline / (h + C(e))&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaLower>
+  <StatCompression_AdvancedPreviewFormulaLowerDirect>B = positive baseline; T = B * threshold; e = (T - value) / B&#10;value &gt;= T: result = value&#10;value &lt; T: result = T - B * C(e)&#10;C(e) = {0}; actual t = {1}</StatCompression_AdvancedPreviewFormulaLowerDirect>
   <StatCompression_AdvancedPreviewValues>Numeric preview</StatCompression_AdvancedPreviewValues>
   <StatCompression_AdvancedPreviewPercentColumn>Baseline percentage</StatCompression_AdvancedPreviewPercentColumn>
   <StatCompression_AdvancedPreviewActualColumn>Actual value</StatCompression_AdvancedPreviewActualColumn>
   <StatCompression_AdvancedPreviewGraph>Compression mapping curve</StatCompression_AdvancedPreviewGraph>
   <StatCompression_AdvancedPreviewGraphXAxis>Input % (log)</StatCompression_AdvancedPreviewGraphXAxis>
+  <StatCompression_AdvancedPreviewGraphXAxisSigned>Input % (symmetric log)</StatCompression_AdvancedPreviewGraphXAxisSigned>
   <StatCompression_AdvancedPreviewGraphYAxis>Output % (linear)</StatCompression_AdvancedPreviewGraphYAxis>
-  <StatCompression_AdvancedHelp>Configure compression for each stat. Method selects the mapping function. Let x = stat value / baseline and h = Threshold. If x is below h, f(x)=x; above h, only the excess x-h is compressed.</StatCompression_AdvancedHelp>
-  <StatCompression_AdvancedFormulaHelp>Linear: h+(x-h)t; Power: h+((x-h)+1)^t-1; Logarithmic: h+ln(1+ln(t)(x-h))/ln(t); Soft cap: h+t(x-h)/((x-h)+t)</StatCompression_AdvancedFormulaHelp>
-  <StatCompression_DirectionHelp>Direction: Higher compresses values above the threshold; Lower compresses values below the inverse threshold.</StatCompression_DirectionHelp>
+  <StatCompression_AdvancedHelp>Configure compression for each stat. Method selects C(e). Baseline remains positive and normalizes the difference; direct directions allow a negative threshold.</StatCompression_AdvancedHelp>
+  <StatCompression_AdvancedFormulaHelp>For normalized excess e: Linear C(e)=et; Power C(e)=(e+1)^t-1; Logarithmic C(e)=ln(1+ln(t)e)/ln(t); Soft cap C(e)=te/(e+t).</StatCompression_AdvancedFormulaHelp>
+  <StatCompression_DirectionHelp>Direction controls the domain: Higher direct is additive above the trigger; Lower ratio is multiplicative below it; Lower direct is additive below it.</StatCompression_DirectionHelp>
   <StatCompression_Search>Search</StatCompression_Search>
   <StatCompression_Column_On>On</StatCompression_Column_On>
   <StatCompression_Column_DefName>DefName</StatCompression_Column_DefName>
@@ -65,9 +78,13 @@
   <StatCompression_Column_Threshold>Threshold</StatCompression_Column_Threshold>
   <StatCompression_Column_Direction>Direction</StatCompression_Column_Direction>
   <StatCompression_Column_Label>Label</StatCompression_Column_Label>
-  <StatCompression_Direction_Higher>Higher</StatCompression_Direction_Higher>
-  <StatCompression_Direction_Lower>Lower</StatCompression_Direction_Lower>
-  <StatCompression_DirectionTooltip>Higher: compress values above the threshold.&#10;Lower: compress values below the inverse threshold.</StatCompression_DirectionTooltip>
+  <StatCompression_Direction_Higher>Higher direct</StatCompression_Direction_Higher>
+  <StatCompression_Direction_Lower>Lower ratio</StatCompression_Direction_Lower>
+  <StatCompression_Direction_LowerDirect>Lower direct</StatCompression_Direction_LowerDirect>
+  <StatCompression_DirectionExplanation_Higher>Compress the additive excess above the trigger value.</StatCompression_DirectionExplanation_Higher>
+  <StatCompression_DirectionExplanation_Lower>Compress positive values below the trigger in reciprocal multiplier space.</StatCompression_DirectionExplanation_Lower>
+  <StatCompression_DirectionExplanation_LowerDirect>Compress the additive distance below the trigger value.</StatCompression_DirectionExplanation_LowerDirect>
+  <StatCompression_DirectionTooltip>Higher direct: compress the additive excess above the trigger.&#10;Lower ratio: compress low positive values in reciprocal multiplier space.&#10;Lower direct: compress the additive distance below the trigger.</StatCompression_DirectionTooltip>
   <StatCompression_Tooltip_Baseline>Baseline: {0}</StatCompression_Tooltip_Baseline>
   <StatCompression_Tooltip_Threshold>Threshold: {0}%</StatCompression_Tooltip_Threshold>
   <StatCompression_Tooltip_Method>Method: {0}</StatCompression_Tooltip_Method>
@@ -80,10 +97,14 @@
   <StatCompression_Explanation_ValueLine>Stat compression (displayed value): {0} -> {1}</StatCompression_Explanation_ValueLine>
   <StatCompression_Explanation_RawValueLine>Compressed input (pre-curve score): {0} -> {1}</StatCompression_Explanation_RawValueLine>
   <StatCompression_Explanation_MethodLine>Method: {0} t={1}, baseline {2}</StatCompression_Explanation_MethodLine>
+  <StatCompression_Explanation_DirectionLine>Direction: {0}</StatCompression_Explanation_DirectionLine>
   <StatCompression_Explanation_RawScore>raw score {0}</StatCompression_Explanation_RawScore>
   <StatCompression_Explanation_Hint_Power>Power compression is equivalent to reducing multiplicative gains proportionally.</StatCompression_Explanation_Hint_Power>
+  <StatCompression_Explanation_Hint_Power_LowerDirect>Power compression proportionally weakens the additive distance below the trigger.</StatCompression_Explanation_Hint_Power_LowerDirect>
   <StatCompression_Explanation_Hint_Logarithmic>Logarithmic compression is equivalent to converting multiplicative gains into additive growth.</StatCompression_Explanation_Hint_Logarithmic>
+  <StatCompression_Explanation_Hint_Logarithmic_LowerDirect>Logarithmic compression makes the additive distance below the trigger grow logarithmically.</StatCompression_Explanation_Hint_Logarithmic_LowerDirect>
   <StatCompression_Explanation_Hint_SoftCap>Soft cap compression keeps the compressed value below a fixed upper limit.</StatCompression_Explanation_Hint_SoftCap>
+  <StatCompression_Explanation_Hint_SoftCap_Lower>Soft cap compression keeps the compressed value above a fixed lower limit.</StatCompression_Explanation_Hint_SoftCap_Lower>
   <StatCompression_BodyPartHealth_Explanation_ValueLine>Stat compression: {0} HP -> {1} HP</StatCompression_BodyPartHealth_Explanation_ValueLine>
   <StatCompression_BodyPartHealth_Explanation_MethodLine>Method: {0} t={1}, natural baseline {2} HP</StatCompression_BodyPartHealth_Explanation_MethodLine>
   <StatCompression_BaseDamage_Info_Count>{0} base-damage fields compressed</StatCompression_BaseDamage_Info_Count>
@@ -94,4 +115,9 @@
   <StatCompression_BaseDamage_Source_NonTool>Non-tool melee attack</StatCompression_BaseDamage_Source_NonTool>
   <StatCompression_BaseDamage_Source_Beam>Beam total damage</StatCompression_BaseDamage_Source_Beam>
   <StatCompression_BaseDamage_Source_Surprise>Surprise attack</StatCompression_BaseDamage_Source_Surprise>
+  <StatCompression_HediffStage_Info_Header>Stat compression</StatCompression_HediffStage_Info_Header>
+  <StatCompression_HediffStage_Info_Count>{0} Hediff field(s)</StatCompression_HediffStage_Info_Count>
+  <StatCompression_HediffStage_Info_Value>{0}: {1} -> {2}</StatCompression_HediffStage_Info_Value>
+  <StatCompression_HediffStage_Info_Method>Method: {0} t={1}, baseline {2}, threshold {3}</StatCompression_HediffStage_Info_Method>
+  <StatCompression_HediffStage_RegenerationPerDay>{0} HP/day</StatCompression_HediffStage_RegenerationPerDay>
 </LanguageData>

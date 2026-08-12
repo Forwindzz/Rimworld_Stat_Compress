@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
   <StatCompression_Enable>启用数值压缩</StatCompression_Enable>
+  <StatCompression_ShowInfoCardSettingsButton>在信息卡中显示压缩属性设置按钮</StatCompression_ShowInfoCardSettingsButton>
   <StatCompression_SP_BodyPartHealth_Label>部位血量</StatCompression_SP_BodyPartHealth_Label>
   <StatCompression_SP_BodyPartHealth_BaselineTooltip>对于部位血量，Baseline 是角色自然种族、生命阶段和部位血量的倍率；1 表示自然血量的 100%。</StatCompression_SP_BodyPartHealth_BaselineTooltip>
   <StatCompression_SP_MeleeBaseDamage_Label>近战基础伤害</StatCompression_SP_MeleeBaseDamage_Label>
@@ -11,6 +12,15 @@
   <StatCompression_SP_OtherDamage_Label>其他基础伤害</StatCompression_SP_OtherDamage_Label>
   <StatCompression_SP_Damage_BaselineTooltip>对于基础伤害模块，Baseline 是装备、角色、材料及其他运行时倍率生效前的绝对伤害值。</StatCompression_SP_Damage_BaselineTooltip>
   <StatCompression_SP_Damage_DirectionTooltip>基础伤害只支持压缩高于阈值的数值。</StatCompression_SP_Damage_DirectionTooltip>
+  <StatCompression_SP_NaturalHealingFactor_Label>自然愈合系数</StatCompression_SP_NaturalHealingFactor_Label>
+  <StatCompression_SP_RegenerationRate_Label>再生速率</StatCompression_SP_RegenerationRate_Label>
+  <StatCompression_SP_TotalBleedFactor_Label>总流血系数</StatCompression_SP_TotalBleedFactor_Label>
+  <StatCompression_SP_HungerRateFactor_Label>饥饿速率系数</StatCompression_SP_HungerRateFactor_Label>
+  <StatCompression_SP_RestFallFactor_Label>休息下降系数</StatCompression_SP_RestFallFactor_Label>
+  <StatCompression_SP_FoodPoisoningChanceFactor_Label>食物中毒概率系数</StatCompression_SP_FoodPoisoningChanceFactor_Label>
+  <StatCompression_SP_HediffStageFactor_BaselineTooltip>对于该 HediffStage 字段，Baseline 1 表示中性的 100% 倍率。</StatCompression_SP_HediffStageFactor_BaselineTooltip>
+  <StatCompression_SP_RegenerationRate_BaselineTooltip>对于原版再生字段，Baseline 是以 HP/天计量的绝对再生速率。</StatCompression_SP_RegenerationRate_BaselineTooltip>
+  <StatCompression_SP_HediffStage_DirectionTooltip>方向由字段语义固定：自然愈合和再生压缩过高数值；流血、饥饿、休息下降和食物中毒压缩过低数值。</StatCompression_SP_HediffStage_DirectionTooltip>
   <StatCompression_Tooltip_SpecialModule>特殊模块</StatCompression_Tooltip_SpecialModule>
   <StatCompression_CompressionType>压缩类型</StatCompression_CompressionType>
   <StatCompression_Method_Linear>线性</StatCompression_Method_Linear>
@@ -33,6 +43,7 @@
   <StatCompression_IncomingDamageFactor>承伤系数</StatCompression_IncomingDamageFactor>
   <StatCompression_CompressedIncomingDamageFactor>压缩后的承伤系数</StatCompression_CompressedIncomingDamageFactor>
   <StatCompression_AdvancedSettings>高级设置</StatCompression_AdvancedSettings>
+  <StatCompression_OpenStatSettings>压缩属性设置</StatCompression_OpenStatSettings>
   <StatCompression_ExportXml>导出设置 XML</StatCompression_ExportXml>
   <StatCompression_ImportXml>导入设置 XML</StatCompression_ImportXml>
   <StatCompression_ResetSettings>重置设置</StatCompression_ResetSettings>
@@ -43,18 +54,20 @@
   <StatCompression_AdvancedTitle>高级属性设置</StatCompression_AdvancedTitle>
   <StatCompression_ResizeColumnTooltip>拖动可调整列宽，点击表头可排序。</StatCompression_ResizeColumnTooltip>
   <StatCompression_SelectStatForPreview>请选择一个属性行以预览压缩映射。</StatCompression_SelectStatForPreview>
-  <StatCompression_AdvancedPreviewSummary>方向：{0}&#10;基准值：{1}&#10;触发值：{2}</StatCompression_AdvancedPreviewSummary>
-  <StatCompression_AdvancedPreviewFormulaHigher>x = 属性值 / 基准值；h = 阈值；e = x - h&#10;x &lt;= h：结果 = 原值&#10;x &gt; h：结果 = 基准值 * (h + C(e))&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
+  <StatCompression_AdvancedPreviewSummary>方向：{0}&#10;正数基准值：{1}&#10;触发值：{2}</StatCompression_AdvancedPreviewSummary>
+  <StatCompression_AdvancedPreviewFormulaHigher>B = 正数基准值；T = B * 阈值；e = (属性值 - T) / B&#10;属性值 &lt;= T：结果 = 原值&#10;属性值 &gt; T：结果 = T + B * C(e)&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
   <StatCompression_AdvancedPreviewFormulaLower>x = 属性值 / 基准值；r = 1 / x；h = 阈值；e = r - h&#10;r &lt;= h：结果 = 原值&#10;r &gt; h：结果 = 基准值 / (h + C(e))&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaLower>
+  <StatCompression_AdvancedPreviewFormulaLowerDirect>B = 正数基准值；T = B * 阈值；e = (T - 属性值) / B&#10;属性值 &gt;= T：结果 = 原值&#10;属性值 &lt; T：结果 = T - B * C(e)&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaLowerDirect>
   <StatCompression_AdvancedPreviewValues>数值预览</StatCompression_AdvancedPreviewValues>
   <StatCompression_AdvancedPreviewPercentColumn>基准百分比</StatCompression_AdvancedPreviewPercentColumn>
   <StatCompression_AdvancedPreviewActualColumn>实际数值</StatCompression_AdvancedPreviewActualColumn>
   <StatCompression_AdvancedPreviewGraph>压缩映射曲线</StatCompression_AdvancedPreviewGraph>
   <StatCompression_AdvancedPreviewGraphXAxis>输入 %（对数）</StatCompression_AdvancedPreviewGraphXAxis>
+  <StatCompression_AdvancedPreviewGraphXAxisSigned>输入 %（对称对数）</StatCompression_AdvancedPreviewGraphXAxisSigned>
   <StatCompression_AdvancedPreviewGraphYAxis>输出 %（线性）</StatCompression_AdvancedPreviewGraphYAxis>
-  <StatCompression_AdvancedHelp>你可以设置每一个属性的修正方式。Method 为映射函数类型。设 x = 属性值 / Baseline，h = Threshold；低于 h 时 f(x)=x，高于 h 时只压缩超出部分 x-h。</StatCompression_AdvancedHelp>
-  <StatCompression_AdvancedFormulaHelp>线性：h+(x-h)t；指数：h+((x-h)+1)^t-1；对数：h+ln(1+ln(t)(x-h))/ln(t)；软上限：h+t(x-h)/((x-h)+t)</StatCompression_AdvancedFormulaHelp>
-  <StatCompression_DirectionHelp>Direction 含义：Higher 表示高于阈值时压缩；Lower 表示低于反向阈值时压缩。</StatCompression_DirectionHelp>
+  <StatCompression_AdvancedHelp>你可以设置每个属性的压缩方式，Method 决定 C(e)。基准值保持正数并用于归一化差值；直接压缩方向允许阈值为负数。</StatCompression_AdvancedHelp>
+  <StatCompression_AdvancedFormulaHelp>对归一化差值 e：线性 C(e)=et；指数 C(e)=(e+1)^t-1；对数 C(e)=ln(1+ln(t)e)/ln(t)；软上限 C(e)=te/(e+t)。</StatCompression_AdvancedFormulaHelp>
+  <StatCompression_DirectionHelp>Direction 决定压缩数域：高值直接压缩处理阈值以上；低值乘法压缩处理低倍率；低值直接压缩处理阈值以下的加算差值。</StatCompression_DirectionHelp>
   <StatCompression_Search>搜索</StatCompression_Search>
   <StatCompression_Column_On>启用</StatCompression_Column_On>
   <StatCompression_Column_DefName>DefName</StatCompression_Column_DefName>
@@ -65,9 +78,13 @@
   <StatCompression_Column_Threshold>阈值</StatCompression_Column_Threshold>
   <StatCompression_Column_Direction>Direction</StatCompression_Column_Direction>
   <StatCompression_Column_Label>显示名</StatCompression_Column_Label>
-  <StatCompression_Direction_Higher>高于阈值</StatCompression_Direction_Higher>
-  <StatCompression_Direction_Lower>低于阈值</StatCompression_Direction_Lower>
-  <StatCompression_DirectionTooltip>Higher：数值高于阈值时压缩。&#10;Lower：数值低于反向阈值时压缩。</StatCompression_DirectionTooltip>
+  <StatCompression_Direction_Higher>高值直接压缩</StatCompression_Direction_Higher>
+  <StatCompression_Direction_Lower>低值乘法压缩</StatCompression_Direction_Lower>
+  <StatCompression_Direction_LowerDirect>低值直接压缩</StatCompression_Direction_LowerDirect>
+  <StatCompression_DirectionExplanation_Higher>直接压缩高于触发值的加算差值。</StatCompression_DirectionExplanation_Higher>
+  <StatCompression_DirectionExplanation_Lower>在倒数倍率域压缩低于触发值的正数。</StatCompression_DirectionExplanation_Lower>
+  <StatCompression_DirectionExplanation_LowerDirect>直接压缩低于触发值的加算差值。</StatCompression_DirectionExplanation_LowerDirect>
+  <StatCompression_DirectionTooltip>高值直接压缩：压缩高于触发值的加算差值。&#10;低值乘法压缩：在倒数倍率域压缩低倍率正数。&#10;低值直接压缩：压缩低于触发值的加算差值。</StatCompression_DirectionTooltip>
   <StatCompression_Tooltip_Baseline>基准值：{0}</StatCompression_Tooltip_Baseline>
   <StatCompression_Tooltip_Threshold>阈值：{0}%</StatCompression_Tooltip_Threshold>
   <StatCompression_Tooltip_Method>方法：{0}</StatCompression_Tooltip_Method>
@@ -80,10 +97,14 @@
   <StatCompression_Explanation_ValueLine>数值压缩（属性值）：{0} -> {1}</StatCompression_Explanation_ValueLine>
   <StatCompression_Explanation_RawValueLine>实际压缩输入（曲线前分数）：{0} -> {1}</StatCompression_Explanation_RawValueLine>
   <StatCompression_Explanation_MethodLine>压缩方式：{0} t={1}，基准值 {2}</StatCompression_Explanation_MethodLine>
+  <StatCompression_Explanation_DirectionLine>压缩方向：{0}</StatCompression_Explanation_DirectionLine>
   <StatCompression_Explanation_RawScore>曲线前分数 {0}</StatCompression_Explanation_RawScore>
   <StatCompression_Explanation_Hint_Power>指数压缩等价于将乘法增益按比例削弱。</StatCompression_Explanation_Hint_Power>
+  <StatCompression_Explanation_Hint_Power_LowerDirect>指数压缩会按比例削弱低于触发值的加算差值。</StatCompression_Explanation_Hint_Power_LowerDirect>
   <StatCompression_Explanation_Hint_Logarithmic>对数压缩等价于将乘法增益变为加法。</StatCompression_Explanation_Hint_Logarithmic>
+  <StatCompression_Explanation_Hint_Logarithmic_LowerDirect>对数压缩会让低于触发值的加算差值按对数增长。</StatCompression_Explanation_Hint_Logarithmic_LowerDirect>
   <StatCompression_Explanation_Hint_SoftCap>软上限压缩会让压缩后的数值永远不超过某个固定上限。</StatCompression_Explanation_Hint_SoftCap>
+  <StatCompression_Explanation_Hint_SoftCap_Lower>软上限压缩会让压缩后的数值永远不低于某个固定下限。</StatCompression_Explanation_Hint_SoftCap_Lower>
   <StatCompression_BodyPartHealth_Explanation_ValueLine>数值压缩：{0} HP -> {1} HP</StatCompression_BodyPartHealth_Explanation_ValueLine>
   <StatCompression_BodyPartHealth_Explanation_MethodLine>压缩方式：{0} t={1}，自然基准值 {2} HP</StatCompression_BodyPartHealth_Explanation_MethodLine>
   <StatCompression_BaseDamage_Info_Count>已压缩 {0} 个基础伤害字段</StatCompression_BaseDamage_Info_Count>
@@ -94,4 +115,9 @@
   <StatCompression_BaseDamage_Source_NonTool>无工具近战攻击</StatCompression_BaseDamage_Source_NonTool>
   <StatCompression_BaseDamage_Source_Beam>射束总伤害</StatCompression_BaseDamage_Source_Beam>
   <StatCompression_BaseDamage_Source_Surprise>突袭伤害</StatCompression_BaseDamage_Source_Surprise>
+  <StatCompression_HediffStage_Info_Header>数值压缩</StatCompression_HediffStage_Info_Header>
+  <StatCompression_HediffStage_Info_Count>已压缩 {0} 个 Hediff 字段</StatCompression_HediffStage_Info_Count>
+  <StatCompression_HediffStage_Info_Value>{0}：{1} -> {2}</StatCompression_HediffStage_Info_Value>
+  <StatCompression_HediffStage_Info_Method>压缩方式：{0} t={1}，基准值 {2}，阈值 {3}</StatCompression_HediffStage_Info_Method>
+  <StatCompression_HediffStage_RegenerationPerDay>{0} HP/天</StatCompression_HediffStage_RegenerationPerDay>
 </LanguageData>

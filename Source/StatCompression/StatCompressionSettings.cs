@@ -17,6 +17,7 @@ namespace StatCompression
         private bool initialized;
 
         public bool enabled = true;
+        public bool showInfoCardSettingsButton = true;
         public CompressionStage stage = CompressionStage.BeforePostProcessCurve;
         public bool autoFallbackToGlobalPostfix = true;
         public CompressionMethod method = CompressionMethod.Logarithmic;
@@ -24,6 +25,7 @@ namespace StatCompression
         public float thresholdFactor = 1f;
         public StatCompressionStatConfig bodyPartHealthConfig = SpecialCompressionConfigs.CreateBodyPartHealth();
         public List<StatCompressionStatConfig> specialDamageConfigs = SpecialCompressionConfigs.CreateDamageConfigs();
+        public List<StatCompressionStatConfig> specialHediffStageConfigs = SpecialCompressionConfigs.CreateHediffStageConfigs();
         public List<StatCompressionStatConfig> statConfigs = new List<StatCompressionStatConfig>();
 
         public StatCompressionStatConfig BodyPartHealthConfig
@@ -53,9 +55,19 @@ namespace StatCompression
             }
         }
 
+        public IReadOnlyList<StatCompressionStatConfig> SpecialHediffStageConfigs
+        {
+            get
+            {
+                EnsureSpecialHediffStageConfigs();
+                return specialHediffStageConfigs;
+            }
+        }
+
         public override void ExposeData()
         {
             Scribe_Values.Look(ref enabled, "enabled", true);
+            Scribe_Values.Look(ref showInfoCardSettingsButton, "showInfoCardSettingsButton", true);
             Scribe_Values.Look(ref stage, "stage", CompressionStage.BeforePostProcessCurve);
             Scribe_Values.Look(ref autoFallbackToGlobalPostfix, "autoFallbackToGlobalPostfix", true);
             Scribe_Values.Look(ref method, "method", CompressionMethod.Logarithmic);
@@ -65,6 +77,7 @@ namespace StatCompression
             Scribe_Values.Look(ref legacyBodyPartHealthEnabled, "bodyPartHealthEnabled", false);
             Scribe_Deep.Look(ref bodyPartHealthConfig, "bodyPartHealthConfig");
             Scribe_Collections.Look(ref specialDamageConfigs, "specialDamageConfigs", LookMode.Deep);
+            Scribe_Collections.Look(ref specialHediffStageConfigs, "specialHediffStageConfigs", LookMode.Deep);
             Scribe_Collections.Look(ref statConfigs, "statConfigs", LookMode.Deep);
 
             if (bodyPartHealthConfig == null)
@@ -75,6 +88,7 @@ namespace StatCompression
 
             bodyPartHealthConfig.defName = SpecialCompressionConfigs.BodyPartHealthDefName;
             EnsureSpecialDamageConfigs();
+            EnsureSpecialHediffStageConfigs();
 
             if (statConfigs == null)
             {
@@ -137,6 +151,13 @@ namespace StatCompression
                 specialDamageConfigs[i].direction = StatCompressionDirection.HigherIsBetter;
                 NormalizeConfig(specialDamageConfigs[i]);
             }
+            EnsureSpecialHediffStageConfigs();
+            for (var i = 0; i < specialHediffStageConfigs.Count; i++)
+            {
+                var config = specialHediffStageConfigs[i];
+                config.direction = SpecialCompressionConfigs.DirectionForHediffStage(config.defName);
+                NormalizeConfig(config);
+            }
 
             return Math.Abs(oldParameter - parameter) > 0.000001f ||
                    Math.Abs(oldThresholdFactor - thresholdFactor) > 0.000001f;
@@ -192,6 +213,25 @@ namespace StatCompression
                 config.direction = StatCompressionDirection.HigherIsBetter;
                 NormalizeConfig(config);
             }
+
+            EnsureSpecialHediffStageConfigs();
+            for (var i = 0; i < specialHediffStageConfigs.Count; i++)
+            {
+                var config = specialHediffStageConfigs[i];
+                if (!config.enabled)
+                {
+                    continue;
+                }
+
+                if (applyMethod)
+                {
+                    config.method = method;
+                }
+
+                config.thresholdFactor = thresholdFactor;
+                config.direction = SpecialCompressionConfigs.DirectionForHediffStage(config.defName);
+                NormalizeConfig(config);
+            }
         }
 
         public void RebuildLookup()
@@ -201,6 +241,7 @@ namespace StatCompression
             StatCompressionRuntime.RebuildRuntimePlan(this);
             BodyPartHealthCompressionModule.NotifySettingsChanged(this);
             BaseDamageCompressionModule.NotifySettingsChanged(this);
+            HediffStageCompressionModule.NotifySettingsChanged(this);
         }
 
         public IEnumerable<StatCompressionStatConfig> AdvancedConfigs()
@@ -211,6 +252,11 @@ namespace StatCompression
             for (var i = 0; i < specialDamageConfigs.Count; i++)
             {
                 yield return specialDamageConfigs[i];
+            }
+            EnsureSpecialHediffStageConfigs();
+            for (var i = 0; i < specialHediffStageConfigs.Count; i++)
+            {
+                yield return specialHediffStageConfigs[i];
             }
             for (var i = 0; i < statConfigs.Count; i++)
             {
@@ -232,6 +278,15 @@ namespace StatCompression
                 if (specialDamageConfigs[i].defName == defName)
                 {
                     return specialDamageConfigs[i];
+                }
+            }
+
+            EnsureSpecialHediffStageConfigs();
+            for (var i = 0; i < specialHediffStageConfigs.Count; i++)
+            {
+                if (specialHediffStageConfigs[i].defName == defName)
+                {
+                    return specialHediffStageConfigs[i];
                 }
             }
 
@@ -302,6 +357,64 @@ namespace StatCompression
                 else
                 {
                     specialDamageConfigs.Add(defaultConfig);
+                }
+            }
+        }
+
+        private void EnsureSpecialHediffStageConfigs()
+        {
+            if (specialHediffStageConfigs != null)
+            {
+                for (var i = 0; i < specialHediffStageConfigs.Count; i++)
+                {
+                    var config = specialHediffStageConfigs[i];
+                    if (config != null)
+                    {
+                        config.defName = SpecialCompressionConfigs.CanonicalizeId(config.defName);
+                    }
+                }
+            }
+
+            if (specialHediffStageConfigs != null &&
+                specialHediffStageConfigs.Count == SpecialCompressionConfigs.HediffStageDefNames.Length)
+            {
+                var completeAndOrdered = true;
+                for (var i = 0; i < specialHediffStageConfigs.Count; i++)
+                {
+                    var config = specialHediffStageConfigs[i];
+                    if (config == null || config.defName != SpecialCompressionConfigs.HediffStageDefNames[i])
+                    {
+                        completeAndOrdered = false;
+                        break;
+                    }
+
+                    config.direction = SpecialCompressionConfigs.DirectionForHediffStage(config.defName);
+                }
+
+                if (completeAndOrdered)
+                {
+                    return;
+                }
+            }
+
+            var defaults = SpecialCompressionConfigs.CreateHediffStageConfigs();
+            var existing = (specialHediffStageConfigs ?? new List<StatCompressionStatConfig>())
+                .Where(config => config != null && !config.defName.NullOrEmpty())
+                .GroupBy(config => config.defName, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+            specialHediffStageConfigs = new List<StatCompressionStatConfig>(defaults.Count);
+            for (var i = 0; i < defaults.Count; i++)
+            {
+                var defaultConfig = defaults[i];
+                if (existing.TryGetValue(defaultConfig.defName, out var config))
+                {
+                    config.direction = SpecialCompressionConfigs.DirectionForHediffStage(config.defName);
+                    specialHediffStageConfigs.Add(config);
+                }
+                else
+                {
+                    specialHediffStageConfigs.Add(defaultConfig);
                 }
             }
         }
@@ -407,6 +520,7 @@ namespace StatCompression
             StatCompressionRuntime.RebuildRuntimePlan(this);
             BodyPartHealthCompressionModule.NotifySettingsChanged(this);
             BaseDamageCompressionModule.NotifySettingsChanged(this);
+            HediffStageCompressionModule.NotifySettingsChanged(this);
             Log.Message($"[{StatCompressionConstants.DisplayName}] Default stat configs initialized: total={newConfigs.Count}, added={added}, fromDefaultXml={fromDefaultPreset}, missingDefaultXml={missingDefaultPreset}, xmlBaselineFallbacks={normalizedInvalidPresetBaseline}, autoEnabled={enabledByDefault}, keptExisting={skippedExisting}, skippedStaticRules={skippedStaticRules}, skippedShouldShow={skippedShouldShow}.");
             return true;
         }
@@ -522,6 +636,7 @@ namespace StatCompression
             var importedGlobal = new DefaultGlobalSettings
             {
                 enabled = enabled,
+                showInfoCardSettingsButton = showInfoCardSettingsButton,
                 stage = stage,
                 autoFallbackToGlobalPostfix = autoFallbackToGlobalPostfix,
                 method = method,
@@ -534,7 +649,12 @@ namespace StatCompression
             updated += StatCompressionSettingsXml.ReadSpecialDamageConfigs(
                 root.Element("SpecialDamageConfigs"),
                 specialDamageConfigs);
+            EnsureSpecialHediffStageConfigs();
+            updated += StatCompressionSettingsXml.ReadSpecialHediffStageConfigs(
+                root.Element("SpecialHediffStageConfigs"),
+                specialHediffStageConfigs);
             enabled = importedGlobal.enabled;
+            showInfoCardSettingsButton = importedGlobal.showInfoCardSettingsButton;
             stage = importedGlobal.stage;
             autoFallbackToGlobalPostfix = importedGlobal.autoFallbackToGlobalPostfix;
             method = importedGlobal.method;
@@ -625,7 +745,11 @@ namespace StatCompression
 
             config.method_t = NormalizeParameter(config.method, config.method_t);
             config.tScale = Math.Max(0.0001f, config.tScale);
-            config.thresholdFactor = Math.Max(0.0001f, config.thresholdFactor);
+            config.baseline = Math.Max(1e-10f, config.baseline);
+            if (config.direction == StatCompressionDirection.LowerIsBetter)
+            {
+                config.thresholdFactor = Math.Max(0.0001f, config.thresholdFactor);
+            }
         }
 
         public static bool PassesStaticDefaultRules(StatDef stat)

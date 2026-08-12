@@ -44,9 +44,32 @@ namespace StatCompression
 
         public static string DirectionShortLabel(StatCompressionDirection direction)
         {
-            return direction == StatCompressionDirection.HigherIsBetter
-                ? T("StatCompression_Direction_Higher")
-                : T("StatCompression_Direction_Lower");
+            switch (direction)
+            {
+                case StatCompressionDirection.HigherIsBetter:
+                    return T("StatCompression_Direction_Higher");
+                case StatCompressionDirection.LowerIsBetter:
+                    return T("StatCompression_Direction_Lower");
+                case StatCompressionDirection.LowerDirect:
+                    return T("StatCompression_Direction_LowerDirect");
+                default:
+                    return direction.ToString();
+            }
+        }
+
+        public static string DirectionExplanation(StatCompressionDirection direction)
+        {
+            switch (direction)
+            {
+                case StatCompressionDirection.HigherIsBetter:
+                    return T("StatCompression_DirectionExplanation_Higher");
+                case StatCompressionDirection.LowerIsBetter:
+                    return T("StatCompression_DirectionExplanation_Lower");
+                case StatCompressionDirection.LowerDirect:
+                    return T("StatCompression_DirectionExplanation_LowerDirect");
+                default:
+                    return direction.ToString();
+            }
         }
 
     }

@@ -45,6 +45,11 @@ namespace StatCompression
                 target.enabled = enabled;
             }
 
+            if (bool.TryParse(Attr(element, "showInfoCardSettingsButton"), out var showInfoCardSettingsButton))
+            {
+                target.showInfoCardSettingsButton = showInfoCardSettingsButton;
+            }
+
             if (Enum.TryParse(Attr(element, "stage"), out CompressionStage stage))
             {
                 target.stage = stage;
@@ -86,27 +91,14 @@ namespace StatCompression
             XElement element,
             System.Collections.Generic.IList<StatCompressionStatConfig> targets)
         {
-            if (element == null || targets == null)
-            {
-                return 0;
-            }
+            return ReadSpecialConfigs(element, targets, false);
+        }
 
-            var updated = 0;
-            var byName = targets.ToDictionary(config => config.defName, StringComparer.Ordinal);
-            foreach (var configElement in element.Elements("Config"))
-            {
-                var defName = SpecialCompressionConfigs.CanonicalizeId(Attr(configElement, "defName"));
-                if (!byName.TryGetValue(defName, out var config))
-                {
-                    continue;
-                }
-
-                ApplyStatElement(configElement, config);
-                config.direction = StatCompressionDirection.HigherIsBetter;
-                updated++;
-            }
-
-            return updated;
+        public static int ReadSpecialHediffStageConfigs(
+            XElement element,
+            System.Collections.Generic.IList<StatCompressionStatConfig> targets)
+        {
+            return ReadSpecialConfigs(element, targets, true);
         }
 
         public static bool TryReadDefaultStat(
@@ -196,6 +188,7 @@ namespace StatCompression
                     new XElement(
                         "Global",
                         new XAttribute("enabled", settings.enabled),
+                        new XAttribute("showInfoCardSettingsButton", settings.showInfoCardSettingsButton),
                         new XAttribute("stage", settings.stage),
                         new XAttribute("autoFallbackToGlobalPostfix", settings.autoFallbackToGlobalPostfix),
                         new XAttribute("method", settings.method),
@@ -207,6 +200,10 @@ namespace StatCompression
                     new XElement(
                         "SpecialDamageConfigs",
                         settings.SpecialDamageConfigs.Select(config =>
+                            new XElement("Config", ConfigAttributes(config)))),
+                    new XElement(
+                        "SpecialHediffStageConfigs",
+                        settings.SpecialHediffStageConfigs.Select(config =>
                             new XElement("Config", ConfigAttributes(config)))),
                     new XElement(
                         "Stats",
@@ -226,6 +223,36 @@ namespace StatCompression
             return new XElement(
                 "Stat",
                 ConfigAttributes(config));
+        }
+
+        private static int ReadSpecialConfigs(
+            XElement element,
+            System.Collections.Generic.IList<StatCompressionStatConfig> targets,
+            bool hediffStage)
+        {
+            if (element == null || targets == null)
+            {
+                return 0;
+            }
+
+            var updated = 0;
+            var byName = targets.ToDictionary(config => config.defName, StringComparer.Ordinal);
+            foreach (var configElement in element.Elements("Config"))
+            {
+                var defName = SpecialCompressionConfigs.CanonicalizeId(Attr(configElement, "defName"));
+                if (!byName.TryGetValue(defName, out var config))
+                {
+                    continue;
+                }
+
+                ApplyStatElement(configElement, config);
+                config.direction = hediffStage
+                    ? SpecialCompressionConfigs.DirectionForHediffStage(defName)
+                    : StatCompressionDirection.HigherIsBetter;
+                updated++;
+            }
+
+            return updated;
         }
 
         private static object[] ConfigAttributes(StatCompressionStatConfig config)
@@ -257,6 +284,7 @@ namespace StatCompression
     internal sealed class DefaultGlobalSettings
     {
         public bool enabled = true;
+        public bool showInfoCardSettingsButton = true;
         public CompressionStage stage = CompressionStage.BeforePostProcessCurve;
         public bool autoFallbackToGlobalPostfix = true;
         public CompressionMethod method = CompressionMethod.Logarithmic;

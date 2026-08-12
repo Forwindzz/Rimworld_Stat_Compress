@@ -173,6 +173,9 @@ namespace StatCompression
                     StatCompressionText.MethodLabel(config.method),
                     actualParameter.ToString("0.###"),
                     baselineText);
+            text += "\n" + StatCompressionText.T(
+                "StatCompression_Explanation_DirectionLine",
+                StatCompressionText.DirectionExplanation(config.direction));
             if (usesRawCurveInput && context.compressionInputCaptured)
             {
                 text += "\n" + StatCompressionText.T(
@@ -181,7 +184,7 @@ namespace StatCompression
                     context.compressionOutput.ToString("0.###"));
             }
 
-            var hint = GetMethodHint(config.method);
+            var hint = GetMethodHint(config.method, config.direction);
             if (!hint.NullOrEmpty())
             {
                 text += "\n" + hint;
@@ -309,8 +312,29 @@ namespace StatCompression
             }
         }
 
-        private static string GetMethodHint(CompressionMethod method)
+        private static string GetMethodHint(
+            CompressionMethod method,
+            StatCompressionDirection direction)
         {
+            if (direction == StatCompressionDirection.LowerDirect)
+            {
+                switch (method)
+                {
+                    case CompressionMethod.Exponential:
+                        return StatCompressionText.T("StatCompression_Explanation_Hint_Power_LowerDirect");
+                    case CompressionMethod.Logarithmic:
+                        return StatCompressionText.T("StatCompression_Explanation_Hint_Logarithmic_LowerDirect");
+                    case CompressionMethod.SoftCap:
+                        return StatCompressionText.T("StatCompression_Explanation_Hint_SoftCap_Lower");
+                }
+            }
+
+            if (direction == StatCompressionDirection.LowerIsBetter &&
+                method == CompressionMethod.SoftCap)
+            {
+                return StatCompressionText.T("StatCompression_Explanation_Hint_SoftCap_Lower");
+            }
+
             switch (method)
             {
                 case CompressionMethod.Exponential:

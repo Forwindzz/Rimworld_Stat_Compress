@@ -28,6 +28,7 @@ namespace StatCompression
             if (StaticConstructorOnStartupUtility.coreStaticAssetsLoaded)
             {
                 BaseDamageCompressionModule.Initialize();
+                HediffStageCompressionModule.Initialize();
             }
 
             Log.Message($"[{StatCompressionConstants.DisplayName}] {StatCompressionConstants.Version} loaded.");

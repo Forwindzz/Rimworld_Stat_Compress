@@ -15,7 +15,11 @@ namespace StatCompression
         LowerLinear,
         LowerPower,
         LowerLogarithmic,
-        LowerSoftCap
+        LowerSoftCap,
+        LowerDirectLinear,
+        LowerDirectPower,
+        LowerDirectLogarithmic,
+        LowerDirectSoftCap
     }
 
     internal struct CompiledStatConfig
@@ -63,11 +67,12 @@ namespace StatCompression
                 settings.method,
                 settings.parameter,
                 config.tScale);
-            var higher = config.direction == StatCompressionDirection.HigherIsBetter;
+            var direction = config.direction;
+            var direct = direction != StatCompressionDirection.LowerIsBetter;
             var result = new CompiledStatConfig
             {
-                kernel = KernelFor(config.method, higher),
-                thresholdValue = higher ? baseline * threshold : baseline / threshold,
+                kernel = KernelFor(config.method, direction),
+                thresholdValue = direct ? baseline * threshold : baseline / threshold,
                 thresholdFactor = threshold,
                 baseline = baseline,
                 invBaseline = 1f / baseline
@@ -79,29 +84,31 @@ namespace StatCompression
                     result.parameter0 = actualParameter;
                     break;
                 case CompressionMethod.Exponential:
-                    result.parameter0 = higher ? result.invBaseline : actualParameter;
+                    result.parameter0 = direct ? result.invBaseline : actualParameter;
                     result.parameter1 = actualParameter;
                     break;
                 case CompressionMethod.Logarithmic:
                     var logarithmicStrength = (float)Math.Log(actualParameter);
-                    result.parameter0 = higher
+                    result.parameter0 = direct
                         ? logarithmicStrength * result.invBaseline
                         : logarithmicStrength;
-                    result.parameter1 = higher
+                    result.parameter1 = direct
                         ? baseline / logarithmicStrength
                         : 1f / logarithmicStrength;
                     break;
                 case CompressionMethod.SoftCap:
-                    result.parameter0 = higher ? baseline * actualParameter : actualParameter;
+                    result.parameter0 = direct ? baseline * actualParameter : actualParameter;
                     break;
             }
 
             return result;
         }
 
-        private static CompressionKernel KernelFor(CompressionMethod method, bool higher)
+        private static CompressionKernel KernelFor(
+            CompressionMethod method,
+            StatCompressionDirection direction)
         {
-            if (higher)
+            if (direction == StatCompressionDirection.HigherIsBetter)
             {
                 switch (method)
                 {
@@ -115,7 +122,7 @@ namespace StatCompression
                         return CompressionKernel.HigherSoftCap;
                 }
             }
-            else
+            if (direction == StatCompressionDirection.LowerIsBetter)
             {
                 switch (method)
                 {
@@ -127,6 +134,21 @@ namespace StatCompression
                         return CompressionKernel.LowerLogarithmic;
                     case CompressionMethod.SoftCap:
                         return CompressionKernel.LowerSoftCap;
+                }
+            }
+
+            if (direction == StatCompressionDirection.LowerDirect)
+            {
+                switch (method)
+                {
+                    case CompressionMethod.Linear:
+                        return CompressionKernel.LowerDirectLinear;
+                    case CompressionMethod.Exponential:
+                        return CompressionKernel.LowerDirectPower;
+                    case CompressionMethod.Logarithmic:
+                        return CompressionKernel.LowerDirectLogarithmic;
+                    case CompressionMethod.SoftCap:
+                        return CompressionKernel.LowerDirectSoftCap;
                 }
             }
 
@@ -146,12 +168,17 @@ namespace StatCompression
                 return !(value <= config.thresholdValue);
             }
 
-            if (float.IsNaN(value))
+            if (config.kernel <= CompressionKernel.LowerSoftCap)
             {
-                return true;
+                if (float.IsNaN(value))
+                {
+                    return true;
+                }
+
+                return value >= 0f && value < config.thresholdValue;
             }
 
-            return value >= 0f && value < config.thresholdValue;
+            return !(value >= config.thresholdValue);
         }
 
         public static float ApplyStatic(ref CompiledStatConfig config, float value)
@@ -179,6 +206,22 @@ namespace StatCompression
                 case CompressionKernel.LowerLogarithmic:
                 case CompressionKernel.LowerSoftCap:
                     return ApplyStaticLower(ref config, value);
+                case CompressionKernel.LowerDirectLinear:
+                    return config.thresholdValue -
+                        (config.thresholdValue - value) * config.parameter0;
+                case CompressionKernel.LowerDirectPower:
+                    return config.thresholdValue - config.baseline *
+                        ((float)Math.Pow(
+                            1f + (config.thresholdValue - value) * config.parameter0,
+                            config.parameter1) - 1f);
+                case CompressionKernel.LowerDirectLogarithmic:
+                    return config.thresholdValue - config.parameter1 *
+                        (float)Math.Log(
+                            1f + config.parameter0 * (config.thresholdValue - value));
+                case CompressionKernel.LowerDirectSoftCap:
+                    var lowerDelta = config.thresholdValue - value;
+                    return config.thresholdValue -
+                        config.parameter0 * lowerDelta / (lowerDelta + config.parameter0);
                 default:
                     return value;
             }

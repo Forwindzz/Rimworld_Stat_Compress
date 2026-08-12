@@ -23,6 +23,7 @@ namespace StatCompression
             EnsureLoaded();
             var global = preset.global;
             settings.enabled = global.enabled;
+            settings.showInfoCardSettingsButton = global.showInfoCardSettingsButton;
             settings.stage = global.stage;
             settings.autoFallbackToGlobalPostfix = global.autoFallbackToGlobalPostfix;
             settings.method = global.method;
@@ -33,6 +34,12 @@ namespace StatCompression
             for (var i = 0; i < targetDamageConfigs.Count; i++)
             {
                 var source = preset.specialDamageConfigs[i];
+                settings.GetAdvancedConfig(source.defName).CopyFrom(source);
+            }
+            var targetHediffStageConfigs = settings.SpecialHediffStageConfigs;
+            for (var i = 0; i < targetHediffStageConfigs.Count; i++)
+            {
+                var source = preset.specialHediffStageConfigs[i];
                 settings.GetAdvancedConfig(source.defName).CopyFrom(source);
             }
         }
@@ -88,6 +95,9 @@ namespace StatCompression
             _ = StatCompressionSettingsXml.ReadSpecialDamageConfigs(
                 root.Element("SpecialDamageConfigs"),
                 result.specialDamageConfigs);
+            _ = StatCompressionSettingsXml.ReadSpecialHediffStageConfigs(
+                root.Element("SpecialHediffStageConfigs"),
+                result.specialHediffStageConfigs);
             var statsElement = root.Element("Stats");
             if (statsElement != null)
             {
@@ -127,6 +137,8 @@ namespace StatCompression
             SpecialCompressionConfigs.CreateBodyPartHealth();
         public readonly List<StatCompressionStatConfig> specialDamageConfigs =
             SpecialCompressionConfigs.CreateDamageConfigs();
+        public readonly List<StatCompressionStatConfig> specialHediffStageConfigs =
+            SpecialCompressionConfigs.CreateHediffStageConfigs();
         public readonly Dictionary<string, DefaultStatConfigRecord> recordsByDefName =
             new Dictionary<string, DefaultStatConfigRecord>(StringComparer.Ordinal);
     }

@@ -11,7 +11,10 @@ namespace StatCompression
         [HarmonyPostfix]
         private static void Postfix()
         {
-            BaseDamageCompressionModule.Initialize();
+            // Def post-processors registered by static constructors can replace verb/projectile objects.
+            // Defer twice so direct and nested ExecuteWhenFinished callbacks complete before capture.
+            LongEventHandler.ExecuteWhenFinished(() =>
+                LongEventHandler.ExecuteWhenFinished(BaseDamageCompressionModule.Initialize));
         }
     }
 
@@ -22,6 +25,18 @@ namespace StatCompression
         private static void Postfix(Def __instance, ref IEnumerable<StatDrawEntry> __result)
         {
             __result = BaseDamageCompressionModule.AppendInfoEntries(__result, __instance);
+        }
+    }
+
+    [HarmonyPatch(typeof(ThingDef), nameof(ThingDef.SpecialDisplayStats))]
+    internal static class BaseDamageThingDefReportPatch
+    {
+        [HarmonyPostfix]
+        private static void Postfix(
+            ThingDef __instance,
+            ref IEnumerable<StatDrawEntry> __result)
+        {
+            __result = BaseDamageCompressionModule.AppendThingDefDamageReports(__result, __instance);
         }
     }
 

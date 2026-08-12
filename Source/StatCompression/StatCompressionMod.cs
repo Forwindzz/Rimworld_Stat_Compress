@@ -46,6 +46,9 @@ namespace StatCompression
             listing.Begin(inRect);
 
             listing.CheckboxLabeled(StatCompressionText.T("StatCompression_Enable"), ref Settings.enabled);
+            listing.CheckboxLabeled(
+                StatCompressionText.T("StatCompression_ShowInfoCardSettingsButton"),
+                ref Settings.showInfoCardSettingsButton);
             DrawMethodRow(listing);
             DrawParameterRow(listing);
             DrawThresholdRow(listing);

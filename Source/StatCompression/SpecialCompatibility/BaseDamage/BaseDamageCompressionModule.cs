@@ -26,6 +26,12 @@ namespace StatCompression
         private static readonly AccessTools.FieldRef<ProjectileProperties, float> ProjectileArmorPenetration =
             AccessTools.FieldRefAccess<ProjectileProperties, float>("armorPenetrationBase");
 
+        private static readonly AccessTools.FieldRef<StatDrawEntry, string> OverrideReportText =
+            AccessTools.FieldRefAccess<StatDrawEntry, string>("overrideReportText");
+
+        private static readonly AccessTools.FieldRef<StatDrawEntry, string> ExplanationText =
+            AccessTools.FieldRefAccess<StatDrawEntry, string>("explanationText");
+
         private static readonly Dictionary<Def, List<DamageFieldRecord>> RecordsByOwner =
             new Dictionary<Def, List<DamageFieldRecord>>(ReferenceComparer<Def>.Instance);
 
@@ -65,6 +71,8 @@ namespace StatCompression
                 return;
             }
 
+            RestoreAll();
+            ScanDefs();
             Rebuild(settings);
         }
 
@@ -110,6 +118,67 @@ namespace StatCompression
                     false,
                     false);
             }
+        }
+
+        public static IEnumerable<StatDrawEntry> AppendThingDefDamageReports(
+            IEnumerable<StatDrawEntry> original,
+            ThingDef owner)
+        {
+            var projectileRecords = ProjectileRecordsFor(owner);
+            var projectileIndex = 0;
+            foreach (var entry in original)
+            {
+                if (entry.DisplayPriorityWithinCategory == 5500 &&
+                    projectileIndex < projectileRecords.Count)
+                {
+                    var record = projectileRecords[projectileIndex++];
+                    if (record.Changed)
+                    {
+                        var config = ConfigFor(StatCompressionMod.Settings, record.Category);
+                        var originalReport = OverrideReportText(entry);
+                        var compressionReport = BuildCompressionDetails(
+                            new List<DamageFieldRecord> { record },
+                            config);
+                        entry.SetReportText(
+                            originalReport.NullOrEmpty()
+                                ? compressionReport
+                                : originalReport.TrimEndNewlines() + "\n\n" + compressionReport);
+                        ExplanationText(entry) = null;
+                    }
+                }
+
+                yield return entry;
+            }
+        }
+
+        private static List<ProjectileDamageRecord> ProjectileRecordsFor(ThingDef owner)
+        {
+            var result = new List<ProjectileDamageRecord>();
+            if (owner == null ||
+                !RecordsByOwner.TryGetValue(owner, out var ownerRecords) ||
+                owner.Verbs.NullOrEmpty())
+            {
+                return result;
+            }
+
+            for (var i = 0; i < owner.Verbs.Count; i++)
+            {
+                var projectile = owner.Verbs[i]?.defaultProjectile?.projectile;
+                if (projectile?.damageDef == null || !projectile.damageDef.harmsHealth)
+                {
+                    continue;
+                }
+
+                var record = ownerRecords
+                    .OfType<ProjectileDamageRecord>()
+                    .FirstOrDefault(candidate => ReferenceEquals(candidate.Target, projectile));
+                if (record != null)
+                {
+                    result.Add(record);
+                }
+            }
+
+            return result;
         }
 
         private static void Rebuild(StatCompressionSettings settings)
@@ -266,6 +335,14 @@ namespace StatCompression
             List<DamageFieldRecord> records,
             StatCompressionStatConfig config)
         {
+            return "Stat_Thing_Damage_Desc".Translate() + "\n\n" +
+                   BuildCompressionDetails(records, config);
+        }
+
+        private static string BuildCompressionDetails(
+            List<DamageFieldRecord> records,
+            StatCompressionStatConfig config)
+        {
             var parameter = StatCompressionRuntime.GetActualParameter(
                 config.method,
                 StatCompressionMod.Settings.method,
@@ -273,8 +350,6 @@ namespace StatCompression
                 config.tScale);
             var lines = new List<string>
             {
-                "Stat_Thing_Damage_Desc".Translate(),
-                string.Empty,
                 "<color=#A0A0A0>",
                 StatCompressionText.T("StatCompression_Explanation_Separator"),
                 StatCompressionText.T("StatCompression_BaseDamage_Info_Header")
@@ -455,6 +530,8 @@ namespace StatCompression
             private readonly int originalDamage;
             private readonly float originalArmorPenetration;
             private readonly int effectiveOriginal;
+
+            public ProjectileProperties Target => target;
 
             public ProjectileDamageRecord(
                 ProjectileProperties target,

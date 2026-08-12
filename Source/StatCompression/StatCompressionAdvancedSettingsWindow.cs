@@ -31,8 +31,12 @@ namespace StatCompression
         private readonly Dictionary<string, string> thresholdBuffers = new Dictionary<string, string>(StringComparer.Ordinal);
         private readonly float[] columnWidths = (float[])DefaultColumnWidths.Clone();
         private readonly float[] resizeStartWidths = new float[ColumnCount];
-        private static readonly float[] HigherPreviewPercents = { 50f, 100f, 150f, 200f, 500f, 5000f, 100000f };
-        private static readonly float[] LowerPreviewPercents = { 150f, 100f, 75f, 40f, 10f, 1f, 0.1f };
+        private readonly float[] higherPreviewPercents = { 50f, 100f, 150f, 200f, 500f, 5000f, 100000f };
+        private readonly float[] lowerPreviewPercents = { 150f, 100f, 75f, 40f, 10f, 1f, 0.1f };
+        private readonly float[] lowerDirectPreviewPercents = { -100f, -50f, 0f, 50f, 100f, 200f };
+        private readonly string[] higherPreviewBuffers = new string[7];
+        private readonly string[] lowerPreviewBuffers = new string[7];
+        private readonly string[] lowerDirectPreviewBuffers = new string[6];
 
         private Vector2 scrollPosition;
         private string searchText = string.Empty;
@@ -55,11 +59,18 @@ namespace StatCompression
             Direction
         }
 
-        public StatCompressionAdvancedSettingsWindow(StatCompressionSettings settings)
+        public StatCompressionAdvancedSettingsWindow(StatCompressionSettings settings, string focusDefName = null)
         {
             this.settings = settings;
+            if (!focusDefName.NullOrEmpty())
+            {
+                searchText = focusDefName;
+                selectedDefName = focusDefName;
+            }
+
             doCloseX = true;
             doCloseButton = false;
+            forcePause = true;
             absorbInputAroundWindow = true;
             closeOnClickedOutside = false;
             optionalTitle = StatCompressionText.T("StatCompression_AdvancedTitle");
@@ -259,19 +270,26 @@ namespace StatCompression
             TooltipHandler.TipRegion(Col(rect, 4), StatCompressionText.T("StatCompression_TScaleTooltip"));
 
             var baselineBuffer = GetBuffer(baselineBuffers, config.defName, "b", config.baseline);
-            Widgets.TextFieldNumeric(Col(rect, 5), ref config.baseline, ref baselineBuffer, 0.000001f, float.MaxValue);
+            Widgets.TextFieldNumeric(Col(rect, 5), ref config.baseline, ref baselineBuffer, 1e-10f, float.MaxValue);
             baselineBuffers[BufferKey(config.defName, "b")] = baselineBuffer;
 
             var thresholdPercent = config.thresholdFactor * 100f;
             var thresholdBuffer = GetBuffer(thresholdBuffers, config.defName, "th", thresholdPercent);
-            Widgets.TextFieldNumeric(Col(rect, 6), ref thresholdPercent, ref thresholdBuffer, 0.0001f, float.MaxValue);
-            config.thresholdFactor = Math.Max(0.0001f, thresholdPercent / 100f);
+            var thresholdMinimum = config.direction == StatCompressionDirection.LowerIsBetter
+                ? 0.0001f
+                : float.MinValue;
+            Widgets.TextFieldNumeric(Col(rect, 6), ref thresholdPercent, ref thresholdBuffer, thresholdMinimum, float.MaxValue);
+            config.thresholdFactor = thresholdPercent / 100f;
             thresholdBuffers[BufferKey(config.defName, "th")] = thresholdBuffer;
 
             var directionRect = Col(rect, 7);
-            if (SpecialCompressionConfigs.IsDamage(config.defName))
+            var fixedSpecialDirection = SpecialCompressionConfigs.IsDamage(config.defName) ||
+                                        SpecialCompressionConfigs.IsHediffStage(config.defName);
+            if (fixedSpecialDirection)
             {
-                config.direction = StatCompressionDirection.HigherIsBetter;
+                config.direction = SpecialCompressionConfigs.IsDamage(config.defName)
+                    ? StatCompressionDirection.HigherIsBetter
+                    : SpecialCompressionConfigs.DirectionForHediffStage(config.defName);
                 var oldAnchor = Text.Anchor;
                 Text.Anchor = TextAnchor.MiddleCenter;
                 Widgets.Label(directionRect, StatCompressionText.DirectionShortLabel(config.direction));
@@ -279,14 +297,14 @@ namespace StatCompression
             }
             else if (Widgets.ButtonText(directionRect, StatCompressionText.DirectionShortLabel(config.direction)))
             {
-                config.direction = config.direction == StatCompressionDirection.HigherIsBetter
-                    ? StatCompressionDirection.LowerIsBetter
-                    : StatCompressionDirection.HigherIsBetter;
+                OpenDirectionMenu(config);
             }
             TooltipHandler.TipRegion(
                 directionRect,
                 SpecialCompressionConfigs.IsDamage(config.defName)
                     ? StatCompressionText.T("StatCompression_SP_Damage_DirectionTooltip")
+                    : SpecialCompressionConfigs.IsHediffStage(config.defName)
+                        ? StatCompressionText.T("StatCompression_SP_HediffStage_DirectionTooltip")
                     : StatCompressionText.T("StatCompression_DirectionTooltip"));
             TooltipHandler.TipRegion(Col(rect, 1), Tooltip(stat, config));
             TooltipHandler.TipRegion(Col(rect, 2), Tooltip(stat, config));
@@ -319,9 +337,8 @@ namespace StatCompression
                 settings.method,
                 settings.parameter,
                 config.tScale);
-            var thresholdValue = config.direction == StatCompressionDirection.HigherIsBetter
-                ? config.baseline * config.thresholdFactor
-                : config.baseline / config.thresholdFactor;
+            var compiled = StatCompressionRuntimeCompiler.CompileConfig(settings, config);
+            var thresholdValue = compiled.thresholdValue;
             var summaryY = inner.y + 56f;
             Text.Font = GameFont.Tiny;
             Widgets.Label(
@@ -343,10 +360,7 @@ namespace StatCompression
                 new Rect(inner.x, valuesY + 4f, inner.width, 22f),
                 StatCompressionText.T("StatCompression_AdvancedPreviewValues"));
 
-            var percents = config.direction == StatCompressionDirection.HigherIsBetter
-                ? HigherPreviewPercents
-                : LowerPreviewPercents;
-            var compiled = StatCompressionRuntimeCompiler.CompileConfig(settings, config);
+            GetPreviewValues(config.direction, out var percents, out var percentBuffers);
             var percentColumnWidth = Mathf.Clamp(inner.width * 0.44f, 146f, 190f);
             var columnHeaderY = valuesY + 26f;
             Text.Anchor = TextAnchor.MiddleLeft;
@@ -365,7 +379,8 @@ namespace StatCompression
                     stat,
                     config,
                     ref compiled,
-                    percents[i],
+                    percents,
+                    percentBuffers,
                     percentColumnWidth,
                     i);
             }
@@ -390,7 +405,8 @@ namespace StatCompression
             StatDef stat,
             StatCompressionStatConfig config,
             ref CompiledStatConfig compiled,
-            float inputPercent,
+            float[] previewPercents,
+            string[] previewBuffers,
             float percentColumnWidth,
             int index)
         {
@@ -399,19 +415,58 @@ namespace StatCompression
                 Widgets.DrawBoxSolid(rect, new Color(1f, 1f, 1f, 0.025f));
             }
 
+            if (previewBuffers[index] == null)
+            {
+                previewBuffers[index] = previewPercents[index].ToString("0.###");
+            }
+
+            var inputRect = new Rect(rect.x, rect.y + 1f, 56f, rect.height - 2f);
+            Widgets.TextFieldNumeric(
+                inputRect,
+                ref previewPercents[index],
+                ref previewBuffers[index],
+                float.MinValue,
+                float.MaxValue);
+
+            var inputPercent = previewPercents[index];
             var original = config.baseline * (inputPercent / 100f);
             var final = StatCompressionRuntimeCompiler.ApplyStatic(ref compiled, original);
             var mappedPercent = config.baseline == 0f ? 0f : final / config.baseline * 100f;
-            var percentText = FormatPreviewPercent(inputPercent) + " -> " + FormatPreviewPercent(mappedPercent);
+            var percentText = "% -> " + FormatPreviewPercent(mappedPercent);
             var actualText = FormatStatValue(stat, original) + " -> " + FormatStatValue(stat, final);
             var oldWordWrap = Text.WordWrap;
             Text.WordWrap = false;
-            Widgets.LabelFit(new Rect(rect.x, rect.y, percentColumnWidth, rect.height), percentText);
+            Widgets.LabelFit(
+                new Rect(inputRect.xMax + 3f, rect.y, percentColumnWidth - inputRect.width - 3f, rect.height),
+                percentText);
             Widgets.LabelFit(
                 new Rect(rect.x + percentColumnWidth + 8f, rect.y, rect.width - percentColumnWidth - 8f, rect.height),
                 actualText);
             Text.WordWrap = oldWordWrap;
             TooltipHandler.TipRegion(rect, percentText + "    " + actualText);
+        }
+
+        private void GetPreviewValues(
+            StatCompressionDirection direction,
+            out float[] values,
+            out string[] buffers)
+        {
+            if (direction == StatCompressionDirection.HigherIsBetter)
+            {
+                values = higherPreviewPercents;
+                buffers = higherPreviewBuffers;
+                return;
+            }
+
+            if (direction == StatCompressionDirection.LowerDirect)
+            {
+                values = lowerDirectPreviewPercents;
+                buffers = lowerDirectPreviewBuffers;
+                return;
+            }
+
+            values = lowerPreviewPercents;
+            buffers = lowerPreviewBuffers;
         }
 
         private static void DrawPreviewGraph(
@@ -425,22 +480,47 @@ namespace StatCompression
                 return;
             }
 
-            var minInput = Math.Max(0.000001f, previewPercents.Min());
-            var maxInput = Math.Max(minInput * 1.001f, previewPercents.Max());
-            var logMin = (float)Math.Log10(minInput);
-            var logMax = (float)Math.Log10(maxInput);
+            var minInput = previewPercents.Min();
+            var maxInput = previewPercents.Max();
+            var signedAxis = minInput <= 0f;
+            if (!signedAxis)
+            {
+                minInput = Math.Max(0.000001f, minInput);
+                maxInput = Math.Max(minInput * 1.001f, maxInput);
+            }
+
+            var axisMin = TransformInputAxis(minInput, signedAxis);
+            var axisMax = TransformInputAxis(maxInput, signedAxis);
+            if (Math.Abs(axisMax - axisMin) < 0.000001f)
+            {
+                axisMin -= 1f;
+                axisMax += 1f;
+            }
+
+            var minOutput = 0f;
             var maxOutput = 0f;
             for (var i = 0; i <= GraphSegmentCount; i++)
             {
-                var inputPercent = LogSample(logMin, logMax, i / (float)GraphSegmentCount);
+                var inputPercent = InverseInputAxis(
+                    Mathf.Lerp(axisMin, axisMax, i / (float)GraphSegmentCount),
+                    signedAxis);
                 var outputPercent = PreviewMappedPercent(config, ref compiled, inputPercent);
                 if (!float.IsNaN(outputPercent) && !float.IsInfinity(outputPercent))
                 {
+                    minOutput = Math.Min(minOutput, outputPercent);
                     maxOutput = Math.Max(maxOutput, outputPercent);
                 }
             }
 
-            var yMax = NiceAxisMaximum(maxOutput);
+            if (Math.Abs(maxOutput - minOutput) < 0.000001f)
+            {
+                minOutput -= 1f;
+                maxOutput += 1f;
+            }
+
+            var outputPadding = (maxOutput - minOutput) * 0.06f;
+            var yMin = minOutput - outputPadding;
+            var yMax = maxOutput + outputPadding;
             var plot = new Rect(rect.x + 46f, rect.y + 20f, rect.width - 56f, rect.height - 46f);
             Widgets.DrawBoxSolid(plot, new Color(0.08f, 0.09f, 0.1f, 0.72f));
 
@@ -454,7 +534,9 @@ namespace StatCompression
                 StatCompressionText.T("StatCompression_AdvancedPreviewGraphYAxis"));
             Text.Anchor = TextAnchor.MiddleRight;
             Widgets.Label(new Rect(plot.x + plot.width * 0.5f, rect.y, plot.width * 0.5f, 18f),
-                StatCompressionText.T("StatCompression_AdvancedPreviewGraphXAxis"));
+                StatCompressionText.T(signedAxis
+                    ? "StatCompression_AdvancedPreviewGraphXAxisSigned"
+                    : "StatCompression_AdvancedPreviewGraphXAxis"));
 
             var gridColor = new Color(0.55f, 0.57f, 0.59f, 0.28f);
             for (var i = 0; i <= 4; i++)
@@ -465,31 +547,45 @@ namespace StatCompression
                 Text.Anchor = TextAnchor.MiddleRight;
                 Widgets.Label(
                     new Rect(rect.x, y - 9f, 42f, 18f),
-                    FormatAxisPercent(yMax * fraction));
+                    FormatAxisPercent(Mathf.Lerp(yMin, yMax, fraction)));
             }
 
-            var firstDecade = (int)Math.Ceiling(logMin);
-            var lastDecade = (int)Math.Floor(logMax);
-            for (var decade = firstDecade; decade <= lastDecade; decade++)
+            if (signedAxis)
             {
-                var fraction = (decade - logMin) / (logMax - logMin);
-                var x = Mathf.Lerp(plot.x, plot.xMax, fraction);
-                Widgets.DrawLine(new Vector2(x, plot.y), new Vector2(x, plot.yMax), gridColor, 1f);
-                Text.Anchor = TextAnchor.UpperCenter;
-                Widgets.Label(
-                    new Rect(x - 32f, plot.yMax + 1f, 64f, 18f),
-                    FormatAxisPercent((float)Math.Pow(10d, decade)));
+                for (var i = 0; i <= 4; i++)
+                {
+                    var fraction = i / 4f;
+                    var axisValue = Mathf.Lerp(axisMin, axisMax, fraction);
+                    DrawInputGridLine(
+                        plot,
+                        fraction,
+                        FormatAxisPercent(InverseInputAxis(axisValue, true)),
+                        gridColor);
+                }
+            }
+            else
+            {
+                var firstDecade = (int)Math.Ceiling(axisMin);
+                var lastDecade = (int)Math.Floor(axisMax);
+                for (var decade = firstDecade; decade <= lastDecade; decade++)
+                {
+                    DrawInputGridLine(
+                        plot,
+                        (decade - axisMin) / (axisMax - axisMin),
+                        FormatAxisPercent((float)Math.Pow(10d, decade)),
+                        gridColor);
+                }
             }
 
-            var thresholdPercent = config.direction == StatCompressionDirection.HigherIsBetter
-                ? config.thresholdFactor * 100f
-                : 100f / config.thresholdFactor;
+            var thresholdPercent = config.baseline == 0f
+                ? float.NaN
+                : compiled.thresholdValue / config.baseline * 100f;
             if (thresholdPercent >= minInput && thresholdPercent <= maxInput)
             {
                 var thresholdX = Mathf.Lerp(
                     plot.x,
                     plot.xMax,
-                    ((float)Math.Log10(thresholdPercent) - logMin) / (logMax - logMin));
+                    (TransformInputAxis(thresholdPercent, signedAxis) - axisMin) / (axisMax - axisMin));
                 Widgets.DrawLine(
                     new Vector2(thresholdX, plot.y),
                     new Vector2(thresholdX, plot.yMax),
@@ -503,7 +599,7 @@ namespace StatCompression
             for (var i = 0; i <= GraphSegmentCount; i++)
             {
                 var fraction = i / (float)GraphSegmentCount;
-                var inputPercent = LogSample(logMin, logMax, fraction);
+                var inputPercent = InverseInputAxis(Mathf.Lerp(axisMin, axisMax, fraction), signedAxis);
                 var outputPercent = PreviewMappedPercent(config, ref compiled, inputPercent);
                 if (float.IsNaN(outputPercent) || float.IsInfinity(outputPercent))
                 {
@@ -513,7 +609,7 @@ namespace StatCompression
 
                 var point = new Vector2(
                     Mathf.Lerp(plot.x, plot.xMax, fraction),
-                    Mathf.Lerp(plot.yMax, plot.y, Mathf.Clamp01(outputPercent / yMax)));
+                    Mathf.Lerp(plot.yMax, plot.y, Mathf.InverseLerp(yMin, yMax, outputPercent)));
                 if (hasPrevious)
                 {
                     Widgets.DrawLine(previous, point, curveColor, 2f);
@@ -536,14 +632,42 @@ namespace StatCompression
                     Mathf.Lerp(
                         plot.x,
                         plot.xMax,
-                        ((float)Math.Log10(inputPercent) - logMin) / (logMax - logMin)),
-                    Mathf.Lerp(plot.yMax, plot.y, Mathf.Clamp01(outputPercent / yMax)));
+                        (TransformInputAxis(inputPercent, signedAxis) - axisMin) / (axisMax - axisMin)),
+                    Mathf.Lerp(plot.yMax, plot.y, Mathf.InverseLerp(yMin, yMax, outputPercent)));
                 Widgets.DrawBoxSolid(new Rect(point.x - 2f, point.y - 2f, 4f, 4f), Color.white);
             }
 
             Text.Font = oldFont;
             Text.Anchor = oldAnchor;
             Text.WordWrap = oldWordWrap;
+        }
+
+        private static void DrawInputGridLine(Rect plot, float fraction, string label, Color color)
+        {
+            var x = Mathf.Lerp(plot.x, plot.xMax, fraction);
+            Widgets.DrawLine(new Vector2(x, plot.y), new Vector2(x, plot.yMax), color, 1f);
+            Text.Anchor = TextAnchor.UpperCenter;
+            Widgets.Label(new Rect(x - 34f, plot.yMax + 1f, 68f, 18f), label);
+        }
+
+        private static float TransformInputAxis(float value, bool signed)
+        {
+            if (!signed)
+            {
+                return (float)Math.Log10(Math.Max(0.000001f, value));
+            }
+
+            return Math.Sign(value) * (float)Math.Log10(1f + Math.Abs(value) / 100f);
+        }
+
+        private static float InverseInputAxis(float value, bool signed)
+        {
+            if (!signed)
+            {
+                return (float)Math.Pow(10d, value);
+            }
+
+            return Math.Sign(value) * 100f * ((float)Math.Pow(10d, Math.Abs(value)) - 1f);
         }
 
         private static float PreviewMappedPercent(
@@ -554,24 +678,6 @@ namespace StatCompression
             var original = config.baseline * inputPercent / 100f;
             var mapped = StatCompressionRuntimeCompiler.ApplyStatic(ref compiled, original);
             return mapped / config.baseline * 100f;
-        }
-
-        private static float LogSample(float logMin, float logMax, float fraction)
-        {
-            return (float)Math.Pow(10d, Mathf.Lerp(logMin, logMax, fraction));
-        }
-
-        private static float NiceAxisMaximum(float value)
-        {
-            if (value <= 0f || float.IsNaN(value) || float.IsInfinity(value))
-            {
-                return 100f;
-            }
-
-            var magnitude = (float)Math.Pow(10d, Math.Floor(Math.Log10(value)));
-            var scaled = value / magnitude;
-            var nice = scaled <= 1f ? 1f : scaled <= 2f ? 2f : scaled <= 5f ? 5f : 10f;
-            return nice * magnitude;
         }
 
         private static string FormatPreviewPercent(float value)
@@ -592,9 +698,19 @@ namespace StatCompression
         private string BuildFormula(StatCompressionStatConfig config, float actualParameter)
         {
             var expression = CompressionExpression(config.method);
-            var key = config.direction == StatCompressionDirection.HigherIsBetter
-                ? "StatCompression_AdvancedPreviewFormulaHigher"
-                : "StatCompression_AdvancedPreviewFormulaLower";
+            string key;
+            switch (config.direction)
+            {
+                case StatCompressionDirection.HigherIsBetter:
+                    key = "StatCompression_AdvancedPreviewFormulaHigher";
+                    break;
+                case StatCompressionDirection.LowerDirect:
+                    key = "StatCompression_AdvancedPreviewFormulaLowerDirect";
+                    break;
+                default:
+                    key = "StatCompression_AdvancedPreviewFormulaLower";
+                    break;
+            }
             return StatCompressionText.T(key, expression, actualParameter.ToString("0.###"));
         }
 
@@ -642,6 +758,27 @@ namespace StatCompression
                         config.method = selectedMethod;
                         StatCompressionSettings.NormalizeConfig(config);
                     }));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private void OpenDirectionMenu(StatCompressionStatConfig config)
+        {
+            var options = new List<FloatMenuOption>();
+            var directions = new[]
+            {
+                StatCompressionDirection.HigherIsBetter,
+                StatCompressionDirection.LowerIsBetter,
+                StatCompressionDirection.LowerDirect
+            };
+            for (var i = 0; i < directions.Length; i++)
+            {
+                var selectedDirection = directions[i];
+                options.Add(new FloatMenuOption(
+                    StatCompressionText.DirectionShortLabel(selectedDirection) + ": " +
+                    StatCompressionText.DirectionExplanation(selectedDirection),
+                    () => config.direction = selectedDirection));
             }
 
             Find.WindowStack.Add(new FloatMenu(options));
@@ -794,10 +931,14 @@ namespace StatCompression
                    (SpecialCompressionConfigs.IsSpecial(config.defName)
                        ? "\n" + StatCompressionText.T("StatCompression_Tooltip_SpecialModule") +
                          (config.defName == SpecialCompressionConfigs.BodyPartHealthDefName
-                             ? "\n" + StatCompressionText.T("StatCompression_SP_BodyPartHealth_BaselineTooltip")
-                             : SpecialCompressionConfigs.IsDamage(config.defName)
-                                 ? "\n" + StatCompressionText.T("StatCompression_SP_Damage_BaselineTooltip")
-                                 : string.Empty)
+                              ? "\n" + StatCompressionText.T("StatCompression_SP_BodyPartHealth_BaselineTooltip")
+                              : SpecialCompressionConfigs.IsDamage(config.defName)
+                                  ? "\n" + StatCompressionText.T("StatCompression_SP_Damage_BaselineTooltip")
+                                  : SpecialCompressionConfigs.IsHediffStage(config.defName)
+                                      ? "\n" + (config.defName == SpecialCompressionConfigs.RegenerationRateDefName
+                                          ? StatCompressionText.T("StatCompression_SP_RegenerationRate_BaselineTooltip")
+                                          : StatCompressionText.T("StatCompression_SP_HediffStageFactor_BaselineTooltip"))
+                                  : string.Empty)
                        : stat == null
                            ? string.Empty
                            : "\n" + StatCompressionText.T("StatCompression_Tooltip_Category", stat.category?.defName));
