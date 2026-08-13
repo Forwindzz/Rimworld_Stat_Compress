@@ -141,6 +141,111 @@ namespace StatCompression
             }
         }
 
+        public static bool TryGetImportCollision(
+            StatCompressionPreset source,
+            out StatCompressionPreset existing,
+            out string error)
+        {
+            EnsureLoaded();
+            existing = null;
+            if (!TryGetImportFileName(source, out var fileName, out error))
+            {
+                return false;
+            }
+
+            existing = presets.FirstOrDefault(preset =>
+                preset.BuiltIn &&
+                string.Equals(
+                    preset.Name,
+                    source.Name,
+                    StringComparison.CurrentCultureIgnoreCase));
+            if (existing == null)
+            {
+                existing = Find(fileName);
+            }
+            if (existing != null && existing.BuiltIn)
+            {
+                error = StatCompressionText.T(
+                    "StatCompression_PresetBuiltinConflict",
+                    existing.Name);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool TryImport(
+            StatCompressionPreset source,
+            bool overwrite,
+            out StatCompressionPreset imported,
+            out string error)
+        {
+            imported = null;
+            if (!TryGetImportCollision(source, out var existing, out error))
+            {
+                return false;
+            }
+            if (existing != null && !overwrite)
+            {
+                error = StatCompressionText.T(
+                    "StatCompression_Preset_ErrorExists",
+                    existing.Name);
+                return false;
+            }
+
+            var fileName = SafeFileName(source.Name);
+            var path = Path.Combine(UserPresetDirectory, fileName + ".xml");
+            var temporaryPath = path + ".tmp-" + Guid.NewGuid().ToString("N");
+            try
+            {
+                Directory.CreateDirectory(UserPresetDirectory);
+                var copy = new StatCompressionPreset
+                {
+                    Name = source.Name.Trim(),
+                    FileName = fileName,
+                    Path = path,
+                    BuiltIn = false,
+                    Configs = source.Configs
+                        .Where(config => config != null)
+                        .Select(CloneConfig)
+                        .OrderBy(config => config.defName, StringComparer.Ordinal)
+                        .ToList()
+                };
+                StatCompressionPresetXml.Save(copy, temporaryPath);
+                if (File.Exists(path))
+                {
+                    File.Copy(temporaryPath, path, true);
+                    File.Delete(temporaryPath);
+                }
+                else
+                {
+                    File.Move(temporaryPath, path);
+                }
+
+                Refresh();
+                imported = Find(fileName);
+                return imported != null;
+            }
+            catch (Exception ex)
+            {
+                error = $"{ex.GetType().Name}: {ex.Message}";
+                return false;
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    try
+                    {
+                        File.Delete(temporaryPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
         public static bool TryFindConflict(
             StatCompressionSettings settings,
             StatCompressionPreset candidate,
@@ -292,6 +397,34 @@ namespace StatCompression
         {
             var invalid = Path.GetInvalidFileNameChars();
             return new string(name.Where(ch => !invalid.Contains(ch)).ToArray()).Trim();
+        }
+
+        private static bool TryGetImportFileName(
+            StatCompressionPreset source,
+            out string fileName,
+            out string error)
+        {
+            fileName = string.Empty;
+            error = null;
+            if (source == null || source.Name.NullOrEmpty())
+            {
+                error = StatCompressionText.T("StatCompression_Preset_ErrorEmptyName");
+                return false;
+            }
+
+            fileName = SafeFileName(source.Name.Trim());
+            if (fileName.Length == 0)
+            {
+                error = StatCompressionText.T("StatCompression_Preset_ErrorInvalidName");
+                return false;
+            }
+            if (source.Configs == null || source.Configs.Count == 0)
+            {
+                error = StatCompressionText.T("StatCompression_Preset_ErrorNoSelection");
+                return false;
+            }
+
+            return true;
         }
     }
 }

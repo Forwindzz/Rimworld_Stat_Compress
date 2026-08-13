@@ -205,6 +205,48 @@ namespace StatCompression
                 return false;
             }
 
+            var enabledText = Attr(element, "enabled");
+            if (!enabledText.NullOrEmpty() && !bool.TryParse(enabledText, out _))
+            {
+                error = $"invalid enabled for {defName}";
+                return false;
+            }
+
+            var methodText = Attr(element, "method");
+            if (!methodText.NullOrEmpty() &&
+                (!Enum.TryParse(methodText, out CompressionMethod method) ||
+                 !Enum.IsDefined(typeof(CompressionMethod), method)))
+            {
+                error = $"invalid method for {defName}";
+                return false;
+            }
+
+            var directionText = Attr(element, "direction");
+            if (!directionText.NullOrEmpty() &&
+                (!Enum.TryParse(directionText, out StatCompressionDirection direction) ||
+                 !Enum.IsDefined(typeof(StatCompressionDirection), direction)))
+            {
+                error = $"invalid direction for {defName}";
+                return false;
+            }
+
+            var numericFields = new[]
+            {
+                "method_t",
+                "tScale",
+                "baseline",
+                "thresholdFactor"
+            };
+            for (var i = 0; i < numericFields.Length; i++)
+            {
+                var value = Attr(element, numericFields[i]);
+                if (!value.NullOrEmpty() && !TryParseFloat(value, out _))
+                {
+                    error = $"invalid {numericFields[i]} for {defName}";
+                    return false;
+                }
+            }
+
             config = new StatCompressionStatConfig { defName = defName };
             ApplyStatElement(element, config);
             NormalizeConfigForXml(config);

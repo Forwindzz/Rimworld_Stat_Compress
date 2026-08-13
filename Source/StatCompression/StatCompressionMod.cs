@@ -12,6 +12,7 @@ namespace StatCompression
         private static string lastExportPath;
         private static string lastImportPath;
         private static bool globalSettingsExpanded;
+        private static bool configActionsExpanded;
         private static Vector2 presetScrollPosition;
 
         public static StatCompressionSettings Settings { get; private set; }
@@ -69,18 +70,8 @@ namespace StatCompression
                 DrawPreviewSheet(listing);
             }
 
-            var settingsReplaced = DrawActionButtons(listing);
-            settingsReplaced |= DrawResetRow(listing);
-
-            if (!lastExportPath.NullOrEmpty())
-            {
-                listing.Label(StatCompressionText.T("StatCompression_LastExport", lastExportPath));
-            }
-
-            if (!lastImportPath.NullOrEmpty())
-            {
-                listing.Label(StatCompressionText.T("StatCompression_LastImport", lastImportPath));
-            }
+            DrawAdvancedSettingsButton(listing);
+            var settingsReplaced = DrawConfigActionsSection(listing);
 
             listing.End();
 
@@ -321,48 +312,257 @@ namespace StatCompression
             }
         }
 
-        private static bool DrawActionButtons(Listing_Standard listing)
+        private static void DrawAdvancedSettingsButton(Listing_Standard listing)
         {
-            var settingsReplaced = false;
-            var rect = listing.GetRect(32f);
-            var buttonWidth = rect.width / 3f;
-            var advancedRect = new Rect(rect.x, rect.y, buttonWidth - 4f, rect.height);
-            var exportRect = new Rect(rect.x + buttonWidth + 2f, rect.y, buttonWidth - 4f, rect.height);
-            var importRect = new Rect(rect.x + buttonWidth * 2f + 4f, rect.y, buttonWidth - 4f, rect.height);
-            if (Widgets.ButtonText(advancedRect, StatCompressionText.T("StatCompression_AdvancedSettings")))
+            if (listing.ButtonText(StatCompressionText.T("StatCompression_AdvancedSettings")))
             {
                 Find.WindowStack.Add(new StatCompressionAdvancedSettingsWindow(Settings));
             }
+        }
 
-            if (Widgets.ButtonText(exportRect, StatCompressionText.T("StatCompression_ExportXml")))
+        private static bool DrawConfigActionsSection(Listing_Standard listing)
+        {
+            if (listing.ButtonText(
+                    (configActionsExpanded ? "- " : "+ ") +
+                    StatCompressionText.T("StatCompression_ConfigActions")))
             {
-                lastExportPath = Settings.ExportSettingsToXml();
-                Messages.Message(StatCompressionText.T("StatCompression_ExportedMessage", lastExportPath), MessageTypeDefOf.TaskCompletion, false);
+                configActionsExpanded = !configActionsExpanded;
             }
 
-            if (Widgets.ButtonText(importRect, StatCompressionText.T("StatCompression_ImportXml")))
+            if (!configActionsExpanded)
             {
-                lastImportPath = Settings.ImportSettingsFromXml(out var updated, out var skipped);
-                parameterBuffer = Settings.parameter.ToString();
-                thresholdPercentBuffer = (Settings.thresholdFactor * 100f).ToString();
-                settingsReplaced = true;
-                Messages.Message(StatCompressionText.T("StatCompression_ImportedMessage", updated, skipped, lastImportPath), MessageTypeDefOf.TaskCompletion, false);
+                return false;
+            }
+
+            var settingsReplaced = false;
+            var xmlRect = listing.GetRect(32f);
+            var halfWidth = xmlRect.width / 2f;
+            var exportRect = new Rect(xmlRect.x, xmlRect.y, halfWidth - 2f, xmlRect.height);
+            var importRect = new Rect(xmlRect.x + halfWidth + 2f, xmlRect.y, halfWidth - 2f, xmlRect.height);
+
+            if (Widgets.ButtonText(
+                    exportRect,
+                    StatCompressionText.T("StatCompression_ExportAllSettingsXml")))
+            {
+                try
+                {
+                    lastExportPath = Settings.ExportSettingsToXml();
+                    Messages.Message(
+                        StatCompressionText.T(
+                            "StatCompression_ExportedMessage",
+                            lastExportPath),
+                        MessageTypeDefOf.TaskCompletion,
+                        false);
+                }
+                catch (Exception ex)
+                {
+                    Messages.Message(
+                        StatCompressionText.T(
+                            "StatCompression_ExportSettingsFailed",
+                            ex.GetType().Name + ": " + ex.Message),
+                        MessageTypeDefOf.RejectInput,
+                        false);
+                }
+            }
+
+            if (Widgets.ButtonText(
+                    importRect,
+                    StatCompressionText.T("StatCompression_ImportAllSettingsXml")))
+            {
+                lastImportPath = Settings.ImportSettingsFromXml(
+                    out var updated,
+                    out var skipped,
+                    out var error);
+                if (error.NullOrEmpty())
+                {
+                    parameterBuffer = Settings.parameter.ToString();
+                    thresholdPercentBuffer = (Settings.thresholdFactor * 100f).ToString();
+                    settingsReplaced = true;
+                    Messages.Message(
+                        StatCompressionText.T(
+                            "StatCompression_ImportedMessage",
+                            updated,
+                            skipped,
+                            lastImportPath),
+                        MessageTypeDefOf.TaskCompletion,
+                        false);
+                }
+                else
+                {
+                    Messages.Message(
+                        StatCompressionText.T(
+                            "StatCompression_ImportSettingsFailed",
+                            error),
+                        MessageTypeDefOf.RejectInput,
+                        false);
+                }
+            }
+
+            var presetRect = listing.GetRect(32f);
+            var copyRect = new Rect(
+                presetRect.x,
+                presetRect.y,
+                halfWidth - 2f,
+                presetRect.height);
+            var pasteRect = new Rect(
+                presetRect.x + halfWidth + 2f,
+                presetRect.y,
+                halfWidth - 2f,
+                presetRect.height);
+            if (Widgets.ButtonText(
+                    copyRect,
+                    StatCompressionText.T("StatCompression_ExportPresetClipboard")))
+            {
+                OpenPresetClipboardExportMenu();
+            }
+            if (Widgets.ButtonText(
+                    pasteRect,
+                    StatCompressionText.T("StatCompression_ImportPresetClipboard")))
+            {
+                ImportPresetFromClipboard();
+            }
+
+            if (listing.ButtonText(StatCompressionText.T("StatCompression_ResetAllSettings")))
+            {
+                RequestResetConfirmation();
+            }
+
+            if (!lastExportPath.NullOrEmpty())
+            {
+                listing.Label(StatCompressionText.T("StatCompression_LastExport", lastExportPath));
+            }
+            if (!lastImportPath.NullOrEmpty())
+            {
+                listing.Label(StatCompressionText.T("StatCompression_LastImport", lastImportPath));
             }
 
             return settingsReplaced;
         }
 
-        private static bool DrawResetRow(Listing_Standard listing)
+        private static void OpenPresetClipboardExportMenu()
         {
-            if (listing.ButtonText(StatCompressionText.T("StatCompression_ResetSettings")))
+            StatCompressionPresetManager.Refresh();
+            var presets = StatCompressionPresetManager.Presets;
+            if (presets.Count == 0)
             {
-                Settings.ResetToDefaults();
-                parameterBuffer = Settings.parameter.ToString();
-                thresholdPercentBuffer = (Settings.thresholdFactor * 100f).ToString();
-                return true;
+                Messages.Message(
+                    StatCompressionText.T("StatCompression_Preset_None"),
+                    MessageTypeDefOf.NeutralEvent,
+                    false);
+                return;
             }
 
-            return false;
+            var options = new System.Collections.Generic.List<FloatMenuOption>(presets.Count);
+            for (var i = 0; i < presets.Count; i++)
+            {
+                var preset = presets[i];
+                options.Add(new FloatMenuOption(
+                    preset.Name,
+                    () =>
+                    {
+                        GUIUtility.systemCopyBuffer =
+                            StatCompressionPresetXml.CreateDocument(preset).ToString();
+                        Messages.Message(
+                            StatCompressionText.T(
+                                "StatCompression_PresetCopied",
+                                preset.Name),
+                            MessageTypeDefOf.TaskCompletion,
+                            false);
+                    }));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private static void ImportPresetFromClipboard()
+        {
+            var xml = GUIUtility.systemCopyBuffer;
+            if (xml.NullOrEmpty())
+            {
+                Messages.Message(
+                    StatCompressionText.T("StatCompression_PresetClipboardEmpty"),
+                    MessageTypeDefOf.RejectInput,
+                    false);
+                return;
+            }
+
+            if (!StatCompressionPresetXml.TryParse(xml, out var preset, out var parseError))
+            {
+                Messages.Message(
+                    StatCompressionText.T(
+                        "StatCompression_PresetClipboardInvalid",
+                        parseError),
+                    MessageTypeDefOf.RejectInput,
+                    false);
+                return;
+            }
+
+            if (!StatCompressionPresetManager.TryGetImportCollision(
+                    preset,
+                    out var existing,
+                    out var validationError))
+            {
+                Messages.Message(validationError, MessageTypeDefOf.RejectInput, false);
+                return;
+            }
+
+            if (existing == null)
+            {
+                SaveImportedPreset(preset, false);
+                return;
+            }
+
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                StatCompressionText.T(
+                    "StatCompression_PresetOverwriteConfirm",
+                    existing.Name),
+                () => SaveImportedPreset(preset, true),
+                true,
+                StatCompressionText.T("StatCompression_PresetOverwriteTitle")));
+        }
+
+        private static void SaveImportedPreset(
+            StatCompressionPreset preset,
+            bool overwrite)
+        {
+            if (StatCompressionPresetManager.TryImport(
+                    preset,
+                    overwrite,
+                    out var imported,
+                    out var error))
+            {
+                Messages.Message(
+                    StatCompressionText.T(
+                        "StatCompression_PresetImported",
+                        imported.Name),
+                    MessageTypeDefOf.TaskCompletion,
+                    false);
+            }
+            else
+            {
+                Messages.Message(error, MessageTypeDefOf.RejectInput, false);
+            }
+        }
+
+        private static void RequestResetConfirmation()
+        {
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                StatCompressionText.T("StatCompression_ResetConfirmText"),
+                ResetAllSettings,
+                true,
+                StatCompressionText.T("StatCompression_ResetConfirmTitle")));
+        }
+
+        private static void ResetAllSettings()
+        {
+            Settings.ResetToDefaults();
+            parameterBuffer = Settings.parameter.ToString();
+            thresholdPercentBuffer = (Settings.thresholdFactor * 100f).ToString();
+            Settings.RebuildLookup();
+            Messages.Message(
+                StatCompressionText.T("StatCompression_ResetCompleted"),
+                MessageTypeDefOf.TaskCompletion,
+                false);
         }
 
         private static float Preview(float value, StatCompressionDirection direction)

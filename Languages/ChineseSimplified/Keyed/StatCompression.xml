@@ -63,9 +63,24 @@
   <StatCompression_Preset_ErrorExists>名为“{0}”的预设已经存在。</StatCompression_Preset_ErrorExists>
   <StatCompression_Preset_ErrorNoSelection>请至少选择一行属性配置。</StatCompression_Preset_ErrorNoSelection>
   <StatCompression_OpenStatSettings>压缩属性设置</StatCompression_OpenStatSettings>
-  <StatCompression_ExportXml>导出设置 XML</StatCompression_ExportXml>
-  <StatCompression_ImportXml>导入设置 XML</StatCompression_ImportXml>
-  <StatCompression_ResetSettings>重置设置</StatCompression_ResetSettings>
+  <StatCompression_ConfigActions>导出 / 导入 / 重置配置</StatCompression_ConfigActions>
+  <StatCompression_ExportAllSettingsXml>导出所有设置 XML</StatCompression_ExportAllSettingsXml>
+  <StatCompression_ImportAllSettingsXml>导入所有设置 XML</StatCompression_ImportAllSettingsXml>
+  <StatCompression_ExportPresetClipboard>导出预设到剪贴板</StatCompression_ExportPresetClipboard>
+  <StatCompression_ImportPresetClipboard>从剪贴板导入预设</StatCompression_ImportPresetClipboard>
+  <StatCompression_PresetCopied>已复制预设：{0}</StatCompression_PresetCopied>
+  <StatCompression_PresetImported>已导入预设：{0}</StatCompression_PresetImported>
+  <StatCompression_PresetClipboardEmpty>剪贴板为空。</StatCompression_PresetClipboardEmpty>
+  <StatCompression_PresetClipboardInvalid>剪贴板中不是有效的 Stat Compression 预设：{0}</StatCompression_PresetClipboardInvalid>
+  <StatCompression_PresetOverwriteTitle>覆盖预设</StatCompression_PresetOverwriteTitle>
+  <StatCompression_PresetOverwriteConfirm>用户预设“{0}”已经存在。是否覆盖？</StatCompression_PresetOverwriteConfirm>
+  <StatCompression_PresetBuiltinConflict>不能覆盖内置预设“{0}”。请修改 XML 中的预设名称后重新导入。</StatCompression_PresetBuiltinConflict>
+  <StatCompression_ResetAllSettings>重置所有设置</StatCompression_ResetAllSettings>
+  <StatCompression_ResetConfirmTitle>重置 Stat Compression</StatCompression_ResetConfirmTitle>
+  <StatCompression_ResetConfirmText>是否重置 Stat Compression 的所有设置？&#10;&#10;这会恢复全局设置、全部属性配置和特殊模块配置，并取消当前启用的预设。用户保存的预设文件不会被删除。</StatCompression_ResetConfirmText>
+  <StatCompression_ResetCompleted>Stat Compression 设置已重置。</StatCompression_ResetCompleted>
+  <StatCompression_ExportSettingsFailed>导出设置 XML 失败：{0}</StatCompression_ExportSettingsFailed>
+  <StatCompression_ImportSettingsFailed>导入设置 XML 失败：{0}</StatCompression_ImportSettingsFailed>
   <StatCompression_LastExport>上次导出：{0}</StatCompression_LastExport>
   <StatCompression_LastImport>上次导入：{0}</StatCompression_LastImport>
   <StatCompression_ExportedMessage>数值压缩已导出设置 XML：{0}</StatCompression_ExportedMessage>

@@ -563,14 +563,24 @@ namespace StatCompression
 
         public string ImportSettingsFromXml(out int updated, out int skipped)
         {
+            return ImportSettingsFromXml(out updated, out skipped, out _);
+        }
+
+        public string ImportSettingsFromXml(
+            out int updated,
+            out int skipped,
+            out string error)
+        {
             EnsureStatConfigs();
             var path = Path.Combine(GenFilePaths.ConfigFolderPath, "StatCompression", "settings.xml");
             updated = 0;
             skipped = 0;
+            error = null;
 
             if (!File.Exists(path))
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Settings XML import file not found: {path}");
+                error = $"Settings XML import file not found: {path}";
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] {error}");
                 return path;
             }
 
@@ -581,13 +591,15 @@ namespace StatCompression
             }
             catch (Exception ex)
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Failed to read settings XML import file: {path}\n{ex}");
+                error = $"Failed to read settings XML: {ex.GetType().Name}: {ex.Message}";
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] {error}: {path}\n{ex}");
                 return path;
             }
 
             if (!StatCompressionSettingsXml.TryGetRoot(document, out var root, out var rootError))
             {
-                Log.Warning($"[{StatCompressionConstants.DisplayName}] Invalid settings XML ({rootError}): {path}");
+                error = $"Invalid settings XML: {rootError}";
+                Log.Warning($"[{StatCompressionConstants.DisplayName}] {error}: {path}");
                 return path;
             }
 

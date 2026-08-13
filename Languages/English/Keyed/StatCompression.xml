@@ -63,9 +63,24 @@
   <StatCompression_Preset_ErrorExists>A preset named "{0}" already exists.</StatCompression_Preset_ErrorExists>
   <StatCompression_Preset_ErrorNoSelection>Select at least one config row.</StatCompression_Preset_ErrorNoSelection>
   <StatCompression_OpenStatSettings>Compression settings</StatCompression_OpenStatSettings>
-  <StatCompression_ExportXml>Export settings XML</StatCompression_ExportXml>
-  <StatCompression_ImportXml>Import settings XML</StatCompression_ImportXml>
-  <StatCompression_ResetSettings>Reset settings</StatCompression_ResetSettings>
+  <StatCompression_ConfigActions>Export / import / reset configuration</StatCompression_ConfigActions>
+  <StatCompression_ExportAllSettingsXml>Export all settings XML</StatCompression_ExportAllSettingsXml>
+  <StatCompression_ImportAllSettingsXml>Import all settings XML</StatCompression_ImportAllSettingsXml>
+  <StatCompression_ExportPresetClipboard>Export preset to clipboard</StatCompression_ExportPresetClipboard>
+  <StatCompression_ImportPresetClipboard>Import preset from clipboard</StatCompression_ImportPresetClipboard>
+  <StatCompression_PresetCopied>Copied preset: {0}</StatCompression_PresetCopied>
+  <StatCompression_PresetImported>Imported preset: {0}</StatCompression_PresetImported>
+  <StatCompression_PresetClipboardEmpty>The clipboard is empty.</StatCompression_PresetClipboardEmpty>
+  <StatCompression_PresetClipboardInvalid>The clipboard does not contain a valid Stat Compression preset: {0}</StatCompression_PresetClipboardInvalid>
+  <StatCompression_PresetOverwriteTitle>Overwrite preset</StatCompression_PresetOverwriteTitle>
+  <StatCompression_PresetOverwriteConfirm>The user preset "{0}" already exists. Overwrite it?</StatCompression_PresetOverwriteConfirm>
+  <StatCompression_PresetBuiltinConflict>The built-in preset "{0}" cannot be overwritten. Rename the preset in the XML and import it again.</StatCompression_PresetBuiltinConflict>
+  <StatCompression_ResetAllSettings>Reset all settings</StatCompression_ResetAllSettings>
+  <StatCompression_ResetConfirmTitle>Reset Stat Compression</StatCompression_ResetConfirmTitle>
+  <StatCompression_ResetConfirmText>Reset all Stat Compression settings?&#10;&#10;This restores global settings, every stat configuration, and all special-module configurations, and disables active presets. User preset files will not be deleted.</StatCompression_ResetConfirmText>
+  <StatCompression_ResetCompleted>Stat Compression settings have been reset.</StatCompression_ResetCompleted>
+  <StatCompression_ExportSettingsFailed>Failed to export settings XML: {0}</StatCompression_ExportSettingsFailed>
+  <StatCompression_ImportSettingsFailed>Failed to import settings XML: {0}</StatCompression_ImportSettingsFailed>
   <StatCompression_LastExport>Last export: {0}</StatCompression_LastExport>
   <StatCompression_LastImport>Last import: {0}</StatCompression_LastImport>
   <StatCompression_ExportedMessage>Stat Compression exported settings XML: {0}</StatCompression_ExportedMessage>
