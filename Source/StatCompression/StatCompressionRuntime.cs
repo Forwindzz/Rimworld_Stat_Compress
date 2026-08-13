@@ -165,12 +165,13 @@ namespace StatCompression
                 settings.method,
                 settings.parameter,
                 config.tScale);
+            var actualMethod = ResolveMethod(config.method, settings.method);
             var text =
                 StatCompressionText.T("StatCompression_Explanation_Separator") + "\n" +
                 StatCompressionText.T("StatCompression_Explanation_ValueLine", originalText, compressedText) + "\n" +
                 StatCompressionText.T(
                     "StatCompression_Explanation_MethodLine",
-                    StatCompressionText.MethodLabel(config.method),
+                    StatCompressionText.MethodLabel(actualMethod),
                     actualParameter.ToString("0.###"),
                     baselineText);
             text += "\n" + StatCompressionText.T(
@@ -184,7 +185,7 @@ namespace StatCompression
                     context.compressionOutput.ToString("0.###"));
             }
 
-            var hint = GetMethodHint(config.method, config.direction);
+            var hint = GetMethodHint(actualMethod, config.direction);
             if (!hint.NullOrEmpty())
             {
                 text += "\n" + hint;
@@ -284,15 +285,35 @@ namespace StatCompression
             float globalParameter,
             float tScale)
         {
-            var baseParameter = method == globalMethod
+            var actualMethod = ResolveMethod(method, globalMethod);
+            var baseParameter = method == CompressionMethod.FollowGlobal
                 ? globalParameter
-                : DefaultParameter(method);
-            if (method == CompressionMethod.Logarithmic)
+                : DefaultParameter(actualMethod);
+            if (actualMethod == CompressionMethod.Logarithmic)
             {
-                return StatCompressionSettings.NormalizeParameter(method, baseParameter * tScale);
+                return StatCompressionSettings.NormalizeParameter(actualMethod, baseParameter * tScale);
             }
 
-            return StatCompressionSettings.NormalizeParameter(method, baseParameter / tScale);
+            return StatCompressionSettings.NormalizeParameter(actualMethod, baseParameter / tScale);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CompressionMethod ResolveMethod(
+            CompressionMethod method,
+            CompressionMethod globalMethod)
+        {
+            return method == CompressionMethod.FollowGlobal ? globalMethod : method;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float GetActualThresholdFactor(
+            CompressionMethod method,
+            float globalThresholdFactor,
+            float configThresholdFactor)
+        {
+            return method == CompressionMethod.FollowGlobal
+                ? globalThresholdFactor
+                : configThresholdFactor;
         }
 
         public static float DefaultParameter(CompressionMethod method)

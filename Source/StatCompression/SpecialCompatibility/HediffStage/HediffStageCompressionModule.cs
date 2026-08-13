@@ -248,6 +248,11 @@ namespace StatCompression
                     settings.method,
                     settings.parameter,
                     config.tScale);
+                var actualMethod = StatCompressionRuntime.ResolveMethod(config.method, settings.method);
+                var actualThreshold = StatCompressionRuntime.GetActualThresholdFactor(
+                    config.method,
+                    settings.thresholdFactor,
+                    config.thresholdFactor);
                 lines.Add(StatCompressionText.T(
                     "StatCompression_HediffStage_Info_Value",
                     SpecialCompressionConfigs.LabelFor(record.DefName),
@@ -255,10 +260,10 @@ namespace StatCompression
                     record.Format(record.Applied)));
                 lines.Add(StatCompressionText.T(
                     "StatCompression_HediffStage_Info_Method",
-                    StatCompressionText.MethodLabel(config.method),
+                    StatCompressionText.MethodLabel(actualMethod),
                     parameter.ToString("0.###"),
                     record.Format(config.baseline),
-                    (config.thresholdFactor * 100f).ToString("0.###") + "%"));
+                    (actualThreshold * 100f).ToString("0.###") + "%"));
             }
 
             return string.Join("\n", lines).Colorize(ColoredText.SubtleGrayColor);

@@ -12,17 +12,17 @@ namespace StatCompression
         private const float RowHeight = 30f;
         private const float PreviewRowHeight = 22f;
         private const float SplitGap = 12f;
-        private const int ColumnCount = 8;
+        private const int ColumnCount = 9;
         private const int GraphSegmentCount = 64;
 
         private static readonly float[] DefaultColumnWidths =
         {
-            36f, 184f, 132f, 90f, 78f, 94f, 94f, 118f
+            34f, 36f, 160f, 120f, 88f, 72f, 86f, 86f, 110f
         };
 
         private static readonly float[] MinimumColumnWidths =
         {
-            32f, 112f, 82f, 70f, 62f, 72f, 72f, 92f
+            30f, 32f, 102f, 76f, 68f, 58f, 66f, 66f, 84f
         };
 
         private readonly StatCompressionSettings settings;
@@ -37,6 +37,7 @@ namespace StatCompression
         private readonly string[] higherPreviewBuffers = new string[7];
         private readonly string[] lowerPreviewBuffers = new string[7];
         private readonly string[] lowerDirectPreviewBuffers = new string[6];
+        private readonly HashSet<string> presetSelection = new HashSet<string>(StringComparer.Ordinal);
 
         private Vector2 scrollPosition;
         private string searchText = string.Empty;
@@ -46,9 +47,11 @@ namespace StatCompression
         private bool columnWidthsInitialized;
         private int resizingColumn = -1;
         private float resizeStartMouseX;
+        private StatCompressionPreset editingPreset;
 
         private enum SortColumn
         {
+            Selection,
             Enabled,
             DefName,
             Label,
@@ -82,11 +85,11 @@ namespace StatCompression
         {
             settings.EnsureStatConfigs();
 
-            var helpRect = new Rect(inRect.x, inRect.y, inRect.width, 78f);
+            var helpRect = new Rect(inRect.x, inRect.y, inRect.width, 96f);
             Text.Font = GameFont.Tiny;
-            Widgets.Label(new Rect(helpRect.x, helpRect.y, helpRect.width, 26f), StatCompressionText.T("StatCompression_AdvancedHelp"));
-            Widgets.Label(new Rect(helpRect.x, helpRect.y + 24f, helpRect.width, 24f), StatCompressionText.T("StatCompression_AdvancedFormulaHelp"));
-            Widgets.Label(new Rect(helpRect.x, helpRect.y + 48f, helpRect.width, 24f), StatCompressionText.T("StatCompression_DirectionHelp"));
+            Widgets.Label(new Rect(helpRect.x, helpRect.y, helpRect.width, 30f), StatCompressionText.T("StatCompression_AdvancedHelp"));
+            Widgets.Label(new Rect(helpRect.x, helpRect.y + 32f, helpRect.width, 30f), StatCompressionText.T("StatCompression_AdvancedFormulaHelp"));
+            Widgets.Label(new Rect(helpRect.x, helpRect.y + 64f, helpRect.width, 30f), StatCompressionText.T("StatCompression_DirectionHelp"));
             Text.Font = GameFont.Small;
 
             var contentTop = helpRect.yMax + 8f;
@@ -107,24 +110,47 @@ namespace StatCompression
         private void DrawTable(Rect rect)
         {
             var searchRect = new Rect(rect.x, rect.y, rect.width, 30f);
-            Widgets.Label(new Rect(searchRect.x, searchRect.y, 90f, searchRect.height), StatCompressionText.T("StatCompression_Search"));
+            Widgets.Label(new Rect(searchRect.x, searchRect.y, 64f, searchRect.height), StatCompressionText.T("StatCompression_Search"));
+            var actionWidth = editingPreset == null ? 150f : 184f;
             searchText = Widgets.TextField(
-                new Rect(searchRect.x + 96f, searchRect.y, searchRect.width - 96f, searchRect.height),
+                new Rect(searchRect.x + 68f, searchRect.y, searchRect.width - 72f - actionWidth, searchRect.height),
                 searchText ?? string.Empty);
+            var actionRect = new Rect(searchRect.xMax - actionWidth, searchRect.y, actionWidth, searchRect.height);
+            if (editingPreset == null)
+            {
+                if (Widgets.ButtonText(actionRect, StatCompressionText.T("StatCompression_Preset_LoadEdit")))
+                {
+                    OpenPresetMenu();
+                }
+            }
+            else
+            {
+                Widgets.Label(
+                    new Rect(actionRect.x, actionRect.y, actionRect.width - 34f, actionRect.height),
+                    editingPreset.Name);
+                if (Widgets.ButtonText(
+                        new Rect(actionRect.xMax - 30f, actionRect.y, 30f, actionRect.height),
+                        "X"))
+                {
+                    ExitPresetEditing();
+                }
+            }
+
+            var configs = CurrentConfigs().Where(MatchesSearch).ToList();
+            SortConfigs(configs);
 
             var headerRect = new Rect(rect.x, searchRect.yMax + 10f, rect.width - 16f, RowHeight);
             EnsureColumnWidths(headerRect.width);
             HandleColumnResize(headerRect);
-            DrawHeader(headerRect);
+            DrawHeader(headerRect, configs);
 
-            var configs = settings.AdvancedConfigs().Where(MatchesSearch).ToList();
-            SortConfigs(configs);
             if (selectedDefName.NullOrEmpty() && configs.Count > 0)
             {
                 selectedDefName = configs[0].defName;
             }
 
-            var outRect = new Rect(rect.x, headerRect.yMax, rect.width, rect.yMax - headerRect.yMax);
+            var footerHeight = 38f;
+            var outRect = new Rect(rect.x, headerRect.yMax, rect.width, rect.yMax - headerRect.yMax - footerHeight);
             var viewRect = new Rect(0f, 0f, headerRect.width, configs.Count * RowHeight);
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             for (var i = 0; i < configs.Count; i++)
@@ -133,13 +159,15 @@ namespace StatCompression
             }
 
             Widgets.EndScrollView();
+            DrawPresetFooter(new Rect(rect.x, rect.yMax - 34f, rect.width, 34f));
         }
 
-        private void DrawHeader(Rect rect)
+        private void DrawHeader(Rect rect, List<StatCompressionStatConfig> visibleConfigs)
         {
             Widgets.DrawBoxSolid(rect, new Color(0.18f, 0.18f, 0.18f, 1f));
             var labels = new[]
             {
+                StatCompressionText.T("StatCompression_Column_Select"),
                 StatCompressionText.T("StatCompression_Column_On"),
                 StatCompressionText.T("StatCompression_Column_DefName"),
                 StatCompressionText.T("StatCompression_Column_Label"),
@@ -161,7 +189,7 @@ namespace StatCompression
 
                 var column = (SortColumn)i;
                 var label = labels[i];
-                if (sortColumn == column)
+                if (i > 0 && sortColumn == column)
                 {
                     label += sortAscending ? " ^" : " v";
                 }
@@ -169,7 +197,14 @@ namespace StatCompression
                 Widgets.Label(cell.ContractedBy(2f), label);
                 if (Widgets.ButtonInvisible(cell, false))
                 {
-                    SetSort(column);
+                    if (i == 0)
+                    {
+                        ToggleVisibleSelection(visibleConfigs);
+                    }
+                    else
+                    {
+                        SetSort(column);
+                    }
                 }
             }
 
@@ -250,27 +285,38 @@ namespace StatCompression
 
             var stat = DefDatabase<StatDef>.GetNamedSilentFail(config.defName);
             var label = LabelFor(config);
+            var selectedForPreset = presetSelection.Contains(config.defName);
+            Widgets.Checkbox(Col(rect, 0).position + new Vector2(2f, 3f), ref selectedForPreset);
+            if (selectedForPreset)
+            {
+                presetSelection.Add(config.defName);
+            }
+            else
+            {
+                presetSelection.Remove(config.defName);
+            }
+
             var enabled = config.enabled;
-            Widgets.Checkbox(Col(rect, 0).position + new Vector2(2f, 3f), ref enabled);
+            Widgets.Checkbox(Col(rect, 1).position + new Vector2(2f, 3f), ref enabled);
             config.enabled = enabled;
 
             Text.Font = GameFont.Tiny;
-            Widgets.Label(Col(rect, 1), config.defName);
-            Widgets.Label(Col(rect, 2), label);
+            Widgets.Label(Col(rect, 2), config.defName);
+            Widgets.Label(Col(rect, 3), label);
             Text.Font = GameFont.Small;
 
-            if (Widgets.ButtonText(Col(rect, 3), StatCompressionText.MethodShortLabel(config.method)))
+            if (Widgets.ButtonText(Col(rect, 4), StatCompressionText.MethodShortLabel(config.method)))
             {
                 OpenMethodMenu(config);
             }
 
             var tScaleBuffer = GetBuffer(tScaleBuffers, config.defName, "ts", config.tScale);
-            Widgets.TextFieldNumeric(Col(rect, 4), ref config.tScale, ref tScaleBuffer, 0.0001f, float.MaxValue);
+            Widgets.TextFieldNumeric(Col(rect, 5), ref config.tScale, ref tScaleBuffer, 0.0001f, float.MaxValue);
             tScaleBuffers[BufferKey(config.defName, "ts")] = tScaleBuffer;
-            TooltipHandler.TipRegion(Col(rect, 4), StatCompressionText.T("StatCompression_TScaleTooltip"));
+            TooltipHandler.TipRegion(Col(rect, 5), StatCompressionText.T("StatCompression_TScaleTooltip"));
 
             var baselineBuffer = GetBuffer(baselineBuffers, config.defName, "b", config.baseline);
-            Widgets.TextFieldNumeric(Col(rect, 5), ref config.baseline, ref baselineBuffer, 1e-10f, float.MaxValue);
+            Widgets.TextFieldNumeric(Col(rect, 6), ref config.baseline, ref baselineBuffer, 1e-10f, float.MaxValue);
             baselineBuffers[BufferKey(config.defName, "b")] = baselineBuffer;
 
             var thresholdPercent = config.thresholdFactor * 100f;
@@ -278,11 +324,11 @@ namespace StatCompression
             var thresholdMinimum = config.direction == StatCompressionDirection.LowerIsBetter
                 ? 0.0001f
                 : float.MinValue;
-            Widgets.TextFieldNumeric(Col(rect, 6), ref thresholdPercent, ref thresholdBuffer, thresholdMinimum, float.MaxValue);
+            Widgets.TextFieldNumeric(Col(rect, 7), ref thresholdPercent, ref thresholdBuffer, thresholdMinimum, float.MaxValue);
             config.thresholdFactor = thresholdPercent / 100f;
             thresholdBuffers[BufferKey(config.defName, "th")] = thresholdBuffer;
 
-            var directionRect = Col(rect, 7);
+            var directionRect = Col(rect, 8);
             var fixedSpecialDirection = SpecialCompressionConfigs.IsDamage(config.defName) ||
                                         SpecialCompressionConfigs.IsHediffStage(config.defName);
             if (fixedSpecialDirection)
@@ -306,8 +352,8 @@ namespace StatCompression
                     : SpecialCompressionConfigs.IsHediffStage(config.defName)
                         ? StatCompressionText.T("StatCompression_SP_HediffStage_DirectionTooltip")
                     : StatCompressionText.T("StatCompression_DirectionTooltip"));
-            TooltipHandler.TipRegion(Col(rect, 1), Tooltip(stat, config));
             TooltipHandler.TipRegion(Col(rect, 2), Tooltip(stat, config));
+            TooltipHandler.TipRegion(Col(rect, 3), Tooltip(stat, config));
             StatCompressionSettings.NormalizeConfig(config);
         }
 
@@ -317,7 +363,7 @@ namespace StatCompression
             var inner = rect.ContractedBy(10f);
             var config = selectedDefName.NullOrEmpty()
                 ? null
-                : settings.GetAdvancedConfig(selectedDefName);
+                : CurrentConfigs().FirstOrDefault(candidate => candidate.defName == selectedDefName);
             if (config == null)
             {
                 Widgets.Label(inner, StatCompressionText.T("StatCompression_SelectStatForPreview"));
@@ -337,6 +383,7 @@ namespace StatCompression
                 settings.method,
                 settings.parameter,
                 config.tScale);
+            var actualMethod = StatCompressionRuntime.ResolveMethod(config.method, settings.method);
             var compiled = StatCompressionRuntimeCompiler.CompileConfig(settings, config);
             var thresholdValue = compiled.thresholdValue;
             var summaryY = inner.y + 56f;
@@ -349,7 +396,7 @@ namespace StatCompression
                     FormatStatValue(stat, config.baseline),
                     FormatStatValue(stat, thresholdValue)));
 
-            var formula = BuildFormula(config, actualParameter);
+            var formula = BuildFormula(config, actualMethod, actualParameter);
             Widgets.Label(new Rect(inner.x, summaryY + 44f, inner.width, 142f), formula);
             Text.Font = GameFont.Small;
 
@@ -695,9 +742,12 @@ namespace StatCompression
             return value.ToString(value < 1f ? "0.###" : "0.##") + "%";
         }
 
-        private string BuildFormula(StatCompressionStatConfig config, float actualParameter)
+        private string BuildFormula(
+            StatCompressionStatConfig config,
+            CompressionMethod actualMethod,
+            float actualParameter)
         {
-            var expression = CompressionExpression(config.method);
+            var expression = CompressionExpression(actualMethod);
             string key;
             switch (config.direction)
             {
@@ -743,6 +793,7 @@ namespace StatCompression
             var options = new List<FloatMenuOption>();
             var methods = new[]
             {
+                CompressionMethod.FollowGlobal,
                 CompressionMethod.Linear,
                 CompressionMethod.Exponential,
                 CompressionMethod.Logarithmic,
@@ -761,6 +812,137 @@ namespace StatCompression
             }
 
             Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private IEnumerable<StatCompressionStatConfig> CurrentConfigs()
+        {
+            return editingPreset == null
+                ? settings.AdvancedConfigs()
+                : editingPreset.Configs;
+        }
+
+        private void DrawPresetFooter(Rect rect)
+        {
+            if (editingPreset != null)
+            {
+                if (Widgets.ButtonText(rect, StatCompressionText.T("StatCompression_Preset_Save")))
+                {
+                    if (StatCompressionPresetManager.TrySave(editingPreset, out var error))
+                    {
+                        Messages.Message(
+                            StatCompressionText.T("StatCompression_Preset_Saved", editingPreset.Name),
+                            MessageTypeDefOf.TaskCompletion,
+                            false);
+                        var refreshed = StatCompressionPresetManager.Find(editingPreset.FileName);
+                        if (refreshed != null)
+                        {
+                            editingPreset = StatCompressionPresetManager.Clone(refreshed);
+                        }
+                    }
+                    else
+                    {
+                        Messages.Message(error, MessageTypeDefOf.RejectInput, false);
+                    }
+                }
+
+                return;
+            }
+
+            if (Widgets.ButtonText(rect, StatCompressionText.T("StatCompression_Preset_CreateFromSelected")))
+            {
+                var selectedConfigs = settings.AdvancedConfigs()
+                    .Where(config => presetSelection.Contains(config.defName))
+                    .ToList();
+                if (selectedConfigs.Count == 0)
+                {
+                    Messages.Message(
+                        StatCompressionText.T("StatCompression_Preset_ErrorNoSelection"),
+                        MessageTypeDefOf.RejectInput,
+                        false);
+                    return;
+                }
+
+                Find.WindowStack.Add(new StatCompressionPresetNameWindow(name =>
+                {
+                    if (StatCompressionPresetManager.TryCreate(
+                            name,
+                            selectedConfigs,
+                            out var preset,
+                            out var error))
+                    {
+                        Messages.Message(
+                            StatCompressionText.T("StatCompression_Preset_Created", preset.Name),
+                            MessageTypeDefOf.TaskCompletion,
+                            false);
+                        presetSelection.Clear();
+                    }
+                    else
+                    {
+                        Messages.Message(error, MessageTypeDefOf.RejectInput, false);
+                    }
+                }));
+            }
+        }
+
+        private void OpenPresetMenu()
+        {
+            StatCompressionPresetManager.Refresh();
+            var options = StatCompressionPresetManager.Presets
+                .Select(preset => new FloatMenuOption(
+                    preset.Name,
+                    () => EnterPresetEditing(preset)))
+                .ToList();
+            if (options.Count == 0)
+            {
+                Messages.Message(
+                    StatCompressionText.T("StatCompression_Preset_None"),
+                    MessageTypeDefOf.NeutralEvent,
+                    false);
+                return;
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private void EnterPresetEditing(StatCompressionPreset preset)
+        {
+            editingPreset = StatCompressionPresetManager.Clone(preset);
+            searchText = string.Empty;
+            selectedDefName = editingPreset.Configs.FirstOrDefault()?.defName;
+            scrollPosition = Vector2.zero;
+            ClearFieldBuffers();
+        }
+
+        private void ExitPresetEditing()
+        {
+            editingPreset = null;
+            searchText = string.Empty;
+            selectedDefName = null;
+            scrollPosition = Vector2.zero;
+            ClearFieldBuffers();
+        }
+
+        private void ToggleVisibleSelection(List<StatCompressionStatConfig> visibleConfigs)
+        {
+            var select = visibleConfigs.Any(config => !presetSelection.Contains(config.defName));
+            for (var i = 0; i < visibleConfigs.Count; i++)
+            {
+                if (select)
+                {
+                    presetSelection.Add(visibleConfigs[i].defName);
+                }
+                else
+                {
+                    presetSelection.Remove(visibleConfigs[i].defName);
+                }
+            }
+        }
+
+        private void ClearFieldBuffers()
+        {
+            tScaleBuffers.Clear();
+            baselineBuffers.Clear();
+            thresholdBuffers.Clear();
         }
 
         private void OpenDirectionMenu(StatCompressionStatConfig config)
@@ -921,10 +1103,14 @@ namespace StatCompression
             return defName + ":" + field;
         }
 
-        private static string Tooltip(StatDef stat, StatCompressionStatConfig config)
+        private string Tooltip(StatDef stat, StatCompressionStatConfig config)
         {
+            var actualThreshold = StatCompressionRuntime.GetActualThresholdFactor(
+                config.method,
+                settings.thresholdFactor,
+                config.thresholdFactor);
             return StatCompressionText.T("StatCompression_Tooltip_Baseline", config.baseline) +
-                   "\n" + StatCompressionText.T("StatCompression_Tooltip_Threshold", (config.thresholdFactor * 100f).ToString("0.###")) +
+                   "\n" + StatCompressionText.T("StatCompression_Tooltip_Threshold", (actualThreshold * 100f).ToString("0.###")) +
                    "\n" + StatCompressionText.T("StatCompression_Tooltip_Method", StatCompressionText.MethodLabel(config.method)) +
                    "\n" + StatCompressionText.T("StatCompression_Tooltip_TScale", config.tScale) +
                    "\n" + StatCompressionText.T("StatCompression_Tooltip_Direction", StatCompressionText.DirectionShortLabel(config.direction)) +

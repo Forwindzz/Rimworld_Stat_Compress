@@ -61,7 +61,11 @@ namespace StatCompression
             }
 
             var baseline = config.baseline;
-            var threshold = config.thresholdFactor;
+            var actualMethod = StatCompressionRuntime.ResolveMethod(config.method, settings.method);
+            var threshold = StatCompressionRuntime.GetActualThresholdFactor(
+                config.method,
+                settings.thresholdFactor,
+                config.thresholdFactor);
             var actualParameter = StatCompressionRuntime.GetActualParameter(
                 config.method,
                 settings.method,
@@ -71,14 +75,14 @@ namespace StatCompression
             var direct = direction != StatCompressionDirection.LowerIsBetter;
             var result = new CompiledStatConfig
             {
-                kernel = KernelFor(config.method, direction),
+                kernel = KernelFor(actualMethod, direction),
                 thresholdValue = direct ? baseline * threshold : baseline / threshold,
                 thresholdFactor = threshold,
                 baseline = baseline,
                 invBaseline = 1f / baseline
             };
 
-            switch (config.method)
+            switch (actualMethod)
             {
                 case CompressionMethod.Linear:
                     result.parameter0 = actualParameter;

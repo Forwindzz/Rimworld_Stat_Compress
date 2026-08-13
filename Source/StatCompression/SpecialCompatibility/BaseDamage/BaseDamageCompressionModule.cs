@@ -348,6 +348,13 @@ namespace StatCompression
                 StatCompressionMod.Settings.method,
                 StatCompressionMod.Settings.parameter,
                 config.tScale);
+            var actualMethod = StatCompressionRuntime.ResolveMethod(
+                config.method,
+                StatCompressionMod.Settings.method);
+            var actualThreshold = StatCompressionRuntime.GetActualThresholdFactor(
+                config.method,
+                StatCompressionMod.Settings.thresholdFactor,
+                config.thresholdFactor);
             var lines = new List<string>
             {
                 "<color=#A0A0A0>",
@@ -366,10 +373,10 @@ namespace StatCompression
 
             lines.Add(StatCompressionText.T(
                 "StatCompression_BaseDamage_Info_Method",
-                StatCompressionText.MethodLabel(config.method),
+                StatCompressionText.MethodLabel(actualMethod),
                 parameter.ToString("0.###"),
                 FormatDamage(config.baseline),
-                (config.thresholdFactor * 100f).ToString("0.###") + "%"));
+                (actualThreshold * 100f).ToString("0.###") + "%"));
             lines.Add(StatCompressionText.T("StatCompression_BaseDamage_Info_AfterFactors"));
             lines.Add("</color>");
             return string.Join("\n", lines);

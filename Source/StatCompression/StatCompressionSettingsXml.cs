@@ -8,7 +8,7 @@ namespace StatCompression
 {
     internal static class StatCompressionSettingsXml
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
         public const string RootName = "StatCompressionSettings";
 
         public static bool TryGetRoot(XDocument document, out XElement root, out string error)
@@ -23,7 +23,7 @@ namespace StatCompression
             var versionText = Attr(root, "version");
             if (!versionText.NullOrEmpty() &&
                 (!int.TryParse(versionText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var version) ||
-                 version != CurrentVersion))
+                 version < 1 || version > CurrentVersion))
             {
                 error = $"unsupported schema version {versionText}";
                 return false;
@@ -31,6 +31,17 @@ namespace StatCompression
 
             error = null;
             return true;
+        }
+
+        public static int VersionOf(XElement root)
+        {
+            return int.TryParse(
+                Attr(root, "version"),
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var version)
+                ? version
+                : 1;
         }
 
         public static void ReadGlobal(XElement element, DefaultGlobalSettings target)
@@ -60,7 +71,8 @@ namespace StatCompression
                 target.autoFallbackToGlobalPostfix = fallback;
             }
 
-            if (Enum.TryParse(Attr(element, "method"), out CompressionMethod method))
+            if (Enum.TryParse(Attr(element, "method"), out CompressionMethod method) &&
+                method != CompressionMethod.FollowGlobal)
             {
                 target.method = method;
             }
@@ -179,6 +191,26 @@ namespace StatCompression
             if (Enum.TryParse(Attr(element, "direction"), out StatCompressionDirection direction)) config.direction = direction;
         }
 
+        public static bool TryReadConfig(
+            XElement element,
+            out StatCompressionStatConfig config,
+            out string error)
+        {
+            config = null;
+            error = null;
+            var defName = SpecialCompressionConfigs.CanonicalizeId(Attr(element, "defName"));
+            if (defName.NullOrEmpty())
+            {
+                error = "missing defName";
+                return false;
+            }
+
+            config = new StatCompressionStatConfig { defName = defName };
+            ApplyStatElement(element, config);
+            NormalizeConfigForXml(config);
+            return true;
+        }
+
         public static XDocument CreateDocument(StatCompressionSettings settings)
         {
             return new XDocument(
@@ -206,6 +238,13 @@ namespace StatCompression
                         settings.SpecialHediffStageConfigs.Select(config =>
                             new XElement("Config", ConfigAttributes(config)))),
                     new XElement(
+                        "ActivePresets",
+                        settings.activePresets
+                            .Where(name => !name.NullOrEmpty())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                            .Select(name => new XElement("Preset", new XAttribute("name", name)))),
+                    new XElement(
                         "Stats",
                         settings.statConfigs
                             .Where(config => config != null && !config.defName.NullOrEmpty())
@@ -216,6 +255,27 @@ namespace StatCompression
         public static string Attr(XElement element, string name)
         {
             return element?.Attribute(name)?.Value ?? string.Empty;
+        }
+
+        public static System.Collections.Generic.List<string> ReadActivePresets(XElement element)
+        {
+            if (element == null)
+            {
+                return new System.Collections.Generic.List<string>();
+            }
+
+            return element.Elements("Preset")
+                .Select(preset => Attr(preset, "name"))
+                .Where(name => !name.NullOrEmpty())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        public static XElement CreateConfigElement(
+            string elementName,
+            StatCompressionStatConfig config)
+        {
+            return new XElement(elementName, ConfigAttributes(config));
         }
 
         private static XElement CreateStatElement(StatCompressionStatConfig config)
@@ -268,6 +328,11 @@ namespace StatCompression
                 new XAttribute("thresholdFactor", FormatFloat(config.thresholdFactor)),
                 new XAttribute("direction", config.direction)
             };
+        }
+
+        private static void NormalizeConfigForXml(StatCompressionStatConfig config)
+        {
+            StatCompressionSettings.NormalizeConfig(config);
         }
 
         private static bool TryParseFloat(string value, out float result)

@@ -5,6 +5,7 @@ namespace StatCompression
         Linear,
         Exponential,
         Logarithmic,
-        SoftCap
+        SoftCap,
+        FollowGlobal
     }
 }

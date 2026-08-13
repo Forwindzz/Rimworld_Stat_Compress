@@ -149,7 +149,7 @@ namespace StatCompression
             return new StatCompressionStatConfig(
                 BodyPartHealthDefName,
                 false,
-                CompressionMethod.Logarithmic,
+                CompressionMethod.FollowGlobal,
                 2f,
                 1f,
                 1f,
@@ -179,7 +179,7 @@ namespace StatCompression
                 result.Add(new StatCompressionStatConfig(
                     defName,
                     false,
-                    CompressionMethod.Logarithmic,
+                    CompressionMethod.FollowGlobal,
                     2f,
                     1f,
                     1f,
@@ -195,7 +195,7 @@ namespace StatCompression
             return new StatCompressionStatConfig(
                 defName,
                 false,
-                CompressionMethod.Logarithmic,
+                CompressionMethod.FollowGlobal,
                 2f,
                 1f,
                 baseline,

@@ -18,6 +18,8 @@ namespace StatCompression
         {
             switch (method)
             {
+                case CompressionMethod.FollowGlobal:
+                    return T("StatCompression_Method_FollowGlobal");
                 case CompressionMethod.Linear:
                     return T("StatCompression_Method_Linear");
                 case CompressionMethod.Exponential:
@@ -35,6 +37,8 @@ namespace StatCompression
         {
             switch (method)
             {
+                case CompressionMethod.FollowGlobal:
+                    return T("StatCompression_Method_FollowGlobalShort");
                 case CompressionMethod.Logarithmic:
                     return T("StatCompression_Method_Log");
                 default:

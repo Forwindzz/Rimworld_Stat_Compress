@@ -29,6 +29,8 @@
   <StatCompression_Method_Logarithmic>对数</StatCompression_Method_Logarithmic>
   <StatCompression_Method_Log>对数</StatCompression_Method_Log>
   <StatCompression_Method_SoftCap>软上限</StatCompression_Method_SoftCap>
+  <StatCompression_Method_FollowGlobal>跟随全局</StatCompression_Method_FollowGlobal>
+  <StatCompression_Method_FollowGlobalShort>全局</StatCompression_Method_FollowGlobalShort>
   <StatCompression_MethodTooltip>不同的削减高数值方式，右边的削减力度更强。</StatCompression_MethodTooltip>
   <StatCompression_Formula_Linear>线性：f(x) = h + (x - h) * t</StatCompression_Formula_Linear>
   <StatCompression_Formula_Power>指数：f(x) = h + ((x - h) + 1)^t - 1</StatCompression_Formula_Power>
@@ -44,6 +46,22 @@
   <StatCompression_IncomingDamageFactor>承伤系数</StatCompression_IncomingDamageFactor>
   <StatCompression_CompressedIncomingDamageFactor>压缩后的承伤系数</StatCompression_CompressedIncomingDamageFactor>
   <StatCompression_AdvancedSettings>高级设置</StatCompression_AdvancedSettings>
+  <StatCompression_GlobalSimpleSettings>全局简易设置</StatCompression_GlobalSimpleSettings>
+  <StatCompression_UsePresets>使用预设</StatCompression_UsePresets>
+  <StatCompression_Preset_None>未找到预设</StatCompression_Preset_None>
+  <StatCompression_Preset_ConflictTooltip>与“{0}”冲突&#10;重复配置：{1}&#10;不同字段：{2}</StatCompression_Preset_ConflictTooltip>
+  <StatCompression_Preset_LoadEdit>载入并修改预设</StatCompression_Preset_LoadEdit>
+  <StatCompression_Preset_CreateFromSelected>将选中的属性建立预设</StatCompression_Preset_CreateFromSelected>
+  <StatCompression_Preset_CreateTitle>建立预设</StatCompression_Preset_CreateTitle>
+  <StatCompression_Preset_Name>预设名称</StatCompression_Preset_Name>
+  <StatCompression_Preset_Create>建立</StatCompression_Preset_Create>
+  <StatCompression_Preset_Save>保存预设</StatCompression_Preset_Save>
+  <StatCompression_Preset_Created>已建立预设：{0}</StatCompression_Preset_Created>
+  <StatCompression_Preset_Saved>已保存预设：{0}</StatCompression_Preset_Saved>
+  <StatCompression_Preset_ErrorEmptyName>请输入预设名称。</StatCompression_Preset_ErrorEmptyName>
+  <StatCompression_Preset_ErrorInvalidName>该预设名称不能作为文件名。</StatCompression_Preset_ErrorInvalidName>
+  <StatCompression_Preset_ErrorExists>名为“{0}”的预设已经存在。</StatCompression_Preset_ErrorExists>
+  <StatCompression_Preset_ErrorNoSelection>请至少选择一行属性配置。</StatCompression_Preset_ErrorNoSelection>
   <StatCompression_OpenStatSettings>压缩属性设置</StatCompression_OpenStatSettings>
   <StatCompression_ExportXml>导出设置 XML</StatCompression_ExportXml>
   <StatCompression_ImportXml>导入设置 XML</StatCompression_ImportXml>
@@ -66,11 +84,12 @@
   <StatCompression_AdvancedPreviewGraphXAxis>输入 %（对数）</StatCompression_AdvancedPreviewGraphXAxis>
   <StatCompression_AdvancedPreviewGraphXAxisSigned>输入 %（对称对数）</StatCompression_AdvancedPreviewGraphXAxisSigned>
   <StatCompression_AdvancedPreviewGraphYAxis>输出 %（线性）</StatCompression_AdvancedPreviewGraphYAxis>
-  <StatCompression_AdvancedHelp>你可以设置每个属性的压缩方式，Method 决定 C(e)。基准值保持正数并用于归一化差值；直接压缩方向允许阈值为负数。</StatCompression_AdvancedHelp>
+  <StatCompression_AdvancedHelp>你可以设置每个属性的压缩方式。跟随全局会使用全局 Method 和 t；具体 Method 使用该方法的默认 t。基准值保持正数；直接压缩方向允许阈值为负数。</StatCompression_AdvancedHelp>
   <StatCompression_AdvancedFormulaHelp>对归一化差值 e：线性 C(e)=et；指数 C(e)=(e+1)^t-1；对数 C(e)=ln(1+ln(t)e)/ln(t)；软上限 C(e)=te/(e+t)。</StatCompression_AdvancedFormulaHelp>
   <StatCompression_DirectionHelp>Direction 决定压缩哪一段数值："高值直接压缩"处理阈值以上的数值部分；"低值乘法压缩"在计算倒数后，再计算压缩超出的数值部分，然后再倒回去；"低值直接压缩"处理阈值以下的加算差值。</StatCompression_DirectionHelp>
   <StatCompression_Search>搜索</StatCompression_Search>
   <StatCompression_Column_On>启用</StatCompression_Column_On>
+  <StatCompression_Column_Select>选择</StatCompression_Column_Select>
   <StatCompression_Column_DefName>DefName</StatCompression_Column_DefName>
   <StatCompression_Column_Method>方法</StatCompression_Column_Method>
   <StatCompression_Column_TScale>t 缩放</StatCompression_Column_TScale>

@@ -12,9 +12,11 @@ namespace StatCompression
     public sealed class StatCompressionSettings : ModSettings
     {
         private const float DefaultMaxValue = 9999999f;
+        private const int CurrentSettingsVersion = 1;
 
         private StatCompressionStatConfig[] configByIndex;
         private bool initialized;
+        private int settingsVersion;
 
         public bool enabled = true;
         public bool showInfoCardSettingsButton = true;
@@ -27,6 +29,7 @@ namespace StatCompression
         public List<StatCompressionStatConfig> specialDamageConfigs = SpecialCompressionConfigs.CreateDamageConfigs();
         public List<StatCompressionStatConfig> specialHediffStageConfigs = SpecialCompressionConfigs.CreateHediffStageConfigs();
         public List<StatCompressionStatConfig> statConfigs = new List<StatCompressionStatConfig>();
+        public List<string> activePresets = new List<string>();
 
         public StatCompressionStatConfig BodyPartHealthConfig
         {
@@ -73,12 +76,14 @@ namespace StatCompression
             Scribe_Values.Look(ref method, "method", CompressionMethod.Logarithmic);
             Scribe_Values.Look(ref parameter, "parameter", 2f);
             Scribe_Values.Look(ref thresholdFactor, "thresholdFactor", 1f);
+            Scribe_Values.Look(ref settingsVersion, "settingsVersion", 0);
             var legacyBodyPartHealthEnabled = bodyPartHealthConfig?.enabled ?? false;
             Scribe_Values.Look(ref legacyBodyPartHealthEnabled, "bodyPartHealthEnabled", false);
             Scribe_Deep.Look(ref bodyPartHealthConfig, "bodyPartHealthConfig");
             Scribe_Collections.Look(ref specialDamageConfigs, "specialDamageConfigs", LookMode.Deep);
             Scribe_Collections.Look(ref specialHediffStageConfigs, "specialHediffStageConfigs", LookMode.Deep);
             Scribe_Collections.Look(ref statConfigs, "statConfigs", LookMode.Deep);
+            Scribe_Collections.Look(ref activePresets, "activePresets", LookMode.Value);
 
             if (bodyPartHealthConfig == null)
             {
@@ -93,6 +98,17 @@ namespace StatCompression
             if (statConfigs == null)
             {
                 statConfigs = new List<StatCompressionStatConfig>();
+            }
+
+            if (activePresets == null)
+            {
+                activePresets = new List<string>();
+            }
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && settingsVersion < CurrentSettingsVersion)
+            {
+                MigrateLegacyGlobalFollowers();
+                settingsVersion = CurrentSettingsVersion;
             }
 
             NormalizeParameters();
@@ -117,12 +133,20 @@ namespace StatCompression
                 StatCompressionDefaultConfigLoader.ApplyGlobalDefaults(this);
             }
 
+            if (settingsVersion < CurrentSettingsVersion)
+            {
+                MigrateLegacyGlobalFollowers();
+                settingsVersion = CurrentSettingsVersion;
+            }
+
             initialized = InitializeDefaultStatConfigs(clearExisting: false);
         }
 
         public void ResetToDefaults()
         {
             StatCompressionDefaultConfigLoader.ApplyGlobalDefaults(this);
+            activePresets.Clear();
+            settingsVersion = CurrentSettingsVersion;
             NormalizeParameters();
             initialized = InitializeDefaultStatConfigs(clearExisting: true);
         }
@@ -131,6 +155,11 @@ namespace StatCompression
         {
             var oldParameter = parameter;
             var oldThresholdFactor = thresholdFactor;
+
+            if (method == CompressionMethod.FollowGlobal)
+            {
+                method = CompressionMethod.Logarithmic;
+            }
 
             parameter = NormalizeParameter(method, parameter);
             thresholdFactor = Math.Max(0.0001f, thresholdFactor);
@@ -161,77 +190,6 @@ namespace StatCompression
 
             return Math.Abs(oldParameter - parameter) > 0.000001f ||
                    Math.Abs(oldThresholdFactor - thresholdFactor) > 0.000001f;
-        }
-
-        public void ApplyGlobalCompressionToEnabled(bool applyMethod)
-        {
-            NormalizeParameters();
-            for (var i = 0; i < statConfigs.Count; i++)
-            {
-                var config = statConfigs[i];
-                if (config == null || !config.enabled)
-                {
-                    continue;
-                }
-
-                if (applyMethod)
-                {
-                    config.method = method;
-                }
-
-                config.thresholdFactor = thresholdFactor;
-                NormalizeConfig(config);
-            }
-
-            var bodyPartHealth = BodyPartHealthConfig;
-            if (bodyPartHealth.enabled)
-            {
-                if (applyMethod)
-                {
-                    bodyPartHealth.method = method;
-                }
-
-                bodyPartHealth.thresholdFactor = thresholdFactor;
-                NormalizeConfig(bodyPartHealth);
-            }
-
-            EnsureSpecialDamageConfigs();
-            for (var i = 0; i < specialDamageConfigs.Count; i++)
-            {
-                var config = specialDamageConfigs[i];
-                if (!config.enabled)
-                {
-                    continue;
-                }
-
-                if (applyMethod)
-                {
-                    config.method = method;
-                }
-
-                config.thresholdFactor = thresholdFactor;
-                config.direction = StatCompressionDirection.HigherIsBetter;
-                NormalizeConfig(config);
-            }
-
-            EnsureSpecialHediffStageConfigs();
-            for (var i = 0; i < specialHediffStageConfigs.Count; i++)
-            {
-                var config = specialHediffStageConfigs[i];
-                if (!config.enabled)
-                {
-                    continue;
-                }
-
-                if (applyMethod)
-                {
-                    config.method = method;
-                }
-
-                config.thresholdFactor = thresholdFactor;
-                config.direction = SpecialCompressionConfigs.DirectionForHediffStage(config.defName);
-                NormalizeConfig(config);
-            }
         }
 
         public void RebuildLookup()
@@ -501,7 +459,7 @@ namespace StatCompression
                 existing[stat.defName] = new StatCompressionStatConfig(
                     stat.defName,
                     defaultEnabled,
-                    method,
+                    CompressionMethod.FollowGlobal,
                     parameter,
                     1f,
                     1f,
@@ -633,6 +591,8 @@ namespace StatCompression
                 return path;
             }
 
+            var importedSchemaVersion = StatCompressionSettingsXml.VersionOf(root);
+
             var importedGlobal = new DefaultGlobalSettings
             {
                 enabled = enabled,
@@ -660,6 +620,7 @@ namespace StatCompression
             method = importedGlobal.method;
             parameter = importedGlobal.parameter;
             thresholdFactor = importedGlobal.thresholdFactor;
+            activePresets = StatCompressionSettingsXml.ReadActivePresets(root.Element("ActivePresets"));
 
             var existing = statConfigs
                 .Where(config => config != null && !config.defName.NullOrEmpty())
@@ -700,6 +661,7 @@ namespace StatCompression
                     try
                     {
                         StatCompressionSettingsXml.ApplyStatElement(statElement, config);
+                        MigrateLegacyImportedMethod(config, importedGlobal.method, importedSchemaVersion);
                         NormalizeConfig(config);
                         updated++;
                     }
@@ -711,6 +673,22 @@ namespace StatCompression
                             $"{ex.GetType().Name}: {ex.Message}");
                     }
                 }
+            }
+
+            if (importedSchemaVersion < 2)
+            {
+                MigrateLegacyImportedElement(
+                    root.Element("BodyPartHealth"),
+                    BodyPartHealthConfig,
+                    importedGlobal.method);
+                MigrateLegacyImportedSpecialElements(
+                    root.Element("SpecialDamageConfigs"),
+                    specialDamageConfigs,
+                    importedGlobal.method);
+                MigrateLegacyImportedSpecialElements(
+                    root.Element("SpecialHediffStageConfigs"),
+                    specialHediffStageConfigs,
+                    importedGlobal.method);
             }
 
             NormalizeParameters();
@@ -749,6 +727,85 @@ namespace StatCompression
             if (config.direction == StatCompressionDirection.LowerIsBetter)
             {
                 config.thresholdFactor = Math.Max(0.0001f, config.thresholdFactor);
+            }
+        }
+
+        private void MigrateLegacyGlobalFollowers()
+        {
+            var legacyGlobalMethod = method;
+            if (bodyPartHealthConfig != null && bodyPartHealthConfig.method == legacyGlobalMethod)
+            {
+                bodyPartHealthConfig.method = CompressionMethod.FollowGlobal;
+            }
+
+            MigrateLegacyGlobalFollowers(specialDamageConfigs, legacyGlobalMethod);
+            MigrateLegacyGlobalFollowers(specialHediffStageConfigs, legacyGlobalMethod);
+            MigrateLegacyGlobalFollowers(statConfigs, legacyGlobalMethod);
+        }
+
+        private static void MigrateLegacyGlobalFollowers(
+            List<StatCompressionStatConfig> configs,
+            CompressionMethod legacyGlobalMethod)
+        {
+            if (configs == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < configs.Count; i++)
+            {
+                var config = configs[i];
+                if (config != null && config.method == legacyGlobalMethod)
+                {
+                    config.method = CompressionMethod.FollowGlobal;
+                }
+            }
+        }
+
+        private static void MigrateLegacyImportedMethod(
+            StatCompressionStatConfig config,
+            CompressionMethod legacyGlobalMethod,
+            int schemaVersion)
+        {
+            if (schemaVersion < 2 && config.method == legacyGlobalMethod)
+            {
+                config.method = CompressionMethod.FollowGlobal;
+            }
+        }
+
+        private static void MigrateLegacyImportedElement(
+            XElement element,
+            StatCompressionStatConfig config,
+            CompressionMethod legacyGlobalMethod)
+        {
+            if (element != null && config.method == legacyGlobalMethod)
+            {
+                config.method = CompressionMethod.FollowGlobal;
+            }
+        }
+
+        private static void MigrateLegacyImportedSpecialElements(
+            XElement parent,
+            List<StatCompressionStatConfig> configs,
+            CompressionMethod legacyGlobalMethod)
+        {
+            if (parent == null)
+            {
+                return;
+            }
+
+            var importedNames = new HashSet<string>(
+                parent.Elements("Config")
+                    .Select(element => SpecialCompressionConfigs.CanonicalizeId(
+                        StatCompressionSettingsXml.Attr(element, "defName"))),
+                StringComparer.Ordinal);
+            for (var i = 0; i < configs.Count; i++)
+            {
+                var config = configs[i];
+                if (importedNames.Contains(config.defName) && config.method == legacyGlobalMethod)
+                {
+                    config.method = CompressionMethod.FollowGlobal;
+                }
             }
         }
 

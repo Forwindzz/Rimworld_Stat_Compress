@@ -18,7 +18,7 @@ namespace StatCompression
         {
             var config = settings.BodyPartHealthConfig;
             active = settings.enabled && config.enabled;
-            method = config.method;
+            method = StatCompressionRuntime.ResolveMethod(config.method, settings.method);
             actualParameter = StatCompressionRuntime.GetActualParameter(
                 config.method,
                 settings.method,

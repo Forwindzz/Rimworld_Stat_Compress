@@ -29,6 +29,8 @@
   <StatCompression_Method_Logarithmic>Logarithmic</StatCompression_Method_Logarithmic>
   <StatCompression_Method_Log>Log</StatCompression_Method_Log>
   <StatCompression_Method_SoftCap>Soft cap</StatCompression_Method_SoftCap>
+  <StatCompression_Method_FollowGlobal>Follow global</StatCompression_Method_FollowGlobal>
+  <StatCompression_Method_FollowGlobalShort>Global</StatCompression_Method_FollowGlobalShort>
   <StatCompression_MethodTooltip>Different ways to reduce high values. Compression becomes stronger from left to right.</StatCompression_MethodTooltip>
   <StatCompression_Formula_Linear>Linear: f(x) = h + (x - h) * t</StatCompression_Formula_Linear>
   <StatCompression_Formula_Power>Power: f(x) = h + ((x - h) + 1)^t - 1</StatCompression_Formula_Power>
@@ -44,6 +46,22 @@
   <StatCompression_IncomingDamageFactor>Incoming Damage Factor</StatCompression_IncomingDamageFactor>
   <StatCompression_CompressedIncomingDamageFactor>Compressed Incoming Damage Factor</StatCompression_CompressedIncomingDamageFactor>
   <StatCompression_AdvancedSettings>Advanced settings</StatCompression_AdvancedSettings>
+  <StatCompression_GlobalSimpleSettings>Global simple settings</StatCompression_GlobalSimpleSettings>
+  <StatCompression_UsePresets>Use presets</StatCompression_UsePresets>
+  <StatCompression_Preset_None>No presets found</StatCompression_Preset_None>
+  <StatCompression_Preset_ConflictTooltip>Conflicts with "{0}"&#10;Duplicate config: {1}&#10;Different fields: {2}</StatCompression_Preset_ConflictTooltip>
+  <StatCompression_Preset_LoadEdit>Load and edit preset</StatCompression_Preset_LoadEdit>
+  <StatCompression_Preset_CreateFromSelected>Create preset from selected configs</StatCompression_Preset_CreateFromSelected>
+  <StatCompression_Preset_CreateTitle>Create preset</StatCompression_Preset_CreateTitle>
+  <StatCompression_Preset_Name>Preset name</StatCompression_Preset_Name>
+  <StatCompression_Preset_Create>Create</StatCompression_Preset_Create>
+  <StatCompression_Preset_Save>Save preset</StatCompression_Preset_Save>
+  <StatCompression_Preset_Created>Created preset: {0}</StatCompression_Preset_Created>
+  <StatCompression_Preset_Saved>Saved preset: {0}</StatCompression_Preset_Saved>
+  <StatCompression_Preset_ErrorEmptyName>Enter a preset name.</StatCompression_Preset_ErrorEmptyName>
+  <StatCompression_Preset_ErrorInvalidName>The preset name cannot be used as a file name.</StatCompression_Preset_ErrorInvalidName>
+  <StatCompression_Preset_ErrorExists>A preset named "{0}" already exists.</StatCompression_Preset_ErrorExists>
+  <StatCompression_Preset_ErrorNoSelection>Select at least one config row.</StatCompression_Preset_ErrorNoSelection>
   <StatCompression_OpenStatSettings>Compression settings</StatCompression_OpenStatSettings>
   <StatCompression_ExportXml>Export settings XML</StatCompression_ExportXml>
   <StatCompression_ImportXml>Import settings XML</StatCompression_ImportXml>
@@ -66,11 +84,12 @@
   <StatCompression_AdvancedPreviewGraphXAxis>Input % (log)</StatCompression_AdvancedPreviewGraphXAxis>
   <StatCompression_AdvancedPreviewGraphXAxisSigned>Input % (symmetric log)</StatCompression_AdvancedPreviewGraphXAxisSigned>
   <StatCompression_AdvancedPreviewGraphYAxis>Output % (linear)</StatCompression_AdvancedPreviewGraphYAxis>
-  <StatCompression_AdvancedHelp>Configure compression for each stat. Method selects C(e). Baseline remains positive and normalizes the difference; direct directions allow a negative threshold.</StatCompression_AdvancedHelp>
+  <StatCompression_AdvancedHelp>Configure compression for each stat. Follow global uses the global Method and t; a specific Method uses that method's default t. Baseline remains positive; direct directions allow a negative threshold.</StatCompression_AdvancedHelp>
   <StatCompression_AdvancedFormulaHelp>For normalized excess e: Linear C(e)=et; Power C(e)=(e+1)^t-1; Logarithmic C(e)=ln(1+ln(t)e)/ln(t); Soft cap C(e)=te/(e+t).</StatCompression_AdvancedFormulaHelp>
   <StatCompression_DirectionHelp>Direction selects which part of the value is compressed: "Higher direct" processes the portion above the threshold; "Lower ratio" takes the reciprocal, compresses the portion above the threshold, then takes the reciprocal again; "Lower direct" processes the additive difference below the threshold.</StatCompression_DirectionHelp>
   <StatCompression_Search>Search</StatCompression_Search>
   <StatCompression_Column_On>On</StatCompression_Column_On>
+  <StatCompression_Column_Select>Select</StatCompression_Column_Select>
   <StatCompression_Column_DefName>DefName</StatCompression_Column_DefName>
   <StatCompression_Column_Method>Method</StatCompression_Column_Method>
   <StatCompression_Column_TScale>t scale</StatCompression_Column_TScale>

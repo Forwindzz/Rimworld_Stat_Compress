@@ -11,6 +11,8 @@ namespace StatCompression
         private static string thresholdPercentBuffer;
         private static string lastExportPath;
         private static string lastImportPath;
+        private static bool globalSettingsExpanded;
+        private static Vector2 presetScrollPosition;
 
         public static StatCompressionSettings Settings { get; private set; }
         public static ModContentPack ContentPack { get; private set; }
@@ -22,6 +24,7 @@ namespace StatCompression
             LongEventHandler.ExecuteWhenFinished(() =>
             {
                 Settings.EnsureStatConfigs();
+                StatCompressionPresetManager.Refresh();
                 StatCompressionBootstrap.PatchAll();
             });
         }
@@ -46,10 +49,26 @@ namespace StatCompression
             listing.CheckboxLabeled(
                 StatCompressionText.T("StatCompression_ShowInfoCardSettingsButton"),
                 ref Settings.showInfoCardSettingsButton);
-            var methodChangedBySimpleUi = DrawMethodRow(listing);
-            var parameterChangedBySimpleUi = DrawParameterRow(listing);
-            var thresholdChangedBySimpleUi = DrawThresholdRow(listing);
-            DrawPreviewSheet(listing);
+            DrawPresetSection(listing);
+
+            if (listing.ButtonText(
+                    (globalSettingsExpanded ? "- " : "+ ") +
+                    StatCompressionText.T("StatCompression_GlobalSimpleSettings")))
+            {
+                globalSettingsExpanded = !globalSettingsExpanded;
+            }
+
+            var methodChangedBySimpleUi = false;
+            var parameterChangedBySimpleUi = false;
+            var thresholdChangedBySimpleUi = false;
+            if (globalSettingsExpanded)
+            {
+                methodChangedBySimpleUi = DrawMethodRow(listing);
+                parameterChangedBySimpleUi = DrawParameterRow(listing);
+                thresholdChangedBySimpleUi = DrawThresholdRow(listing);
+                DrawPreviewSheet(listing);
+            }
+
             var settingsReplaced = DrawActionButtons(listing);
             settingsReplaced |= DrawResetRow(listing);
 
@@ -77,13 +96,83 @@ namespace StatCompression
                 thresholdChangedBySimpleUi;
             if (compressionShapeChanged)
             {
-                Settings.ApplyGlobalCompressionToEnabled(methodChangedBySimpleUi);
+                Settings.RebuildLookup();
             }
 
-            if (compressionShapeChanged || oldEnabled != Settings.enabled)
+            if (!compressionShapeChanged && oldEnabled != Settings.enabled)
             {
                 Settings.RebuildLookup();
             }
+        }
+
+        private static void DrawPresetSection(Listing_Standard listing)
+        {
+            listing.Label(StatCompressionText.T("StatCompression_UsePresets"));
+            var presets = StatCompressionPresetManager.Presets;
+            var rowCount = Math.Max(1, (presets.Count + 1) / 2);
+            var visibleRows = Math.Min(4, rowCount);
+            var rect = listing.GetRect(visibleRows * 30f + 8f);
+            Widgets.DrawMenuSection(rect);
+            var inner = rect.ContractedBy(4f);
+            if (presets.Count == 0)
+            {
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Widgets.Label(inner, StatCompressionText.T("StatCompression_Preset_None"));
+                Text.Anchor = TextAnchor.UpperLeft;
+                return;
+            }
+
+            var view = new Rect(0f, 0f, inner.width - 16f, rowCount * 30f);
+            Widgets.BeginScrollView(inner, ref presetScrollPosition, view);
+            var cellWidth = view.width / 2f;
+            for (var i = 0; i < presets.Count; i++)
+            {
+                var preset = presets[i];
+                var cell = new Rect(
+                    (i % 2) * cellWidth,
+                    (i / 2) * 30f,
+                    cellWidth - 4f,
+                    28f);
+                var active = Settings.activePresets.Any(name =>
+                    string.Equals(name, preset.FileName, StringComparison.OrdinalIgnoreCase));
+                var wasActive = active;
+                StatCompressionPresetConflict conflict = null;
+                var hasConflict = !active &&
+                                  StatCompressionPresetManager.TryFindConflict(
+                                      Settings,
+                                      preset,
+                                      out conflict);
+                var oldEnabled = GUI.enabled;
+                GUI.enabled = oldEnabled && !hasConflict;
+                Widgets.CheckboxLabeled(cell, preset.Name, ref active);
+                GUI.enabled = oldEnabled;
+                if (hasConflict)
+                {
+                    TooltipHandler.TipRegion(
+                        cell,
+                        StatCompressionText.T(
+                            "StatCompression_Preset_ConflictTooltip",
+                            conflict.PresetName,
+                            conflict.DefName,
+                            conflict.Fields));
+                }
+
+                if (active == wasActive)
+                {
+                    continue;
+                }
+
+                if (active)
+                {
+                    StatCompressionPresetManager.Apply(Settings, preset);
+                }
+                else
+                {
+                    StatCompressionPresetManager.Disable(Settings, preset);
+                }
+            }
+
+            Widgets.EndScrollView();
         }
 
         public override void WriteSettings()
@@ -281,7 +370,7 @@ namespace StatCompression
             var config = new StatCompressionStatConfig(
                 "Preview",
                 true,
-                Settings.method,
+                CompressionMethod.FollowGlobal,
                 Settings.parameter,
                 1f,
                 1f,
