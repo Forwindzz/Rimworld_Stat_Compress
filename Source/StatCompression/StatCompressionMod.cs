@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -11,9 +12,14 @@ namespace StatCompression
         private static string thresholdPercentBuffer;
         private static string lastExportPath;
         private static string lastImportPath;
+        private static bool presetSectionExpanded = true;
         private static bool globalSettingsExpanded;
         private static bool configActionsExpanded;
+        private static Vector2 settingsScrollPosition;
         private static Vector2 presetScrollPosition;
+
+        private static readonly Color FoldoutButtonTint =
+            new Color(0.68f, 0.82f, 1f, 1f);
 
         public static StatCompressionSettings Settings { get; private set; }
         public static ModContentPack ContentPack { get; private set; }
@@ -21,13 +27,58 @@ namespace StatCompression
         public StatCompressionMod(ModContentPack content) : base(content)
         {
             ContentPack = content;
+            var globalSettingsExisted = File.Exists(GlobalSettingsPath());
             Settings = GetSettings<StatCompressionSettings>();
             LongEventHandler.ExecuteWhenFinished(() =>
             {
                 Settings.EnsureStatConfigs();
+                var seedResult = StatCompressionDefaultPresetSeeder.EnsureLocalTemplates();
                 StatCompressionPresetManager.Refresh();
+                var appliedCount = 0;
+                var skippedMissingConfigs = 0;
+                if (!globalSettingsExisted &&
+                    !seedResult.Failed &&
+                    StatCompressionDefaultPresetSeeder.TryApplyDefaults(
+                        Settings,
+                        out appliedCount,
+                        out skippedMissingConfigs))
+                {
+                    WriteSettings();
+                }
+
+                if (seedResult.CreatedCount > 0)
+                {
+                    if (globalSettingsExisted)
+                    {
+                        Log.Message(
+                            $"[{StatCompressionConstants.DisplayName}] Created {seedResult.CreatedCount} " +
+                            "local default presets; existing global configuration was left unchanged.");
+                    }
+                    else if (appliedCount > 0)
+                    {
+                        Log.Message(
+                            $"[{StatCompressionConstants.DisplayName}] Created {seedResult.CreatedCount} " +
+                            $"local default presets; applied {appliedCount} for a new global configuration; " +
+                            $"skippedMissingConfigs={skippedMissingConfigs}.");
+                    }
+                }
+                else if (!globalSettingsExisted && appliedCount > 0)
+                {
+                    Log.Message(
+                        $"[{StatCompressionConstants.DisplayName}] Applied {appliedCount} existing " +
+                        $"local default presets for a new global configuration; " +
+                        $"skippedMissingConfigs={skippedMissingConfigs}.");
+                }
+
                 StatCompressionBootstrap.PatchAll();
             });
+        }
+
+        private static string GlobalSettingsPath()
+        {
+            var fileName =
+                "Mod_" + typeof(StatCompressionMod).FullName.Replace('.', '_') + ".xml";
+            return Path.Combine(GenFilePaths.ConfigFolderPath, fileName);
         }
 
         public override string SettingsCategory()
@@ -43,8 +94,16 @@ namespace StatCompression
 
             var oldEnabled = Settings.enabled;
 
+            var contentHeight = EstimateSettingsContentHeight(inRect.height);
+            var viewRect = new Rect(
+                0f,
+                0f,
+                inRect.width - 16f,
+                contentHeight);
+            Widgets.BeginScrollView(inRect, ref settingsScrollPosition, viewRect);
+
             var listing = new Listing_Standard();
-            listing.Begin(inRect);
+            listing.Begin(viewRect);
 
             listing.CheckboxLabeled(StatCompressionText.T("StatCompression_Enable"), ref Settings.enabled);
             listing.CheckboxLabeled(
@@ -52,8 +111,9 @@ namespace StatCompression
                 ref Settings.showInfoCardSettingsButton);
             DrawPresetSection(listing);
 
-            if (listing.ButtonText(
-                    (globalSettingsExpanded ? "- " : "+ ") +
+            if (DrawFoldoutButton(
+                    listing,
+                    globalSettingsExpanded,
                     StatCompressionText.T("StatCompression_GlobalSimpleSettings")))
             {
                 globalSettingsExpanded = !globalSettingsExpanded;
@@ -74,11 +134,17 @@ namespace StatCompression
             var settingsReplaced = DrawConfigActionsSection(listing);
 
             listing.End();
+            Widgets.EndScrollView();
 
             Settings.NormalizeParameters();
             if (settingsReplaced)
             {
                 return;
+            }
+
+            if (thresholdChangedBySimpleUi)
+            {
+                ApplyGlobalThresholdToEnabledConfigs();
             }
 
             var compressionShapeChanged =
@@ -96,12 +162,35 @@ namespace StatCompression
             }
         }
 
+        private static void ApplyGlobalThresholdToEnabledConfigs()
+        {
+            foreach (var config in Settings.AdvancedConfigs())
+            {
+                if (config.enabled)
+                {
+                    config.thresholdFactor = Settings.thresholdFactor;
+                }
+            }
+        }
+
         private static void DrawPresetSection(Listing_Standard listing)
         {
-            listing.Label(StatCompressionText.T("StatCompression_UsePresets"));
+            if (DrawFoldoutButton(
+                    listing,
+                    presetSectionExpanded,
+                    StatCompressionText.T("StatCompression_UsePresets")))
+            {
+                presetSectionExpanded = !presetSectionExpanded;
+            }
+
+            if (!presetSectionExpanded)
+            {
+                return;
+            }
+
             var presets = StatCompressionPresetManager.Presets;
             var rowCount = Math.Max(1, (presets.Count + 1) / 2);
-            var visibleRows = Math.Min(4, rowCount);
+            var visibleRows = Math.Min(4.5f, rowCount);
             var rect = listing.GetRect(visibleRows * 30f + 8f);
             Widgets.DrawMenuSection(rect);
             var inner = rect.ContractedBy(4f);
@@ -110,60 +199,119 @@ namespace StatCompression
                 Text.Anchor = TextAnchor.MiddleCenter;
                 Widgets.Label(inner, StatCompressionText.T("StatCompression_Preset_None"));
                 Text.Anchor = TextAnchor.UpperLeft;
-                return;
             }
-
-            var view = new Rect(0f, 0f, inner.width - 16f, rowCount * 30f);
-            Widgets.BeginScrollView(inner, ref presetScrollPosition, view);
-            var cellWidth = view.width / 2f;
-            for (var i = 0; i < presets.Count; i++)
+            else
             {
-                var preset = presets[i];
-                var cell = new Rect(
-                    (i % 2) * cellWidth,
-                    (i / 2) * 30f,
-                    cellWidth - 4f,
-                    28f);
-                var active = Settings.activePresets.Any(name =>
-                    string.Equals(name, preset.FileName, StringComparison.OrdinalIgnoreCase));
-                var wasActive = active;
-                StatCompressionPresetConflict conflict = null;
-                var hasConflict = !active &&
-                                  StatCompressionPresetManager.TryFindConflict(
-                                      Settings,
-                                      preset,
-                                      out conflict);
-                var oldEnabled = GUI.enabled;
-                GUI.enabled = oldEnabled && !hasConflict;
-                Widgets.CheckboxLabeled(cell, preset.Name, ref active);
-                GUI.enabled = oldEnabled;
-                if (hasConflict)
+                var view = new Rect(0f, 0f, inner.width - 16f, rowCount * 30f);
+                Widgets.BeginScrollView(inner, ref presetScrollPosition, view);
+                var cellWidth = view.width / 2f;
+                for (var i = 0; i < presets.Count; i++)
                 {
-                    TooltipHandler.TipRegion(
-                        cell,
-                        StatCompressionText.T(
-                            "StatCompression_Preset_ConflictTooltip",
-                            conflict.PresetName,
-                            conflict.DefName,
-                            conflict.Fields));
+                    var preset = presets[i];
+                    var cell = new Rect(
+                        (i % 2) * cellWidth,
+                        (i / 2) * 30f,
+                        cellWidth - 4f,
+                        28f);
+                    var active = Settings.activePresets.Any(name =>
+                        string.Equals(name, preset.FileName, StringComparison.OrdinalIgnoreCase));
+                    var wasActive = active;
+                    StatCompressionPresetConflict conflict = null;
+                    var hasConflict = !active &&
+                                      StatCompressionPresetManager.TryFindConflict(
+                                          Settings,
+                                          preset,
+                                          out conflict);
+                    var oldEnabled = GUI.enabled;
+                    GUI.enabled = oldEnabled && !hasConflict;
+                    Widgets.CheckboxLabeled(cell, preset.DisplayName, ref active);
+                    GUI.enabled = oldEnabled;
+                    if (hasConflict)
+                    {
+                        TooltipHandler.TipRegion(
+                            cell,
+                            StatCompressionText.T(
+                                "StatCompression_Preset_ConflictTooltip",
+                                conflict.PresetName,
+                                conflict.DefName,
+                                conflict.Fields));
+                    }
+
+                    if (active == wasActive)
+                    {
+                        continue;
+                    }
+
+                    if (active)
+                    {
+                        StatCompressionPresetManager.Apply(Settings, preset);
+                    }
+                    else
+                    {
+                        StatCompressionPresetManager.Disable(Settings, preset);
+                    }
                 }
 
-                if (active == wasActive)
-                {
-                    continue;
-                }
+                Widgets.EndScrollView();
+            }
 
-                if (active)
+            DrawPresetSectionHint(listing);
+        }
+
+        private static void DrawPresetSectionHint(Listing_Standard listing)
+        {
+            var text = StatCompressionText.T("StatCompression_PresetSectionHint");
+            var oldFont = Text.Font;
+            var oldColor = GUI.color;
+            Text.Font = GameFont.Tiny;
+            GUI.color = Color.gray;
+            listing.Label(text);
+            GUI.color = oldColor;
+            Text.Font = oldFont;
+        }
+
+        private static bool DrawFoldoutButton(
+            Listing_Standard listing,
+            bool expanded,
+            string label)
+        {
+            var oldColor = GUI.color;
+            GUI.color = FoldoutButtonTint;
+            var clicked = listing.ButtonText((expanded ? "- " : "+ ") + label);
+            GUI.color = oldColor;
+            return clicked;
+        }
+
+        private static float EstimateSettingsContentHeight(float viewportHeight)
+        {
+            var height = 190f;
+            if (presetSectionExpanded)
+            {
+                var presetRows = Math.Max(
+                    1,
+                    (StatCompressionPresetManager.Presets.Count + 1) / 2);
+                height += Math.Min(4.5f, presetRows) * 30f + 76f;
+            }
+
+            if (globalSettingsExpanded)
+            {
+                height += 410f;
+            }
+
+            if (configActionsExpanded)
+            {
+                height += 170f;
+                if (!lastExportPath.NullOrEmpty())
                 {
-                    StatCompressionPresetManager.Apply(Settings, preset);
+                    height += 30f;
                 }
-                else
+                if (!lastImportPath.NullOrEmpty())
                 {
-                    StatCompressionPresetManager.Disable(Settings, preset);
+                    height += 30f;
                 }
             }
 
-            Widgets.EndScrollView();
+            return Math.Max(viewportHeight, height);
         }
 
         public override void WriteSettings()
@@ -207,7 +355,9 @@ namespace StatCompression
                 }
             }
 
-            Widgets.Label(new Rect(rect.x, rect.y + 68f, rect.width, 24f), FormulaText(Settings.method));
+            var descriptionRect = new Rect(rect.x, rect.y + 68f, rect.width, 24f);
+            Widgets.Label(descriptionRect, MethodDescription(Settings.method));
+            TooltipHandler.TipRegion(descriptionRect, FormulaText(Settings.method));
             return changed;
         }
 
@@ -215,11 +365,12 @@ namespace StatCompression
         {
             var changed = false;
             var range = ParameterRange(Settings.method);
-            var rect = listing.GetRect(34f);
-            Widgets.Label(new Rect(rect.x, rect.y, rect.width * 0.28f, 24f), StatCompressionText.T("StatCompression_ParameterT"));
-            TooltipHandler.TipRegion(rect, StatCompressionText.T("StatCompression_ParameterTooltip"));
+            var rect = listing.GetRect(52f);
+            var labelRect = new Rect(rect.x, rect.y, rect.width * 0.32f, 24f);
+            Widgets.LabelFit(labelRect, ParameterLabel(Settings.method));
+            TooltipHandler.TipRegion(rect, ParameterTooltip(Settings.method));
 
-            var sliderRect = new Rect(rect.x + rect.width * 0.28f, rect.y, rect.width * 0.52f - 8f, 24f);
+            var sliderRect = new Rect(rect.x + rect.width * 0.32f, rect.y, rect.width * 0.48f - 8f, 24f);
             var sliderValue = Math.Max(range.min, Math.Min(range.max, Settings.parameter));
             var newValue = Widgets.HorizontalSlider(sliderRect, sliderValue, range.min, range.max, false, null, null, null, SliderRoundTo(Settings.method));
             if (Math.Abs(newValue - sliderValue) > 0.000001f)
@@ -237,6 +388,24 @@ namespace StatCompression
                 ParameterSafetyMinimum(Settings.method),
                 float.MaxValue);
             Settings.parameter = StatCompressionSettings.NormalizeParameter(Settings.method, Settings.parameter);
+
+            var oldFont = Text.Font;
+            var oldColor = GUI.color;
+            Text.Font = GameFont.Tiny;
+            var amplifies = (Settings.method == CompressionMethod.Linear ||
+                             Settings.method == CompressionMethod.Exponential) &&
+                            Settings.parameter > 1f;
+            if (amplifies)
+            {
+                GUI.color = new Color(1f, 0.63f, 0.42f, 1f);
+            }
+            Widgets.Label(
+                new Rect(rect.x, rect.y + 28f, rect.width, 22f),
+                amplifies
+                    ? StatCompressionText.T("StatCompression_ParameterAmplifiesWarning")
+                    : ParameterDirectionDescription(Settings.method));
+            GUI.color = oldColor;
+            Text.Font = oldFont;
             return changed || Math.Abs(parameterBeforeTextField - Settings.parameter) > 0.000001f;
         }
 
@@ -272,12 +441,21 @@ namespace StatCompression
 
         private static void DrawPreviewSheet(Listing_Standard listing)
         {
-            var rect = listing.GetRect(185f);
+            var rect = listing.GetRect(207f);
             Widgets.DrawMenuSection(rect);
             rect = rect.ContractedBy(8f);
             Widgets.Label(new Rect(rect.x, rect.y, rect.width, 24f), StatCompressionText.T("StatCompression_Preview"));
+            Text.Font = GameFont.Tiny;
+            Widgets.Label(
+                new Rect(rect.x, rect.y + 24f, rect.width, 22f),
+                StatCompressionText.T(
+                    "StatCompression_PreviewCurrentMethod",
+                    StatCompressionText.MethodLabel(Settings.method),
+                    Settings.parameter.ToString("0.###"),
+                    ParameterMeaning(Settings.method)));
+            Text.Font = GameFont.Small;
 
-            var left = new Rect(rect.x, rect.y + 30f, rect.width, 64f);
+            var left = new Rect(rect.x, rect.y + 50f, rect.width, 64f);
             DrawPreviewRow(
                 left,
                 StatCompressionText.T("StatCompression_GlobalWorkSpeed"),
@@ -285,7 +463,7 @@ namespace StatCompression
                 StatCompressionDirection.HigherIsBetter,
                 new[] { 0.5f, 1f, 1.5f, 2f, 5f, 50f, 1000f });
 
-            var right = new Rect(rect.x, rect.y + 102f, rect.width, 64f);
+            var right = new Rect(rect.x, rect.y + 122f, rect.width, 64f);
             DrawPreviewRow(
                 right,
                 StatCompressionText.T("StatCompression_IncomingDamageFactor"),
@@ -322,8 +500,9 @@ namespace StatCompression
 
         private static bool DrawConfigActionsSection(Listing_Standard listing)
         {
-            if (listing.ButtonText(
-                    (configActionsExpanded ? "- " : "+ ") +
+            if (DrawFoldoutButton(
+                    listing,
+                    configActionsExpanded,
                     StatCompressionText.T("StatCompression_ConfigActions")))
             {
                 configActionsExpanded = !configActionsExpanded;
@@ -422,6 +601,12 @@ namespace StatCompression
                 ImportPresetFromClipboard();
             }
 
+            if (listing.ButtonText(
+                    StatCompressionText.T("StatCompression_RestoreDefaultPresets")))
+            {
+                RequestRestoreDefaultPresetsConfirmation();
+            }
+
             if (listing.ButtonText(StatCompressionText.T("StatCompression_ResetAllSettings")))
             {
                 RequestResetConfirmation();
@@ -457,7 +642,7 @@ namespace StatCompression
             {
                 var preset = presets[i];
                 options.Add(new FloatMenuOption(
-                    preset.Name,
+                    preset.DisplayName,
                     () =>
                     {
                         GUIUtility.systemCopyBuffer =
@@ -465,7 +650,7 @@ namespace StatCompression
                         Messages.Message(
                             StatCompressionText.T(
                                 "StatCompression_PresetCopied",
-                                preset.Name),
+                                preset.DisplayName),
                             MessageTypeDefOf.TaskCompletion,
                             false);
                     }));
@@ -515,7 +700,7 @@ namespace StatCompression
             Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
                 StatCompressionText.T(
                     "StatCompression_PresetOverwriteConfirm",
-                    existing.Name),
+                    existing.DisplayName),
                 () => SaveImportedPreset(preset, true),
                 true,
                 StatCompressionText.T("StatCompression_PresetOverwriteTitle")));
@@ -534,7 +719,7 @@ namespace StatCompression
                 Messages.Message(
                     StatCompressionText.T(
                         "StatCompression_PresetImported",
-                        imported.Name),
+                        imported.DisplayName),
                     MessageTypeDefOf.TaskCompletion,
                     false);
             }
@@ -551,6 +736,44 @@ namespace StatCompression
                 ResetAllSettings,
                 true,
                 StatCompressionText.T("StatCompression_ResetConfirmTitle")));
+        }
+
+        private static void RequestRestoreDefaultPresetsConfirmation()
+        {
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                StatCompressionText.T("StatCompression_RestoreDefaultPresetsConfirmText"),
+                RestoreDefaultPresets,
+                true,
+                StatCompressionText.T("StatCompression_RestoreDefaultPresetsConfirmTitle")));
+        }
+
+        private static void RestoreDefaultPresets()
+        {
+            if (StatCompressionDefaultPresetSeeder.TryReplaceWithDefaults(
+                    Settings,
+                    out var deletedCount,
+                    out var appliedCount,
+                    out var skippedMissingConfigs,
+                    out var error))
+            {
+                presetScrollPosition = Vector2.zero;
+                Messages.Message(
+                    StatCompressionText.T(
+                        "StatCompression_RestoreDefaultPresetsCompleted",
+                        deletedCount,
+                        appliedCount,
+                        skippedMissingConfigs),
+                    MessageTypeDefOf.TaskCompletion,
+                    false);
+                return;
+            }
+
+            Messages.Message(
+                StatCompressionText.T(
+                    "StatCompression_RestoreDefaultPresetsFailed",
+                    error),
+                MessageTypeDefOf.RejectInput,
+                false);
         }
 
         private static void ResetAllSettings()
@@ -633,6 +856,74 @@ namespace StatCompression
                 default:
                     return string.Empty;
             }
+        }
+
+        private static string MethodDescription(CompressionMethod method)
+        {
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return StatCompressionText.T("StatCompression_MethodDescription_Linear");
+                case CompressionMethod.Exponential:
+                    return StatCompressionText.T("StatCompression_MethodDescription_Power");
+                case CompressionMethod.Logarithmic:
+                    return StatCompressionText.T("StatCompression_MethodDescription_Logarithmic");
+                case CompressionMethod.SoftCap:
+                    return StatCompressionText.T("StatCompression_MethodDescription_SoftCap");
+                default:
+                    return string.Empty;
+            }
+        }
+
+        private static string ParameterLabel(CompressionMethod method)
+        {
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return StatCompressionText.T("StatCompression_ParameterLabel_Linear");
+                case CompressionMethod.Exponential:
+                    return StatCompressionText.T("StatCompression_ParameterLabel_Power");
+                case CompressionMethod.Logarithmic:
+                    return StatCompressionText.T("StatCompression_ParameterLabel_Logarithmic");
+                case CompressionMethod.SoftCap:
+                    return StatCompressionText.T("StatCompression_ParameterLabel_SoftCap");
+                default:
+                    return StatCompressionText.T("StatCompression_ParameterT");
+            }
+        }
+
+        private static string ParameterDirectionDescription(CompressionMethod method)
+        {
+            return StatCompressionText.T(
+                method == CompressionMethod.Logarithmic
+                    ? "StatCompression_ParameterDirection_Larger"
+                    : "StatCompression_ParameterDirection_Smaller");
+        }
+
+        private static string ParameterMeaning(CompressionMethod method)
+        {
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_Linear");
+                case CompressionMethod.Exponential:
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_Power");
+                case CompressionMethod.Logarithmic:
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_Logarithmic");
+                case CompressionMethod.SoftCap:
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_SoftCap");
+                default:
+                    return string.Empty;
+            }
+        }
+
+        private static string ParameterTooltip(CompressionMethod method)
+        {
+            return StatCompressionText.T("StatCompression_ParameterTooltip") +
+                   "\n" +
+                   ParameterDirectionDescription(method) +
+                   "\n" +
+                   FormulaText(method);
         }
 
         private static string FormatPercent(float value)

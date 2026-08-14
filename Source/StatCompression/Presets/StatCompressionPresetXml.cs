@@ -64,17 +64,24 @@ namespace StatCompression
 
         public static XDocument CreateDocument(StatCompressionPreset preset)
         {
+            var root = new XElement(
+                RootName,
+                new XAttribute("name", preset.Name));
+            if (!preset.LabelKey.NullOrEmpty())
+            {
+                root.Add(new XAttribute("labelKey", preset.LabelKey));
+            }
+
+            root.Add(
+                new XElement(
+                    "Configs",
+                    preset.Configs
+                        .Where(config => config != null && !config.defName.NullOrEmpty())
+                        .OrderBy(config => config.defName, StringComparer.Ordinal)
+                        .Select(config => StatCompressionSettingsXml.CreateConfigElement("Config", config))));
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
-                new XElement(
-                    RootName,
-                    new XAttribute("name", preset.Name),
-                    new XElement(
-                        "Configs",
-                        preset.Configs
-                            .Where(config => config != null && !config.defName.NullOrEmpty())
-                            .OrderBy(config => config.defName, StringComparer.Ordinal)
-                            .Select(config => StatCompressionSettingsXml.CreateConfigElement("Config", config)))));
+                root);
         }
 
         public static void Save(StatCompressionPreset preset, string path)
@@ -109,6 +116,8 @@ namespace StatCompression
                 error = "preset name is empty";
                 return false;
             }
+
+            var labelKey = root.Attribute("labelKey")?.Value?.Trim();
 
             var configsElement = root.Element("Configs");
             if (configsElement == null)
@@ -145,6 +154,7 @@ namespace StatCompression
             preset = new StatCompressionPreset
             {
                 Name = name,
+                LabelKey = labelKey,
                 FileName = fallbackName,
                 Path = path,
                 BuiltIn = builtIn,

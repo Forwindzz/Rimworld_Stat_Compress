@@ -305,17 +305,6 @@ namespace StatCompression
             return method == CompressionMethod.FollowGlobal ? globalMethod : method;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetActualThresholdFactor(
-            CompressionMethod method,
-            float globalThresholdFactor,
-            float configThresholdFactor)
-        {
-            return method == CompressionMethod.FollowGlobal
-                ? globalThresholdFactor
-                : configThresholdFactor;
-        }
-
         public static float DefaultParameter(CompressionMethod method)
         {
             switch (method)

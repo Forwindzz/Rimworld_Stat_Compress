@@ -12,7 +12,7 @@ if (-not (Test-Path -LiteralPath $SourcePath -PathType Leaf)) {
 }
 
 try {
-    [xml]$Document = Get-Content -LiteralPath $SourcePath -Raw
+    [xml]$Document = Get-Content -LiteralPath $SourcePath -Raw -Encoding UTF8
 }
 catch {
     throw "Failed to parse exported settings XML: $SourcePath`n$_"
@@ -39,9 +39,25 @@ if ($DuplicateDefNames.Count -gt 0) {
 
 $DestinationDirectory = Split-Path -Parent $DestinationPath
 New-Item -ItemType Directory -Force -Path $DestinationDirectory | Out-Null
-Copy-Item -LiteralPath $SourcePath -Destination $DestinationPath -Force
+$ActivePresets = $Document.SelectSingleNode('/StatCompressionSettings/ActivePresets')
+if ($null -eq $ActivePresets) {
+    $ActivePresets = $Document.CreateElement('ActivePresets')
+    $StatsNode = $Document.SelectSingleNode('/StatCompressionSettings/Stats')
+    if ($null -ne $StatsNode) {
+        [void]$Document.DocumentElement.InsertBefore($ActivePresets, $StatsNode)
+    }
+    else {
+        [void]$Document.DocumentElement.AppendChild($ActivePresets)
+    }
+}
+else {
+    $ActivePresets.RemoveAll()
+}
+
+$Document.Save($DestinationPath)
 
 $Hash = (Get-FileHash -LiteralPath $DestinationPath -Algorithm SHA256).Hash
 Write-Host "Updated mod default settings: $DestinationPath"
 Write-Host "Stats: $($Stats.Count)"
+Write-Host 'Active presets: cleared for first-install initialization'
 Write-Host "SHA256: $Hash"

@@ -4,6 +4,6 @@ namespace StatCompression
     {
         public const string PackageId = "forwindz.statcompression";
         public const string DisplayName = "Stat Compression";
-        public const string Version = "1.0";
+        public const string Version = "1.1";
     }
 }

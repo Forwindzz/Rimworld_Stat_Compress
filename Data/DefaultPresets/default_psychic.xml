@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Psychic Powers" labelKey="StatCompression_DefaultPreset_Psychic">
+  <Configs>
+    <Config defName="MeditationFocusGain" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="0.5" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="MeditationFocusStrength" enabled="true" method="FollowGlobal" method_t="2" tScale="1.4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="PsychicEntropyGain" enabled="true" method="FollowGlobal" method_t="2" tScale="1.10000002" baseline="1" thresholdFactor="1" direction="LowerIsBetter" />
+    <Config defName="PsychicEntropyMax" enabled="true" method="FollowGlobal" method_t="2" tScale="1.2" baseline="100" thresholdFactor="1.25" direction="HigherIsBetter" />
+    <Config defName="PsychicEntropyRecoveryRate" enabled="true" method="FollowGlobal" method_t="2" tScale="0.7" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="PsychicSensitivity" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

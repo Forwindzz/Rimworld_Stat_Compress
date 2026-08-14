@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Combat Performance" labelKey="StatCompression_DefaultPreset_CombatPerformance">
+  <Configs>
+    <Config defName="AccuracyLong" enabled="true" method="FollowGlobal" method_t="2" tScale="3" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="AccuracyMedium" enabled="true" method="FollowGlobal" method_t="2" tScale="3" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="AccuracyShort" enabled="true" method="FollowGlobal" method_t="2" tScale="3" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="AccuracyTouch" enabled="true" method="FollowGlobal" method_t="2" tScale="3" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="AimingDelayFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="MeleeCooldownFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="MeleeDamageFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="MeleeDodgeChance" enabled="true" method="FollowGlobal" method_t="2" tScale="5" baseline="20.0000019" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MeleeDoorDamageFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="MeleeHitChance" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="10.000001" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MeleeWeapon_DamageMultiplier" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="RangedCooldownFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="RangedCooldownFactorBuilding" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="RangedWeapon_DamageMultiplier" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="RangedWeapon_WarmupMultiplier" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="ShootingAccuracyChildFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ShootingAccuracyFactor_Long" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ShootingAccuracyFactor_Medium" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ShootingAccuracyFactor_Short" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ShootingAccuracyFactor_Touch" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ShootingAccuracyPawn" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="30" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ShootingAccuracyTurret" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="10" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="VEF_GaussProjectileDamageModifier" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="VEF_MeleeAttackDamageFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="VEF_RangeAttackDamageFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="VEF_RangedCooldownFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="VEF_RangedDodgeChance" enabled="true" method="FollowGlobal" method_t="2" tScale="5" baseline="20" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="VSE_MeleeCooldownFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

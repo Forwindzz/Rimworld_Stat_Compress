@@ -32,25 +32,49 @@ if (-not $ResolvedDeployRoot.StartsWith($ResolvedModsPath, [System.StringCompari
     throw "Refusing to deploy outside RimWorld Mods path: $ResolvedDeployRoot"
 }
 
+$PublishedFileIdBackups = @()
 if (Test-Path -LiteralPath $DeployRoot) {
-    $PublishedFileIdPath = [System.IO.Path]::GetFullPath(
-        (Join-Path $DeployRoot 'About\PublishedFileId.txt'))
-
-    Get-ChildItem -LiteralPath $DeployRoot -Recurse -File -Force |
-        Where-Object {
-            -not [System.IO.Path]::GetFullPath($_.FullName).Equals(
-                $PublishedFileIdPath,
-                [System.StringComparison]::OrdinalIgnoreCase)
-        } |
-        Remove-Item -Force
-
-    Get-ChildItem -LiteralPath $DeployRoot -Recurse -Directory -Force |
-        Sort-Object { $_.FullName.Length } -Descending |
-        Where-Object { (Get-ChildItem -LiteralPath $_.FullName -Force).Count -eq 0 } |
-        Remove-Item -Force
+    Get-ChildItem -LiteralPath $DeployRoot -Recurse -File -Force -Filter 'PublishedFileId.txt' |
+        ForEach-Object {
+            $relativePath = $_.FullName.Substring($ResolvedDeployRoot.Length).TrimStart('\')
+            $PublishedFileIdBackups += [PSCustomObject]@{
+                RelativePath = $relativePath
+                Content = [System.IO.File]::ReadAllBytes($_.FullName)
+            }
+        }
 }
 
-New-Item -ItemType Directory -Force -Path $DeployRoot | Out-Null
-Copy-Item -Path (Join-Path $StageRoot '*') -Destination $DeployRoot -Recurse -Force
+try {
+    if (Test-Path -LiteralPath $DeployRoot) {
+        Get-ChildItem -LiteralPath $DeployRoot -Recurse -File -Force |
+            Remove-Item -Force
+
+        Get-ChildItem -LiteralPath $DeployRoot -Recurse -Directory -Force |
+            Sort-Object { $_.FullName.Length } -Descending |
+            Where-Object { (Get-ChildItem -LiteralPath $_.FullName -Force).Count -eq 0 } |
+            Remove-Item -Force
+    }
+
+    New-Item -ItemType Directory -Force -Path $DeployRoot | Out-Null
+    Copy-Item -Path (Join-Path $StageRoot '*') -Destination $DeployRoot -Recurse -Force
+}
+finally {
+    foreach ($Backup in $PublishedFileIdBackups) {
+        $RestorePath = Join-Path $DeployRoot $Backup.RelativePath
+        $RestoreDirectory = Split-Path -Parent $RestorePath
+        New-Item -ItemType Directory -Force -Path $RestoreDirectory | Out-Null
+        $RestoreRequired = $true
+        if (Test-Path -LiteralPath $RestorePath -PathType Leaf) {
+            $CurrentContent = [System.IO.File]::ReadAllBytes($RestorePath)
+            $RestoreRequired = [System.Convert]::ToBase64String($CurrentContent) -ne
+                [System.Convert]::ToBase64String($Backup.Content)
+        }
+
+        if ($RestoreRequired) {
+            Remove-Item -LiteralPath $RestorePath -Force -ErrorAction SilentlyContinue
+            [System.IO.File]::WriteAllBytes($RestorePath, $Backup.Content)
+        }
+    }
+}
 
 Write-Host "Deployed mod package: $DeployRoot"

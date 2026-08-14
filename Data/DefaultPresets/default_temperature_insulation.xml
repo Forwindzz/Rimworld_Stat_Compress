@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Temperature &amp; Insulation" labelKey="StatCompression_DefaultPreset_TemperatureInsulation">
+  <Configs>
+    <Config defName="ComfyTemperatureMax" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="100" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="ComfyTemperatureMin" enabled="true" method="SoftCap" method_t="2" tScale="4.65" baseline="100" thresholdFactor="-1" direction="LowerDirect" />
+    <Config defName="Insulation_Cold" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="10" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="Insulation_Heat" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="10" thresholdFactor="1" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

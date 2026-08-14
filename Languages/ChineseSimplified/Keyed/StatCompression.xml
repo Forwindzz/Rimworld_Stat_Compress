@@ -32,22 +32,39 @@
   <StatCompression_Method_FollowGlobal>跟随全局</StatCompression_Method_FollowGlobal>
   <StatCompression_Method_FollowGlobalShort>全局</StatCompression_Method_FollowGlobalShort>
   <StatCompression_MethodTooltip>不同的削减高数值方式，右边的削减力度更强。</StatCompression_MethodTooltip>
+  <StatCompression_MethodDescription_Linear>超过阈值的部分按固定比例保留。</StatCompression_MethodDescription_Linear>
+  <StatCompression_MethodDescription_Power>数值全程都会被较大幅度压缩。</StatCompression_MethodDescription_Power>
+  <StatCompression_MethodDescription_Logarithmic>低数值压缩不明显，高数值会被显著压缩。</StatCompression_MethodDescription_Logarithmic>
+  <StatCompression_MethodDescription_SoftCap>数值会无限逼近一个设定好的上限值。</StatCompression_MethodDescription_SoftCap>
   <StatCompression_Formula_Linear>线性：f(x) = h + (x - h) * t</StatCompression_Formula_Linear>
   <StatCompression_Formula_Power>指数：f(x) = h + ((x - h) + 1)^t - 1</StatCompression_Formula_Power>
   <StatCompression_Formula_Logarithmic>对数：f(x) = h + ln(1 + ln(t)(x - h)) / ln(t)</StatCompression_Formula_Logarithmic>
   <StatCompression_Formula_SoftCap>软上限：f(x) = h + t(x - h) / ((x - h) + t)</StatCompression_Formula_SoftCap>
   <StatCompression_ParameterT>压缩系数 t</StatCompression_ParameterT>
+  <StatCompression_ParameterLabel_Linear>t - 超出部分保留比例</StatCompression_ParameterLabel_Linear>
+  <StatCompression_ParameterLabel_Power>t - 指数</StatCompression_ParameterLabel_Power>
+  <StatCompression_ParameterLabel_Logarithmic>t - 对数底数</StatCompression_ParameterLabel_Logarithmic>
+  <StatCompression_ParameterLabel_SoftCap>t - 超出部分上限倍数</StatCompression_ParameterLabel_SoftCap>
+  <StatCompression_ParameterDirection_Smaller>越小压缩越强；1 表示不压缩。</StatCompression_ParameterDirection_Smaller>
+  <StatCompression_ParameterDirection_Larger>越大压缩越强；接近 1 时压缩很弱。</StatCompression_ParameterDirection_Larger>
+  <StatCompression_ParameterAmplifiesWarning>当前 t 大于 1，会放大而不是压缩超出部分。</StatCompression_ParameterAmplifiesWarning>
+  <StatCompression_ParameterMeaning_Linear>超出部分保留比例</StatCompression_ParameterMeaning_Linear>
+  <StatCompression_ParameterMeaning_Power>指数</StatCompression_ParameterMeaning_Power>
+  <StatCompression_ParameterMeaning_Logarithmic>对数底数</StatCompression_ParameterMeaning_Logarithmic>
+  <StatCompression_ParameterMeaning_SoftCap>超出部分上限倍数</StatCompression_ParameterMeaning_SoftCap>
   <StatCompression_ParameterTooltip>调整此值来调整压缩幅度。滑条提供便于操作的范围，也可以手动输入范围之外的数值。</StatCompression_ParameterTooltip>
-  <StatCompression_CompressAbove>在此阈值压缩</StatCompression_CompressAbove>
-  <StatCompression_CompressAboveTooltip>基准值是预设的属性值，比如工作速度150%，移动速度5.0，这些视为100%基准值。当基准值百分比超出阈值时，超出部分的属性会被压缩。（承伤系数等越低越好的特殊属性会用不一样的公式处理）</StatCompression_CompressAboveTooltip>
+  <StatCompression_CompressAbove>触发压缩的基准百分比</StatCompression_CompressAbove>
+  <StatCompression_CompressAboveTooltip>100% 表示从每个属性自己的 Baseline 开始压缩；150% 表示超过 Baseline 的 1.5 倍后开始压缩。只有越过触发值的部分会被缩小。低值乘法属性按倒数方向判断，实际触发值可在高级设置右侧查看。</StatCompression_CompressAboveTooltip>
   <StatCompression_Preview>预览</StatCompression_Preview>
+  <StatCompression_PreviewCurrentMethod>当前：{0}，t={1}（{2}）</StatCompression_PreviewCurrentMethod>
   <StatCompression_GlobalWorkSpeed>全局工作速度</StatCompression_GlobalWorkSpeed>
   <StatCompression_CompressedGlobalWorkSpeed>压缩后的全局工作速度</StatCompression_CompressedGlobalWorkSpeed>
   <StatCompression_IncomingDamageFactor>承伤系数</StatCompression_IncomingDamageFactor>
   <StatCompression_CompressedIncomingDamageFactor>压缩后的承伤系数</StatCompression_CompressedIncomingDamageFactor>
   <StatCompression_AdvancedSettings>高级设置</StatCompression_AdvancedSettings>
   <StatCompression_GlobalSimpleSettings>全局简易设置</StatCompression_GlobalSimpleSettings>
-  <StatCompression_UsePresets>使用预设</StatCompression_UsePresets>
+  <StatCompression_UsePresets>压缩哪类属性（预设配置）</StatCompression_UsePresets>
+  <StatCompression_PresetSectionHint>高级设置可以修改和新建预设。你也可以通过剪贴板导入和导出预设，或通过全局简易设置调整压缩幅度。</StatCompression_PresetSectionHint>
   <StatCompression_Preset_None>未找到预设</StatCompression_Preset_None>
   <StatCompression_Preset_ConflictTooltip>与“{0}”冲突&#10;重复配置：{1}&#10;不同字段：{2}</StatCompression_Preset_ConflictTooltip>
   <StatCompression_Preset_LoadEdit>载入并修改预设</StatCompression_Preset_LoadEdit>
@@ -62,12 +79,31 @@
   <StatCompression_Preset_ErrorInvalidName>该预设名称不能作为文件名。</StatCompression_Preset_ErrorInvalidName>
   <StatCompression_Preset_ErrorExists>名为“{0}”的预设已经存在。</StatCompression_Preset_ErrorExists>
   <StatCompression_Preset_ErrorNoSelection>请至少选择一行属性配置。</StatCompression_Preset_ErrorNoSelection>
+  <StatCompression_DefaultPreset_WorkSpeed>工作速度</StatCompression_DefaultPreset_WorkSpeed>
+  <StatCompression_DefaultPreset_ArmorPenetrationSoftCap>护甲与穿透软上限</StatCompression_DefaultPreset_ArmorPenetrationSoftCap>
+  <StatCompression_DefaultPreset_BaseDamage>基础伤害</StatCompression_DefaultPreset_BaseDamage>
+  <StatCompression_DefaultPreset_CombatPerformance>战斗能力</StatCompression_DefaultPreset_CombatPerformance>
+  <StatCompression_DefaultPreset_Psychic>灵能</StatCompression_DefaultPreset_Psychic>
+  <StatCompression_DefaultPreset_DailyNeeds>日常需求</StatCompression_DefaultPreset_DailyNeeds>
+  <StatCompression_DefaultPreset_SocialTradeCulture>社交、交易与文化</StatCompression_DefaultPreset_SocialTradeCulture>
+  <StatCompression_DefaultPreset_ProductionYield>生产产出</StatCompression_DefaultPreset_ProductionYield>
+  <StatCompression_DefaultPreset_ProductionYieldSoftCap>生产产出软上限</StatCompression_DefaultPreset_ProductionYieldSoftCap>
+  <StatCompression_DefaultPreset_TemperatureInsulation>温度与隔热</StatCompression_DefaultPreset_TemperatureInsulation>
+  <StatCompression_DefaultPreset_MovementSpeed>移动速度</StatCompression_DefaultPreset_MovementSpeed>
+  <StatCompression_DefaultPreset_Learning>学习能力</StatCompression_DefaultPreset_Learning>
+  <StatCompression_DefaultPreset_Caravan>远行队能力</StatCompression_DefaultPreset_Caravan>
+  <StatCompression_DefaultPreset_HealingShieldsDamageTaken>治疗、护盾与承伤</StatCompression_DefaultPreset_HealingShieldsDamageTaken>
   <StatCompression_OpenStatSettings>压缩属性设置</StatCompression_OpenStatSettings>
   <StatCompression_ConfigActions>导出 / 导入 / 重置配置</StatCompression_ConfigActions>
   <StatCompression_ExportAllSettingsXml>导出所有设置 XML</StatCompression_ExportAllSettingsXml>
   <StatCompression_ImportAllSettingsXml>导入所有设置 XML</StatCompression_ImportAllSettingsXml>
   <StatCompression_ExportPresetClipboard>导出预设到剪贴板</StatCompression_ExportPresetClipboard>
   <StatCompression_ImportPresetClipboard>从剪贴板导入预设</StatCompression_ImportPresetClipboard>
+  <StatCompression_RestoreDefaultPresets>删除所有预设，只使用默认预设</StatCompression_RestoreDefaultPresets>
+  <StatCompression_RestoreDefaultPresetsConfirmTitle>恢复默认预设</StatCompression_RestoreDefaultPresetsConfirmTitle>
+  <StatCompression_RestoreDefaultPresetsConfirmText>是否删除所有本地预设并恢复内置默认预设？&#10;&#10;当前预设文件会被永久删除。默认预设将重新生成并全部启用，不属于默认预设的属性压缩将被停用。</StatCompression_RestoreDefaultPresetsConfirmText>
+  <StatCompression_RestoreDefaultPresetsCompleted>已删除 {0} 个预设文件，重新生成并应用 {1} 个默认预设；跳过 {2} 个缺失属性。</StatCompression_RestoreDefaultPresetsCompleted>
+  <StatCompression_RestoreDefaultPresetsFailed>恢复默认预设失败：{0}</StatCompression_RestoreDefaultPresetsFailed>
   <StatCompression_PresetCopied>已复制预设：{0}</StatCompression_PresetCopied>
   <StatCompression_PresetImported>已导入预设：{0}</StatCompression_PresetImported>
   <StatCompression_PresetClipboardEmpty>剪贴板为空。</StatCompression_PresetClipboardEmpty>
@@ -86,32 +122,47 @@
   <StatCompression_ExportedMessage>数值压缩已导出设置 XML：{0}</StatCompression_ExportedMessage>
   <StatCompression_ImportedMessage>已导入设置 XML：更新={0}，跳过={1}，路径={2}</StatCompression_ImportedMessage>
   <StatCompression_AdvancedTitle>高级属性设置</StatCompression_AdvancedTitle>
+  <StatCompression_AdvancedSimpleHelp>你可以设置每个属性的压缩方式。&#10;每个属性会经过基准值和 Direction 归一化，然后根据阈值百分比判断是否需要压缩。&#10;压缩方法有 4 种；如果选择“跟随全局”，则会使用全局简易设置中的方法和参数。&#10;t 值决定压缩效率。</StatCompression_AdvancedSimpleHelp>
+  <StatCompression_Display_TScale>t Scale</StatCompression_Display_TScale>
+  <StatCompression_Display_ActualT>实际 t</StatCompression_Display_ActualT>
+  <StatCompression_DisplayT_Tooltip>t Scale 可以编辑，数值越大压缩越强。实际 t 是换算后参与计算的只读参数。</StatCompression_DisplayT_Tooltip>
   <StatCompression_ResizeColumnTooltip>拖动可调整列宽，点击表头可排序。</StatCompression_ResizeColumnTooltip>
   <StatCompression_SelectStatForPreview>请选择一个属性行以预览压缩映射。</StatCompression_SelectStatForPreview>
-  <StatCompression_AdvancedPreviewSummary>方向：{0}&#10;正数基准值：{1}&#10;触发值：{2}</StatCompression_AdvancedPreviewSummary>
-  <StatCompression_AdvancedPreviewFormulaHigher>B = 正数基准值；T = B * 阈值；e = (属性值 - T) / B&#10;属性值 &lt;= T：结果 = 原值&#10;属性值 &gt; T：结果 = T + B * C(e)&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaHigher>
-  <StatCompression_AdvancedPreviewFormulaLower>x = 属性值 / 基准值；r = 1 / x；h = 阈值；e = r - h&#10;r &lt;= h：结果 = 原值&#10;r &gt; h：结果 = 基准值 / (h + C(e))&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaLower>
-  <StatCompression_AdvancedPreviewFormulaLowerDirect>B = 正数基准值；T = B * 阈值；e = (T - 属性值) / B&#10;属性值 &gt;= T：结果 = 原值&#10;属性值 &lt; T：结果 = T - B * C(e)&#10;C(e) = {0}；实际 t = {1}</StatCompression_AdvancedPreviewFormulaLowerDirect>
   <StatCompression_AdvancedPreviewValues>数值预览</StatCompression_AdvancedPreviewValues>
-  <StatCompression_AdvancedPreviewPercentColumn>基准百分比</StatCompression_AdvancedPreviewPercentColumn>
-  <StatCompression_AdvancedPreviewActualColumn>实际数值</StatCompression_AdvancedPreviewActualColumn>
+  <StatCompression_AdvancedPreviewPercentColumn>输入 → 压缩后（Baseline %）</StatCompression_AdvancedPreviewPercentColumn>
+  <StatCompression_AdvancedPreviewActualColumn>游戏实际数值</StatCompression_AdvancedPreviewActualColumn>
   <StatCompression_AdvancedPreviewGraph>压缩映射曲线</StatCompression_AdvancedPreviewGraph>
   <StatCompression_AdvancedPreviewGraphXAxis>输入 %（对数）</StatCompression_AdvancedPreviewGraphXAxis>
   <StatCompression_AdvancedPreviewGraphXAxisSigned>输入 %（对称对数）</StatCompression_AdvancedPreviewGraphXAxisSigned>
   <StatCompression_AdvancedPreviewGraphYAxis>输出 %（线性）</StatCompression_AdvancedPreviewGraphYAxis>
-  <StatCompression_AdvancedHelp>你可以设置每个属性的压缩方式。跟随全局会使用全局 Method 和 t；具体 Method 使用该方法的默认 t。基准值保持正数；直接压缩方向允许阈值为负数。</StatCompression_AdvancedHelp>
-  <StatCompression_AdvancedFormulaHelp>对归一化差值 e：线性 C(e)=et；指数 C(e)=(e+1)^t-1；对数 C(e)=ln(1+ln(t)e)/ln(t)；软上限 C(e)=te/(e+t)。</StatCompression_AdvancedFormulaHelp>
-  <StatCompression_DirectionHelp>Direction 决定压缩哪一段数值："高值直接压缩"处理阈值以上的数值部分；"低值乘法压缩"在计算倒数后，再计算压缩超出的数值部分，然后再倒回去；"低值直接压缩"处理阈值以下的加算差值。</StatCompression_DirectionHelp>
   <StatCompression_Search>搜索</StatCompression_Search>
-  <StatCompression_Column_On>启用</StatCompression_Column_On>
   <StatCompression_Column_Select>选择</StatCompression_Column_Select>
+  <StatCompression_Column_Type>类型</StatCompression_Column_Type>
   <StatCompression_Column_DefName>DefName</StatCompression_Column_DefName>
-  <StatCompression_Column_Method>方法</StatCompression_Column_Method>
-  <StatCompression_Column_TScale>t 缩放</StatCompression_Column_TScale>
   <StatCompression_Column_Baseline>基准值</StatCompression_Column_Baseline>
-  <StatCompression_Column_Threshold>阈值</StatCompression_Column_Threshold>
-  <StatCompression_Column_Direction>Direction</StatCompression_Column_Direction>
   <StatCompression_Column_Label>显示名</StatCompression_Column_Label>
+  <StatCompression_Column_EnableCompression>启用压缩</StatCompression_Column_EnableCompression>
+  <StatCompression_Column_CompressionMethod>压缩方法</StatCompression_Column_CompressionMethod>
+  <StatCompression_Column_TScaleLong>压缩 t 参数缩放</StatCompression_Column_TScaleLong>
+  <StatCompression_Column_ActualT>实际 t（只读）</StatCompression_Column_ActualT>
+  <StatCompression_Column_ThresholdPercent>阈值百分比</StatCompression_Column_ThresholdPercent>
+  <StatCompression_Column_Normalization>归一化方式</StatCompression_Column_Normalization>
+  <StatCompression_Group_StatInfo>属性信息</StatCompression_Group_StatInfo>
+  <StatCompression_Group_Compression>压缩方式</StatCompression_Group_Compression>
+  <StatCompression_Group_Trigger>何时开启压缩</StatCompression_Group_Trigger>
+  <StatCompression_Type_SpecialModule>特殊模块</StatCompression_Type_SpecialModule>
+  <StatCompression_Type_Uncategorized>未分类</StatCompression_Type_Uncategorized>
+  <StatCompression_ActualT_GlobalSource>全局 t</StatCompression_ActualT_GlobalSource>
+  <StatCompression_ActualT_DefaultSource>方法默认 t</StatCompression_ActualT_DefaultSource>
+  <StatCompression_ActualT_MultiplyTooltip>{0} {1} × t Scale {2} = 实际 t {3}</StatCompression_ActualT_MultiplyTooltip>
+  <StatCompression_ActualT_DivideTooltip>{0} {1} ÷ t Scale {2} = 实际 t {3}</StatCompression_ActualT_DivideTooltip>
+  <StatCompression_AdvancedDetail_Trigger>B 基准值 = {0}&#10;阈值 = {1}&#10;T 触发压缩属性值 = B {2} 阈值 = {0} {2} {1} = {3}</StatCompression_AdvancedDetail_Trigger>
+  <StatCompression_AdvancedDetail_FollowGlobalMethod>跟随全局 → {0}</StatCompression_AdvancedDetail_FollowGlobalMethod>
+  <StatCompression_AdvancedDetail_Method>压缩方法：{0}&#10;t Scale = {1}；实际 t = {2}（{3}）&#10;{4}&#10;{5}</StatCompression_AdvancedDetail_Method>
+  <StatCompression_AdvancedDetail_DirectionHigher>归一化方式：高值直接压缩，只处理高于 T 的部分。&#10;x ≤ T：结果 = x&#10;x &gt; T：e=(x-T)÷B&#10;G(x,F)=T+B×F(e)</StatCompression_AdvancedDetail_DirectionHigher>
+  <StatCompression_AdvancedDetail_DirectionLower>归一化方式：低值乘法压缩，适合越接近 0 越强的倍率。&#10;x &lt; 0 或 x ≥ T：结果 = x&#10;0 ≤ x &lt; T：e=B÷max(x,1e-10)-阈值&#10;G(x,F)=B÷(阈值+F(e))</StatCompression_AdvancedDetail_DirectionLower>
+  <StatCompression_AdvancedDetail_DirectionLowerDirect>归一化方式：低值直接压缩，只处理低于 T 的加算差值。&#10;x ≥ T：结果 = x&#10;x &lt; T：e=(T-x)÷B&#10;G(x,F)=T-B×F(e)</StatCompression_AdvancedDetail_DirectionLowerDirect>
+  <StatCompression_AdvancedDetail_Flow>计算顺序：原始值 x → 判断是否越过 T → 换算超出量 e&#10;→ F(e) 缩小超出量 → G(x,F) 换回属性单位 → 压缩后的属性值</StatCompression_AdvancedDetail_Flow>
   <StatCompression_Direction_Higher>高值直接压缩</StatCompression_Direction_Higher>
   <StatCompression_Direction_Lower>低值乘法压缩</StatCompression_Direction_Lower>
   <StatCompression_Direction_LowerDirect>低值直接压缩</StatCompression_Direction_LowerDirect>

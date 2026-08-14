@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Social, Trade &amp; Culture" labelKey="StatCompression_DefaultPreset_SocialTradeCulture">
+  <Configs>
+    <Config defName="AnimalProductsSellImprovement" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="0.1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="BondAnimalChanceFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="CertaintyLossFactor" enabled="false" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ConversionPower" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="DrugSellPriceImprovement" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="0.1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MarketValue" enabled="false" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MarketValueIgnoreHp" enabled="false" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="NegotiationAbility" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="SellPriceFactor" enabled="false" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="SHGE_ExtraValueFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="3" direction="HigherIsBetter" />
+    <Config defName="SlaveSuppressionFallRate" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="SocialIdeoSpreadFrequencyFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="SocialImpact" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="SuppressionPower" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="TradePriceImprovement" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="0.1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="VSE_PeaceTalksChance" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="VSE_RecruitRate" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

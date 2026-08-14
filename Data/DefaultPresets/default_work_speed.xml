@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Work Speed" labelKey="StatCompression_DefaultPreset_WorkSpeed">
+  <Configs>
+    <Config defName="AnimalGatherSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="ButcheryFleshSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="ButcheryMechanoidSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.2" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="CleaningSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="CleaningTimeFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="LowerIsBetter" />
+    <Config defName="ConstructionSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="CookSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="5" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="DeepDrillingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.2" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="DrugCookingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="DrugSynthesisSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.2" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="FishingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="GeneralLaborSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.3" baseline="1" thresholdFactor="3" direction="HigherIsBetter" />
+    <Config defName="HackingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="MechFormingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="5" direction="HigherIsBetter" />
+    <Config defName="MechRepairSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="4" direction="HigherIsBetter" />
+    <Config defName="MiningSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="Nivarian_TuningSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="PlantWorkSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="PruningSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="4" direction="HigherIsBetter" />
+    <Config defName="ReadingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="ResearchSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="0.7" baseline="1" thresholdFactor="6" direction="HigherIsBetter" />
+    <Config defName="SmeltingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="SmoothingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="SubcoreEncodingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="4" direction="HigherIsBetter" />
+    <Config defName="VSE_ArtSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="VSE_ComponentCraftingSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="VSE_FloorSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="VSE_RepairSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="VSE_RoofSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="VSE_TailoringSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="VSE_WeaponCreationSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+    <Config defName="WorkSpeedGlobal" enabled="true" method="FollowGlobal" method_t="2" tScale="1.3" baseline="1" thresholdFactor="2.5" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

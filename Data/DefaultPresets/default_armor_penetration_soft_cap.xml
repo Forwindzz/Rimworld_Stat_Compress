@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Armor &amp; Penetration Soft Cap" labelKey="StatCompression_DefaultPreset_ArmorPenetrationSoftCap">
+  <Configs>
+    <Config defName="ArmorRating_Blunt" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ArmorRating_Heat" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ArmorRating_Sharp" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MeleeArmorPenetration" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="0.5" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MeleeWeapon_AverageArmorPenetration" enabled="true" method="SoftCap" method_t="2" tScale="10" baseline="0.5" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="RangedWeapon_ArmorPenetrationMultiplier" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="VSE_ArmorPenetrationFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

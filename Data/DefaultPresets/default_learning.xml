@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Learning" labelKey="StatCompression_DefaultPreset_Learning">
+  <Configs>
+    <Config defName="AnimalsLearningFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="GlobalLearningFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

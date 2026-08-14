@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Production Yield" labelKey="StatCompression_DefaultPreset_ProductionYield">
+  <Configs>
+    <Config defName="AnimalGatherYield" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="DrugHarvestYield" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

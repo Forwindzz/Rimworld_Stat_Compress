@@ -24,7 +24,7 @@ namespace StatCompression
                     AdvancedDataSourceKind.Preset,
                     editingPreset,
                     structureVersion,
-                    editingPreset.Name,
+                    editingPreset.DisplayName,
                     editingPreset.Configs);
             }
 
@@ -52,7 +52,7 @@ namespace StatCompression
 
             Widgets.Label(
                 new Rect(rect.x, rect.y, rect.width - 34f, rect.height),
-                editingPreset.Name);
+                editingPreset.DisplayName);
             if (Widgets.ButtonText(
                     new Rect(rect.xMax - 30f, rect.y, 30f, rect.height),
                     "X"))
@@ -102,7 +102,7 @@ namespace StatCompression
                     Messages.Message(
                         StatCompressionText.T(
                             "StatCompression_Preset_Created",
-                            preset.Name),
+                            preset.DisplayName),
                         MessageTypeDefOf.TaskCompletion,
                         false);
                     clearSelection();
@@ -129,7 +129,7 @@ namespace StatCompression
                 Messages.Message(
                     StatCompressionText.T(
                         "StatCompression_Preset_Saved",
-                        editingPreset.Name),
+                        editingPreset.DisplayName),
                     MessageTypeDefOf.TaskCompletion,
                     false);
                 var refreshed = StatCompressionPresetManager.Find(editingPreset.FileName);
@@ -150,7 +150,7 @@ namespace StatCompression
             StatCompressionPresetManager.Refresh();
             var options = StatCompressionPresetManager.Presets
                 .Select(preset => new FloatMenuOption(
-                    preset.Name,
+                    preset.DisplayName,
                     () => EnterPresetEditing(preset)))
                 .ToList();
             if (options.Count == 0)

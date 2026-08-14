@@ -26,18 +26,26 @@ namespace StatCompression
 
     internal sealed class AdvancedTableComponent
     {
+        private const float GroupHeaderHeight = 26f;
+        private const float ColumnHeaderHeight = 30f;
         private const float RowHeight = 30f;
-        private const int ColumnCount = 9;
+        private const float ScrollbarWidth = 16f;
+        private const int ColumnCount = 10;
 
         private static readonly float[] DefaultColumnWidths =
         {
-            34f, 36f, 160f, 120f, 88f, 72f, 86f, 86f, 110f
+            44f, 110f, 190f, 150f, 72f, 96f, 112f, 90f, 96f, 124f
         };
 
         private static readonly float[] MinimumColumnWidths =
         {
-            30f, 32f, 102f, 76f, 68f, 58f, 66f, 66f, 84f
+            38f, 76f, 116f, 96f, 64f, 72f, 84f, 68f, 76f, 94f
         };
+
+        private static readonly Color GroupLineColor =
+            new Color(0.85f, 0.85f, 0.85f, 0.7f);
+        private static readonly Color ColumnLineColor =
+            new Color(0.48f, 0.48f, 0.48f, 0.45f);
 
         private readonly StatCompressionSettings settings;
         private readonly List<AdvancedRowState> allRows = new List<AdvancedRowState>();
@@ -65,13 +73,17 @@ namespace StatCompression
         private bool columnWidthsInitialized;
         private int resizingColumn = -1;
         private float resizeStartMouseX;
+        private bool showActualParameter;
+        private bool hasGlobalInput;
+        private GlobalCompressionInput globalInput;
 
         private enum SortColumn
         {
             Selection,
-            Enabled,
+            Type,
             DefName,
             Label,
+            Enabled,
             Method,
             TScale,
             Baseline,
@@ -84,12 +96,16 @@ namespace StatCompression
             public StatCompressionStatConfig Config;
             public StatDef Stat;
             public string Label;
+            public string TypeLabel;
             public string SearchText;
             public string TScaleBuffer;
             public string BaselineBuffer;
             public string ThresholdBuffer;
             public string MethodLabel;
             public string DirectionLabel;
+            public float ActualParameter;
+            public string ActualParameterText;
+            public string ActualParameterTooltip;
             public bool FixedDirection;
             public bool IsDamage;
             public bool IsHediffStage;
@@ -102,18 +118,39 @@ namespace StatCompression
             this.settings = settings;
             searchText = focusDefName ?? string.Empty;
             selectedDefName = focusDefName;
+            globalInput = new GlobalCompressionInput(settings);
+            hasGlobalInput = true;
             columnLabels = new[]
             {
                 StatCompressionText.T("StatCompression_Column_Select"),
-                StatCompressionText.T("StatCompression_Column_On"),
+                StatCompressionText.T("StatCompression_Column_Type"),
                 StatCompressionText.T("StatCompression_Column_DefName"),
                 StatCompressionText.T("StatCompression_Column_Label"),
-                StatCompressionText.T("StatCompression_Column_Method"),
-                StatCompressionText.T("StatCompression_Column_TScale"),
+                StatCompressionText.T("StatCompression_Column_EnableCompression"),
+                StatCompressionText.T("StatCompression_Column_CompressionMethod"),
+                StatCompressionText.T("StatCompression_Column_TScaleLong"),
                 StatCompressionText.T("StatCompression_Column_Baseline"),
-                StatCompressionText.T("StatCompression_Column_Threshold"),
-                StatCompressionText.T("StatCompression_Column_Direction")
+                StatCompressionText.T("StatCompression_Column_ThresholdPercent"),
+                StatCompressionText.T("StatCompression_Column_Normalization")
             };
+        }
+
+        public bool ShowActualParameter
+        {
+            get => showActualParameter;
+            set
+            {
+                if (showActualParameter == value)
+                {
+                    return;
+                }
+
+                showActualParameter = value;
+                if (sortColumn == SortColumn.TScale)
+                {
+                    sortDirty = true;
+                }
+            }
         }
 
         public StatCompressionStatConfig SelectedConfig
@@ -167,6 +204,26 @@ namespace StatCompression
             sortDirty = true;
         }
 
+        public void SetGlobalInput(GlobalCompressionInput input)
+        {
+            if (hasGlobalInput && GlobalInputEquals(globalInput, input))
+            {
+                return;
+            }
+
+            globalInput = input;
+            hasGlobalInput = true;
+            for (var i = 0; i < allRows.Count; i++)
+            {
+                RefreshActualParameter(allRows[i]);
+            }
+
+            if (sortColumn == SortColumn.TScale && showActualParameter)
+            {
+                sortDirty = true;
+            }
+        }
+
         public void ApplyUpdate(AdvancedConfigUpdate update)
         {
             if (update.Config == null || update.Config.defName.NullOrEmpty())
@@ -203,21 +260,43 @@ namespace StatCompression
         {
             UpdateDerivedRows();
 
-            var headerRect = new Rect(rect.x, rect.y, rect.width - 16f, RowHeight);
-            EnsureColumnWidths(headerRect.width);
-            HandleColumnResize(headerRect);
-            DrawHeader(headerRect);
+            var headerViewport = new Rect(
+                rect.x,
+                rect.y,
+                rect.width - ScrollbarWidth,
+                GroupHeaderHeight + ColumnHeaderHeight);
+            EnsureColumnWidths(headerViewport.width);
+            var contentWidth = columnOffsets[ColumnCount];
+
+            GUI.BeginGroup(headerViewport);
+            var groupedHeaderRect = new Rect(
+                -scrollPosition.x,
+                0f,
+                contentWidth,
+                headerViewport.height);
+            HandleColumnResize(groupedHeaderRect);
+            DrawHeader(groupedHeaderRect);
+            GUI.EndGroup();
 
             if (selectedDefName.NullOrEmpty() && filteredRows.Count > 0)
             {
                 selectedDefName = filteredRows[0].Config.defName;
             }
 
-            var outRect = new Rect(rect.x, headerRect.yMax, rect.width, rect.yMax - headerRect.yMax);
-            var viewRect = new Rect(0f, 0f, headerRect.width, filteredRows.Count * RowHeight);
+            var outRect = new Rect(
+                rect.x,
+                headerViewport.yMax,
+                rect.width,
+                rect.yMax - headerViewport.yMax);
+            var viewRect = new Rect(
+                0f,
+                0f,
+                contentWidth,
+                filteredRows.Count * RowHeight);
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             var interaction = DrawVisibleRows(outRect, viewRect);
             Widgets.EndScrollView();
+            DrawVisibleGroupSeparators(outRect);
             return interaction;
         }
 
@@ -254,15 +333,12 @@ namespace StatCompression
             }
 
             var stat = DefDatabase<StatDef>.GetNamedSilentFail(config.defName);
-            var label = LabelFor(config, stat);
-            var category = stat?.category?.defName ?? string.Empty;
-            return new AdvancedRowState
+            var row = new AdvancedRowState
             {
                 Config = config,
                 Stat = stat,
-                Label = label,
-                SearchText = ((config.defName ?? string.Empty) + "\n" + label + "\n" + category)
-                    .ToLowerInvariant(),
+                Label = LabelFor(config, stat),
+                TypeLabel = TypeLabelFor(config, stat),
                 TScaleBuffer = config.tScale.ToString(),
                 BaselineBuffer = config.baseline.ToString(),
                 ThresholdBuffer = (config.thresholdFactor * 100f).ToString(),
@@ -272,15 +348,52 @@ namespace StatCompression
                 IsDamage = isDamage,
                 IsHediffStage = isHediffStage
             };
+            RebuildSearchText(row);
+            RefreshActualParameter(row);
+            return row;
         }
 
         private void RefreshMetadata(AdvancedRowState row)
         {
             row.Stat = DefDatabase<StatDef>.GetNamedSilentFail(row.Config.defName);
             row.Label = LabelFor(row.Config, row.Stat);
-            var category = row.Stat?.category?.defName ?? string.Empty;
-            row.SearchText = ((row.Config.defName ?? string.Empty) + "\n" + row.Label + "\n" + category)
-                .ToLowerInvariant();
+            row.TypeLabel = TypeLabelFor(row.Config, row.Stat);
+            RebuildSearchText(row);
+        }
+
+        private static void RebuildSearchText(AdvancedRowState row)
+        {
+            row.SearchText = ((row.Config.defName ?? string.Empty) + "\n" +
+                              row.Label + "\n" +
+                              row.TypeLabel).ToLowerInvariant();
+        }
+
+        private void RefreshActualParameter(AdvancedRowState row)
+        {
+            var config = row.Config;
+            var actualMethod = StatCompressionRuntime.ResolveMethod(
+                config.method,
+                globalInput.Method);
+            var baseParameter = config.method == CompressionMethod.FollowGlobal
+                ? globalInput.Parameter
+                : StatCompressionRuntime.DefaultParameter(actualMethod);
+            row.ActualParameter = StatCompressionRuntime.GetActualParameter(
+                config.method,
+                globalInput.Method,
+                globalInput.Parameter,
+                config.tScale);
+            row.ActualParameterText = row.ActualParameter.ToString("0.###");
+            var source = config.method == CompressionMethod.FollowGlobal
+                ? StatCompressionText.T("StatCompression_ActualT_GlobalSource")
+                : StatCompressionText.T("StatCompression_ActualT_DefaultSource");
+            row.ActualParameterTooltip = StatCompressionText.T(
+                actualMethod == CompressionMethod.Logarithmic
+                    ? "StatCompression_ActualT_MultiplyTooltip"
+                    : "StatCompression_ActualT_DivideTooltip",
+                source,
+                baseParameter.ToString("0.###"),
+                config.tScale.ToString("0.###"),
+                row.ActualParameterText);
         }
 
         private void UpdateDerivedRows()
@@ -341,7 +454,10 @@ namespace StatCompression
             return new AdvancedTableInteraction(selectionChanged, configChanged, changedConfig);
         }
 
-        private AdvancedTableInteraction DrawRow(Rect rect, AdvancedRowState row, int rowIndex)
+        private AdvancedTableInteraction DrawRow(
+            Rect rect,
+            AdvancedRowState row,
+            int rowIndex)
         {
             var config = row.Config;
             if ((rowIndex & 1) != 0)
@@ -369,7 +485,9 @@ namespace StatCompression
             }
 
             var selectedForPreset = presetSelection.Contains(config.defName);
-            Widgets.Checkbox(Col(rect, 0).position + new Vector2(2f, 3f), ref selectedForPreset);
+            Widgets.Checkbox(
+                Col(rect, 0).position + new Vector2(2f, 3f),
+                ref selectedForPreset);
             if (selectedForPreset)
             {
                 presetSelection.Add(config.defName);
@@ -379,43 +497,61 @@ namespace StatCompression
                 presetSelection.Remove(config.defName);
             }
 
+            var typeRect = Col(rect, 1);
+            var defRect = Col(rect, 2);
+            var labelRect = Col(rect, 3);
+            Text.Font = GameFont.Tiny;
+            DrawSingleLineText(typeRect, row.TypeLabel);
+            DrawSingleLineText(defRect, config.defName);
+            DrawSingleLineText(labelRect, row.Label);
+            Text.Font = GameFont.Small;
+
             var changedFields = AdvancedConfigField.None;
             var enabled = config.enabled;
-            Widgets.Checkbox(Col(rect, 1).position + new Vector2(2f, 3f), ref enabled);
+            Widgets.Checkbox(
+                Col(rect, 4).position + new Vector2(2f, 3f),
+                ref enabled);
             if (enabled != config.enabled)
             {
                 config.enabled = enabled;
                 changedFields |= AdvancedConfigField.Enabled;
             }
 
-            var defRect = Col(rect, 2);
-            var labelRect = Col(rect, 3);
-            Text.Font = GameFont.Tiny;
-            Widgets.Label(defRect, config.defName);
-            Widgets.Label(labelRect, row.Label);
-            Text.Font = GameFont.Small;
-
-            if (Widgets.ButtonText(Col(rect, 4), row.MethodLabel))
+            if (Widgets.ButtonText(Col(rect, 5), row.MethodLabel))
             {
                 OpenMethodMenu(row);
             }
 
-            var oldTScale = config.tScale;
-            Widgets.TextFieldNumeric(
-                Col(rect, 5),
-                ref config.tScale,
-                ref row.TScaleBuffer,
-                0.0001f,
-                float.MaxValue);
-            if (!NearlyEqual(oldTScale, config.tScale))
+            var parameterRect = Col(rect, 6);
+            if (showActualParameter)
             {
-                changedFields |= AdvancedConfigField.TScale;
+                var oldAnchor = Text.Anchor;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Widgets.Label(parameterRect, row.ActualParameterText);
+                Text.Anchor = oldAnchor;
+                TooltipHandler.TipRegion(parameterRect, row.ActualParameterTooltip);
             }
-            TooltipHandler.TipRegion(Col(rect, 5), StatCompressionText.T("StatCompression_TScaleTooltip"));
+            else
+            {
+                var oldTScale = config.tScale;
+                Widgets.TextFieldNumeric(
+                    parameterRect,
+                    ref config.tScale,
+                    ref row.TScaleBuffer,
+                    0.0001f,
+                    float.MaxValue);
+                if (!NearlyEqual(oldTScale, config.tScale))
+                {
+                    changedFields |= AdvancedConfigField.TScale;
+                }
+                TooltipHandler.TipRegion(
+                    parameterRect,
+                    StatCompressionText.T("StatCompression_TScaleTooltip"));
+            }
 
             var oldBaseline = config.baseline;
             Widgets.TextFieldNumeric(
-                Col(rect, 6),
+                Col(rect, 7),
                 ref config.baseline,
                 ref row.BaselineBuffer,
                 1e-10f,
@@ -431,7 +567,7 @@ namespace StatCompression
                 ? 0.0001f
                 : float.MinValue;
             Widgets.TextFieldNumeric(
-                Col(rect, 7),
+                Col(rect, 8),
                 ref thresholdPercent,
                 ref row.ThresholdBuffer,
                 thresholdMinimum,
@@ -442,7 +578,7 @@ namespace StatCompression
                 changedFields |= AdvancedConfigField.Threshold;
             }
 
-            var directionRect = Col(rect, 8);
+            var directionRect = Col(rect, 9);
             if (row.FixedDirection)
             {
                 var oldAnchor = Text.Anchor;
@@ -458,6 +594,10 @@ namespace StatCompression
             if (Mouse.IsOver(directionRect))
             {
                 TooltipHandler.TipRegion(directionRect, DirectionTooltip(row));
+            }
+            if (Mouse.IsOver(typeRect))
+            {
+                TooltipHandler.TipRegion(typeRect, row.TypeLabel);
             }
             if (Mouse.IsOver(defRect))
             {
@@ -521,28 +661,68 @@ namespace StatCompression
                 RefreshMetadata(row);
                 filterDirty = true;
             }
+
+            if ((fields & (AdvancedConfigField.Method | AdvancedConfigField.TScale)) != 0 ||
+                forceBufferSync)
+            {
+                RefreshActualParameter(row);
+            }
         }
 
         private void DrawHeader(Rect rect)
         {
-            Widgets.DrawBoxSolid(rect, new Color(0.18f, 0.18f, 0.18f, 1f));
+            var groupRect = new Rect(rect.x, rect.y, rect.width, GroupHeaderHeight);
+            var columnRect = new Rect(
+                rect.x,
+                rect.y + GroupHeaderHeight,
+                rect.width,
+                ColumnHeaderHeight);
+            Widgets.DrawBoxSolid(groupRect, new Color(0.15f, 0.15f, 0.15f, 1f));
+            Widgets.DrawBoxSolid(columnRect, new Color(0.18f, 0.18f, 0.18f, 1f));
+
+            var oldAnchor = Text.Anchor;
+            Text.Anchor = TextAnchor.MiddleCenter;
             Text.Font = GameFont.Tiny;
+            Widgets.LabelFit(
+                GroupRect(groupRect, 0, 4),
+                StatCompressionText.T("StatCompression_Group_StatInfo"));
+            Widgets.LabelFit(
+                GroupRect(groupRect, 4, 7),
+                StatCompressionText.T("StatCompression_Group_Compression"));
+            Widgets.LabelFit(
+                GroupRect(groupRect, 7, 10),
+                StatCompressionText.T("StatCompression_Group_Trigger"));
+            Text.Anchor = oldAnchor;
+
+            Widgets.DrawLineHorizontal(
+                groupRect.x,
+                groupRect.yMax - 1f,
+                groupRect.width,
+                GroupLineColor);
+
             for (var i = 0; i < ColumnCount; i++)
             {
-                var cell = Col(rect, i);
+                var cell = Col(columnRect, i);
                 if (Mouse.IsOver(cell))
                 {
                     Widgets.DrawHighlight(cell);
                 }
 
                 var column = (SortColumn)i;
-                var label = columnLabels[i];
+                var label = i == 6 && showActualParameter
+                    ? StatCompressionText.T("StatCompression_Column_ActualT")
+                    : columnLabels[i];
                 if (i > 0 && sortColumn == column)
                 {
                     label += sortAscending ? " ^" : " v";
                 }
 
-                Widgets.Label(cell.ContractedBy(2f), label);
+                var labelRect = cell.ContractedBy(2f);
+                var oldWrap = Text.WordWrap;
+                Text.WordWrap = false;
+                Widgets.LabelFit(labelRect, label);
+                Text.WordWrap = oldWrap;
+                TooltipHandler.TipRegion(labelRect, label);
                 if (Widgets.ButtonInvisible(cell, false))
                 {
                     if (i == 0)
@@ -558,10 +738,34 @@ namespace StatCompression
 
             for (var i = 1; i < ColumnCount; i++)
             {
-                Widgets.DrawLineVertical(rect.x + columnOffsets[i], rect.y, rect.height);
+                var color = i == 4 || i == 7 ? GroupLineColor : ColumnLineColor;
+                Widgets.DrawLine(
+                    new Vector2(rect.x + columnOffsets[i], rect.y),
+                    new Vector2(rect.x + columnOffsets[i], rect.yMax),
+                    color,
+                    i == 4 || i == 7 ? 2f : 1f);
             }
 
             Text.Font = GameFont.Small;
+        }
+
+        private void DrawVisibleGroupSeparators(Rect outRect)
+        {
+            for (var i = 0; i < 2; i++)
+            {
+                var boundary = i == 0 ? 4 : 7;
+                var x = outRect.x + columnOffsets[boundary] - scrollPosition.x;
+                if (x <= outRect.x || x >= outRect.xMax - ScrollbarWidth)
+                {
+                    continue;
+                }
+
+                Widgets.DrawLine(
+                    new Vector2(x, outRect.y),
+                    new Vector2(x, outRect.yMax),
+                    GroupLineColor,
+                    2f);
+            }
         }
 
         private void HandleColumnResize(Rect headerRect)
@@ -571,8 +775,9 @@ namespace StatCompression
             {
                 var boundaryX = headerRect.x + columnOffsets[i + 1];
                 var handle = new Rect(boundaryX - 4f, headerRect.y, 8f, headerRect.height);
-                Widgets.DrawLineVertical(boundaryX, headerRect.y, headerRect.height);
-                TooltipHandler.TipRegion(handle, StatCompressionText.T("StatCompression_ResizeColumnTooltip"));
+                TooltipHandler.TipRegion(
+                    handle,
+                    StatCompressionText.T("StatCompression_ResizeColumnTooltip"));
                 if (current.type == EventType.MouseDown &&
                     current.button == 0 &&
                     handle.Contains(current.mousePosition))
@@ -593,7 +798,8 @@ namespace StatCompression
             if (current.type == EventType.MouseDrag && current.button == 0)
             {
                 var rightColumn = resizingColumn + 1;
-                var pairWidth = resizeStartWidths[resizingColumn] + resizeStartWidths[rightColumn];
+                var pairWidth = resizeStartWidths[resizingColumn] +
+                                resizeStartWidths[rightColumn];
                 var proposedLeft = resizeStartWidths[resizingColumn] +
                                    current.mousePosition.x -
                                    resizeStartMouseX;
@@ -667,7 +873,8 @@ namespace StatCompression
 
         private void ToggleVisibleSelection()
         {
-            var select = filteredRows.Any(row => !presetSelection.Contains(row.Config.defName));
+            var select = filteredRows.Any(row =>
+                !presetSelection.Contains(row.Config.defName));
             for (var i = 0; i < filteredRows.Count; i++)
             {
                 if (select)
@@ -701,6 +908,12 @@ namespace StatCompression
             int comparison;
             switch (sortColumn)
             {
+                case SortColumn.Type:
+                    comparison = string.Compare(
+                        left.TypeLabel,
+                        right.TypeLabel,
+                        StringComparison.CurrentCultureIgnoreCase);
+                    break;
                 case SortColumn.Enabled:
                     comparison = left.Config.enabled.CompareTo(right.Config.enabled);
                     break;
@@ -714,7 +927,9 @@ namespace StatCompression
                     comparison = left.Config.method.CompareTo(right.Config.method);
                     break;
                 case SortColumn.TScale:
-                    comparison = left.Config.tScale.CompareTo(right.Config.tScale);
+                    comparison = showActualParameter
+                        ? left.ActualParameter.CompareTo(right.ActualParameter)
+                        : left.Config.tScale.CompareTo(right.Config.tScale);
                     break;
                 case SortColumn.Baseline:
                     comparison = left.Config.baseline.CompareTo(right.Config.baseline);
@@ -753,19 +968,30 @@ namespace StatCompression
 
             var defaultTotal = DefaultColumnWidths.Sum();
             var minimumTotal = MinimumColumnWidths.Sum();
-            var targetWidth = Math.Max(minimumTotal, availableWidth);
-            var flexibleDefault = defaultTotal - minimumTotal;
-            var flexibleTarget = targetWidth - minimumTotal;
-            var scale = flexibleDefault <= 0f
-                ? 0f
-                : Mathf.Clamp01(flexibleTarget / flexibleDefault);
-            for (var i = 0; i < ColumnCount; i++)
+            if (availableWidth <= minimumTotal)
             {
-                columnWidths[i] = MinimumColumnWidths[i] +
-                                  (DefaultColumnWidths[i] - MinimumColumnWidths[i]) * scale;
+                Array.Copy(MinimumColumnWidths, columnWidths, ColumnCount);
+            }
+            else if (availableWidth < defaultTotal)
+            {
+                var scale = (availableWidth - minimumTotal) /
+                            (defaultTotal - minimumTotal);
+                for (var i = 0; i < ColumnCount; i++)
+                {
+                    columnWidths[i] = MinimumColumnWidths[i] +
+                                      (DefaultColumnWidths[i] - MinimumColumnWidths[i]) * scale;
+                }
+            }
+            else
+            {
+                Array.Copy(DefaultColumnWidths, columnWidths, ColumnCount);
+                var extra = availableWidth - defaultTotal;
+                columnWidths[1] += extra * 0.12f;
+                columnWidths[2] += extra * 0.34f;
+                columnWidths[3] += extra * 0.30f;
+                columnWidths[9] += extra * 0.24f;
             }
 
-            columnWidths[ColumnCount - 1] += availableWidth - columnWidths.Sum();
             columnWidthsInitialized = true;
             RebuildColumnOffsets();
         }
@@ -788,21 +1014,36 @@ namespace StatCompression
                 row.height - 6f);
         }
 
+        private Rect GroupRect(Rect row, int firstColumn, int endColumn)
+        {
+            return new Rect(
+                row.x + columnOffsets[firstColumn],
+                row.y,
+                columnOffsets[endColumn] - columnOffsets[firstColumn],
+                row.height);
+        }
+
+        private static void DrawSingleLineText(Rect rect, string value)
+        {
+            var oldWrap = Text.WordWrap;
+            Text.WordWrap = false;
+            Widgets.LabelFit(rect, value ?? string.Empty);
+            Text.WordWrap = oldWrap;
+        }
+
         private string BuildTooltip(AdvancedRowState row)
         {
             var config = row.Config;
-            var actualThreshold = StatCompressionRuntime.GetActualThresholdFactor(
-                config.method,
-                settings.thresholdFactor,
-                config.thresholdFactor);
             return StatCompressionText.T("StatCompression_Tooltip_Baseline", config.baseline) +
                    "\n" + StatCompressionText.T(
                        "StatCompression_Tooltip_Threshold",
-                       (actualThreshold * 100f).ToString("0.###")) +
+                       (config.thresholdFactor * 100f).ToString("0.###")) +
                    "\n" + StatCompressionText.T(
                        "StatCompression_Tooltip_Method",
                        StatCompressionText.MethodLabel(config.method)) +
-                   "\n" + StatCompressionText.T("StatCompression_Tooltip_TScale", config.tScale) +
+                   "\n" + StatCompressionText.T(
+                       "StatCompression_Tooltip_TScale",
+                       config.tScale) +
                    "\n" + StatCompressionText.T(
                        "StatCompression_Tooltip_Direction",
                        StatCompressionText.DirectionShortLabel(config.direction)) +
@@ -813,7 +1054,7 @@ namespace StatCompression
                            ? string.Empty
                            : "\n" + StatCompressionText.T(
                                "StatCompression_Tooltip_Category",
-                               row.Stat.category?.defName));
+                               row.TypeLabel));
         }
 
         private static string SpecialTooltip(string defName)
@@ -858,6 +1099,32 @@ namespace StatCompression
             return SpecialCompressionConfigs.IsSpecial(config.defName)
                 ? SpecialCompressionConfigs.LabelFor(config.defName)
                 : stat?.LabelCap.ToString() ?? string.Empty;
+        }
+
+        private static string TypeLabelFor(StatCompressionStatConfig config, StatDef stat)
+        {
+            if (SpecialCompressionConfigs.IsSpecial(config.defName))
+            {
+                return StatCompressionText.T("StatCompression_Type_SpecialModule");
+            }
+
+            var category = stat?.category;
+            if (category == null)
+            {
+                return StatCompressionText.T("StatCompression_Type_Uncategorized");
+            }
+
+            var label = category.LabelCap.ToString();
+            return label.NullOrEmpty() ? category.defName : label;
+        }
+
+        private static bool GlobalInputEquals(
+            GlobalCompressionInput left,
+            GlobalCompressionInput right)
+        {
+            return left.Method == right.Method &&
+                   left.Parameter.Equals(right.Parameter) &&
+                   left.ThresholdFactor.Equals(right.ThresholdFactor);
         }
 
         private static bool NearlyEqual(float left, float right)

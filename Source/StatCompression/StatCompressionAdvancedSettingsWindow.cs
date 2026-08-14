@@ -14,6 +14,7 @@ namespace StatCompression
         private readonly AdvancedTableComponent table;
         private readonly AdvancedPreviewComponent preview;
         private readonly AdvancedPresetComponent preset;
+        private bool showActualParameter;
 
         public StatCompressionAdvancedSettingsWindow(
             StatCompressionSettings settings,
@@ -34,25 +35,36 @@ namespace StatCompression
             optionalTitle = StatCompressionText.T("StatCompression_AdvancedTitle");
         }
 
-        public override Vector2 InitialSize => new Vector2(1280f, 780f);
+        public override Vector2 InitialSize => new Vector2(UI.screenWidth, UI.screenHeight);
+
+        protected override void SetInitialSizeAndPosition()
+        {
+            windowRect = new Rect(0f, 0f, UI.screenWidth, UI.screenHeight).Rounded();
+        }
 
         public override void DoWindowContents(Rect inRect)
         {
-            var helpRect = new Rect(inRect.x, inRect.y, inRect.width, 96f);
+            var helpRect = new Rect(inRect.x, inRect.y, inRect.width, 92f);
+            var toggleWidth = Mathf.Min(230f, inRect.width * 0.24f);
+            var toggleRect = new Rect(
+                helpRect.xMax - toggleWidth,
+                helpRect.y,
+                toggleWidth,
+                30f);
+            DrawParameterDisplayToggle(toggleRect);
+
             Text.Font = GameFont.Tiny;
             Widgets.Label(
-                new Rect(helpRect.x, helpRect.y, helpRect.width, 30f),
-                StatCompressionText.T("StatCompression_AdvancedHelp"));
-            Widgets.Label(
-                new Rect(helpRect.x, helpRect.y + 32f, helpRect.width, 30f),
-                StatCompressionText.T("StatCompression_AdvancedFormulaHelp"));
-            Widgets.Label(
-                new Rect(helpRect.x, helpRect.y + 64f, helpRect.width, 30f),
-                StatCompressionText.T("StatCompression_DirectionHelp"));
+                new Rect(
+                    helpRect.x,
+                    helpRect.y,
+                    helpRect.width - toggleWidth - 12f,
+                    helpRect.height),
+                StatCompressionText.T("StatCompression_AdvancedSimpleHelp"));
             Text.Font = GameFont.Small;
 
-            var contentTop = helpRect.yMax + 8f;
-            var previewWidth = Mathf.Clamp(inRect.width * 0.34f, 360f, 440f);
+            var contentTop = helpRect.yMax + 6f;
+            var previewWidth = Mathf.Clamp(inRect.width * 0.30f, 420f, 560f);
             var leftRect = new Rect(
                 inRect.x,
                 contentTop,
@@ -64,10 +76,12 @@ namespace StatCompression
                 previewWidth,
                 inRect.yMax - contentTop);
 
-            DrawLeftPanel(leftRect);
+            var global = new GlobalCompressionInput(settings);
+            table.ShowActualParameter = showActualParameter;
+            DrawLeftPanel(leftRect, global);
             preview.SetData(
                 table.SelectedConfig,
-                new GlobalCompressionInput(settings));
+                global);
             preview.Draw(previewRect);
         }
 
@@ -78,7 +92,7 @@ namespace StatCompression
             base.PostClose();
         }
 
-        private void DrawLeftPanel(Rect rect)
+        private void DrawLeftPanel(Rect rect, GlobalCompressionInput global)
         {
             var searchRect = new Rect(rect.x, rect.y, rect.width, 30f);
             var actionWidth = preset.ToolbarWidth;
@@ -94,6 +108,7 @@ namespace StatCompression
                 searchRect.height));
 
             table.SetData(preset.GetDataSet(settingsConfigs));
+            table.SetGlobalInput(global);
 
             const float footerHeight = 38f;
             var tableRect = new Rect(
@@ -107,6 +122,38 @@ namespace StatCompression
                 new Rect(rect.x, rect.yMax - 34f, rect.width, 34f),
                 table.GetPresetSelection,
                 table.ClearPresetSelection);
+        }
+
+        private void DrawParameterDisplayToggle(Rect rect)
+        {
+            var half = rect.width / 2f;
+            var scaleRect = new Rect(rect.x, rect.y, half - 2f, rect.height);
+            var actualRect = new Rect(rect.x + half + 2f, rect.y, half - 2f, rect.height);
+            if (!showActualParameter)
+            {
+                Widgets.DrawBoxSolid(scaleRect, new Color(0.32f, 0.38f, 0.42f, 1f));
+            }
+            else
+            {
+                Widgets.DrawBoxSolid(actualRect, new Color(0.32f, 0.38f, 0.42f, 1f));
+            }
+
+            if (Widgets.ButtonText(
+                    scaleRect,
+                    StatCompressionText.T("StatCompression_Display_TScale")))
+            {
+                showActualParameter = false;
+            }
+            if (Widgets.ButtonText(
+                    actualRect,
+                    StatCompressionText.T("StatCompression_Display_ActualT")))
+            {
+                showActualParameter = true;
+            }
+
+            TooltipHandler.TipRegion(
+                rect,
+                StatCompressionText.T("StatCompression_DisplayT_Tooltip"));
         }
     }
 }

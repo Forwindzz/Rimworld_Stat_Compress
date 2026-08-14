@@ -74,8 +74,7 @@ namespace StatCompression
             public StatCompressionStatConfig Config;
             public StatDef Stat;
             public string Label;
-            public string SummaryText;
-            public string FormulaText;
+            public string DetailsText;
             public CompiledStatConfig Compiled;
             public float[] Percents;
             public string[] Buffers;
@@ -149,15 +148,16 @@ namespace StatCompression
                 new Rect(inner.x, inner.y + 30f, inner.width, 22f),
                 state.Config.defName);
 
-            var summaryY = inner.y + 56f;
+            var detailsY = inner.y + 56f;
+            var detailsHeight = Mathf.Clamp(
+                Text.CalcHeight(state.DetailsText, inner.width),
+                220f,
+                Mathf.Max(220f, inner.height - 270f));
             Widgets.Label(
-                new Rect(inner.x, summaryY, inner.width, 42f),
-                state.SummaryText);
-            Widgets.Label(
-                new Rect(inner.x, summaryY + 44f, inner.width, 142f),
-                state.FormulaText);
+                new Rect(inner.x, detailsY, inner.width, detailsHeight),
+                state.DetailsText);
 
-            var valuesY = summaryY + 190f;
+            var valuesY = detailsY + detailsHeight + 4f;
             Widgets.DrawLineHorizontal(inner.x, valuesY, inner.width);
             Widgets.Label(
                 new Rect(inner.x, valuesY + 4f, inner.width, 22f),
@@ -243,12 +243,13 @@ namespace StatCompression
                 Config = config,
                 Stat = stat,
                 Label = LabelFor(config, stat),
-                SummaryText = StatCompressionText.T(
-                    "StatCompression_AdvancedPreviewSummary",
-                    StatCompressionText.DirectionShortLabel(config.direction),
-                    FormatStatValue(stat, config.baseline),
-                    FormatStatValue(stat, compiled.thresholdValue)),
-                FormulaText = BuildFormula(config.direction, actualMethod, actualParameter),
+                DetailsText = BuildDetails(
+                    config,
+                    stat,
+                    global,
+                    ref compiled,
+                    actualMethod,
+                    actualParameter),
                 Compiled = compiled,
                 Percents = percents,
                 Buffers = buffers,
@@ -309,7 +310,7 @@ namespace StatCompression
                 var final = StatCompressionRuntimeCompiler.ApplyStatic(ref compiled, original);
                 var mappedPercent = final / state.Config.baseline * 100f;
                 state.MappedPercents[i] = mappedPercent;
-                state.PercentTexts[i] = "% -> " + FormatPreviewPercent(mappedPercent);
+                state.PercentTexts[i] = "%  →  " + FormatPreviewPercent(mappedPercent);
                 state.ActualTexts[i] = FormatStatValue(state.Stat, original) +
                                        " -> " +
                                        FormatStatValue(state.Stat, final);
@@ -590,46 +591,119 @@ namespace StatCompression
             return mapped / config.baseline * 100f;
         }
 
-        private static string BuildFormula(
-            StatCompressionDirection direction,
+        private static string BuildDetails(
+            StatCompressionStatConfig config,
+            StatDef stat,
+            GlobalCompressionInput global,
+            ref CompiledStatConfig compiled,
             CompressionMethod actualMethod,
             float actualParameter)
         {
-            string key;
-            switch (direction)
+            var baseline = FormatValuePair(stat, config.baseline);
+            var trigger = FormatValuePair(stat, compiled.thresholdValue);
+            var triggerOperator = config.direction == StatCompressionDirection.LowerIsBetter
+                ? "÷"
+                : "×";
+            var triggerText = StatCompressionText.T(
+                "StatCompression_AdvancedDetail_Trigger",
+                baseline,
+                (config.thresholdFactor * 100f).ToString("0.###") + "%",
+                triggerOperator,
+                trigger);
+
+            var selectedMethod = config.method == CompressionMethod.FollowGlobal
+                ? StatCompressionText.T(
+                    "StatCompression_AdvancedDetail_FollowGlobalMethod",
+                    StatCompressionText.MethodLabel(actualMethod))
+                : StatCompressionText.MethodLabel(actualMethod);
+            var methodText = StatCompressionText.T(
+                "StatCompression_AdvancedDetail_Method",
+                selectedMethod,
+                config.tScale.ToString("0.###"),
+                actualParameter.ToString("0.###"),
+                ParameterMeaning(actualMethod),
+                CompressionExpression(actualMethod, actualParameter),
+                MethodDescription(actualMethod));
+
+            string directionKey;
+            switch (config.direction)
             {
                 case StatCompressionDirection.HigherIsBetter:
-                    key = "StatCompression_AdvancedPreviewFormulaHigher";
+                    directionKey = "StatCompression_AdvancedDetail_DirectionHigher";
                     break;
                 case StatCompressionDirection.LowerDirect:
-                    key = "StatCompression_AdvancedPreviewFormulaLowerDirect";
+                    directionKey = "StatCompression_AdvancedDetail_DirectionLowerDirect";
                     break;
                 default:
-                    key = "StatCompression_AdvancedPreviewFormulaLower";
+                    directionKey = "StatCompression_AdvancedDetail_DirectionLower";
                     break;
             }
 
-            return StatCompressionText.T(
-                key,
-                CompressionExpression(actualMethod),
-                actualParameter.ToString("0.###"));
+            return triggerText +
+                   "\n\n" + methodText +
+                   "\n\n" + StatCompressionText.T(directionKey) +
+                   "\n\n" + StatCompressionText.T("StatCompression_AdvancedDetail_Flow");
         }
 
-        private static string CompressionExpression(CompressionMethod method)
+        private static string CompressionExpression(
+            CompressionMethod method,
+            float parameter)
+        {
+            var t = parameter.ToString("0.###");
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return "F(e) = e × " + t;
+                case CompressionMethod.Exponential:
+                    return "F(e) = (e + 1)^" + t + " - 1";
+                case CompressionMethod.Logarithmic:
+                    return "F(e) = ln(1 + ln(" + t + ") × e) ÷ ln(" + t + ")";
+                case CompressionMethod.SoftCap:
+                    return "F(e) = " + t + " × e ÷ (e + " + t + ")";
+                default:
+                    return "F(e) = e";
+            }
+        }
+
+        private static string ParameterMeaning(CompressionMethod method)
         {
             switch (method)
             {
                 case CompressionMethod.Linear:
-                    return "e * t";
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_Linear");
                 case CompressionMethod.Exponential:
-                    return "(e + 1)^t - 1";
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_Power");
                 case CompressionMethod.Logarithmic:
-                    return "ln(1 + ln(t) * e) / ln(t)";
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_Logarithmic");
                 case CompressionMethod.SoftCap:
-                    return "t * e / (e + t)";
+                    return StatCompressionText.T("StatCompression_ParameterMeaning_SoftCap");
                 default:
-                    return "e";
+                    return string.Empty;
             }
+        }
+
+        private static string MethodDescription(CompressionMethod method)
+        {
+            switch (method)
+            {
+                case CompressionMethod.Linear:
+                    return StatCompressionText.T("StatCompression_MethodDescription_Linear");
+                case CompressionMethod.Exponential:
+                    return StatCompressionText.T("StatCompression_MethodDescription_Power");
+                case CompressionMethod.Logarithmic:
+                    return StatCompressionText.T("StatCompression_MethodDescription_Logarithmic");
+                case CompressionMethod.SoftCap:
+                    return StatCompressionText.T("StatCompression_MethodDescription_SoftCap");
+                default:
+                    return string.Empty;
+            }
+        }
+
+        private static string FormatValuePair(StatDef stat, float value)
+        {
+            var raw = value.ToString("0.###");
+            var display = FormatStatValue(stat, value);
+            return display == raw ? raw : raw + " (" + display + ")";
         }
 
         private static string FormatStatValue(StatDef stat, float value)

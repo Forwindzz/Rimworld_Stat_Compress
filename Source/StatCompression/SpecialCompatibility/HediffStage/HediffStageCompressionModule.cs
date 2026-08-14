@@ -249,10 +249,7 @@ namespace StatCompression
                     settings.parameter,
                     config.tScale);
                 var actualMethod = StatCompressionRuntime.ResolveMethod(config.method, settings.method);
-                var actualThreshold = StatCompressionRuntime.GetActualThresholdFactor(
-                    config.method,
-                    settings.thresholdFactor,
-                    config.thresholdFactor);
+                var actualThreshold = config.thresholdFactor;
                 lines.Add(StatCompressionText.T(
                     "StatCompression_HediffStage_Info_Value",
                     SpecialCompressionConfigs.LabelFor(record.DefName),

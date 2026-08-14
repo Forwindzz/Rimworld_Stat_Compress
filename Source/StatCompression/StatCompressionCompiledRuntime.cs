@@ -62,10 +62,7 @@ namespace StatCompression
 
             var baseline = config.baseline;
             var actualMethod = StatCompressionRuntime.ResolveMethod(config.method, settings.method);
-            var threshold = StatCompressionRuntime.GetActualThresholdFactor(
-                config.method,
-                settings.thresholdFactor,
-                config.thresholdFactor);
+            var threshold = config.thresholdFactor;
             var actualParameter = StatCompressionRuntime.GetActualParameter(
                 config.method,
                 settings.method,

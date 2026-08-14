@@ -37,7 +37,7 @@ namespace StatCompression
 
             LoadDirectory(UserPresetDirectory, false, names);
             presets.Sort((left, right) =>
-                string.Compare(left.Name, right.Name, StringComparison.CurrentCultureIgnoreCase));
+                string.Compare(left.DisplayName, right.DisplayName, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public static StatCompressionPreset Find(string fileName)
@@ -52,6 +52,7 @@ namespace StatCompression
             return new StatCompressionPreset
             {
                 Name = source.Name,
+                LabelKey = source.LabelKey,
                 FileName = source.FileName,
                 Path = source.Path,
                 BuiltIn = source.BuiltIn,
@@ -156,8 +157,8 @@ namespace StatCompression
             existing = presets.FirstOrDefault(preset =>
                 preset.BuiltIn &&
                 string.Equals(
-                    preset.Name,
-                    source.Name,
+                    preset.DisplayName,
+                    source.DisplayName,
                     StringComparison.CurrentCultureIgnoreCase));
             if (existing == null)
             {
@@ -167,7 +168,7 @@ namespace StatCompression
             {
                 error = StatCompressionText.T(
                     "StatCompression_PresetBuiltinConflict",
-                    existing.Name);
+                    existing.DisplayName);
                 return false;
             }
 
@@ -189,7 +190,7 @@ namespace StatCompression
             {
                 error = StatCompressionText.T(
                     "StatCompression_Preset_ErrorExists",
-                    existing.Name);
+                    existing.DisplayName);
                 return false;
             }
 
@@ -202,6 +203,7 @@ namespace StatCompression
                 var copy = new StatCompressionPreset
                 {
                     Name = source.Name.Trim(),
+                    LabelKey = source.LabelKey,
                     FileName = fileName,
                     Path = path,
                     BuiltIn = false,
@@ -277,7 +279,7 @@ namespace StatCompression
                         {
                             conflict = new StatCompressionPresetConflict
                             {
-                                PresetName = active.Name,
+                                PresetName = active.DisplayName,
                                 DefName = config.defName,
                                 Fields = string.Join(", ", fields)
                             };
@@ -299,7 +301,7 @@ namespace StatCompression
                 var target = settings.GetAdvancedConfig(source.defName);
                 if (target == null)
                 {
-                    Log.Warning($"[{StatCompressionConstants.DisplayName}] Preset {preset.Name} skipped missing config {source.defName}.");
+                    Log.Warning($"[{StatCompressionConstants.DisplayName}] Preset {preset.DisplayName} skipped missing config {source.defName}.");
                     continue;
                 }
 
@@ -373,7 +375,7 @@ namespace StatCompression
             return clone;
         }
 
-        private static string[] DifferentFields(
+        internal static string[] DifferentFields(
             StatCompressionStatConfig left,
             StatCompressionStatConfig right)
         {

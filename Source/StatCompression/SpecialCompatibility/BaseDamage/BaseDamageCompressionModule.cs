@@ -351,10 +351,7 @@ namespace StatCompression
             var actualMethod = StatCompressionRuntime.ResolveMethod(
                 config.method,
                 StatCompressionMod.Settings.method);
-            var actualThreshold = StatCompressionRuntime.GetActualThresholdFactor(
-                config.method,
-                StatCompressionMod.Settings.thresholdFactor,
-                config.thresholdFactor);
+            var actualThreshold = config.thresholdFactor;
             var lines = new List<string>
             {
                 "<color=#A0A0A0>",

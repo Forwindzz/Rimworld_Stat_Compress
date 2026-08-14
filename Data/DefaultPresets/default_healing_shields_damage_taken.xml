@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Healing, Shields &amp; Damage Taken" labelKey="StatCompression_DefaultPreset_HealingShieldsDamageTaken">
+  <Configs>
+    <Config defName="[SP] BodyPartHealth" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] NaturalHealingFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="5" direction="HigherIsBetter" />
+    <Config defName="[SP] RegenerationRate" enabled="true" method="FollowGlobal" method_t="2" tScale="0.75" baseline="100" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] TotalBleedFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="BiosculpterOccupantSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="BloodRegenerationFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="EnergyShieldEnergyMax" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="250" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="EnergyShieldRechargeRate" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="20" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ImmunityGainSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.25" direction="HigherIsBetter" />
+    <Config defName="IncomingDamageFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1.1" baseline="1" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="InjuryHealingFactor" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="4.5" direction="HigherIsBetter" />
+    <Config defName="MechRemoteShieldEnergy" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="100" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MedicalOperationSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.4" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="MedicalPotency" enabled="true" method="FollowGlobal" method_t="2" tScale="4" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="MedicalQualityMax" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="1" thresholdFactor="1.75" direction="HigherIsBetter" />
+    <Config defName="MedicalTendQuality" enabled="true" method="SoftCap" method_t="2" tScale="13.2" baseline="1" thresholdFactor="1.25" direction="HigherIsBetter" />
+    <Config defName="MedicalTendSpeed" enabled="true" method="FollowGlobal" method_t="2" tScale="1.1" baseline="1" thresholdFactor="2" direction="HigherIsBetter" />
+    <Config defName="PainShockThreshold" enabled="true" method="SoftCap" method_t="2" tScale="40" baseline="0.800000012" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="PsychicShieldMaxHealth" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="100" thresholdFactor="1" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>

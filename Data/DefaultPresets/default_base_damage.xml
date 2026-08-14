@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StatCompressionPreset name="Base Damage" labelKey="StatCompression_DefaultPreset_BaseDamage">
+  <Configs>
+    <Config defName="RangedWeapon_Cooldown" enabled="true" method="FollowGlobal" method_t="2" tScale="1.5" baseline="0.25" thresholdFactor="1.5" direction="LowerIsBetter" />
+    <Config defName="TrapMeleeDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="50" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="[SP] ExplosionDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="1" baseline="50" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] MeleeBaseDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="20" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] MeleeExtraDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="15" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] OtherDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="15" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] RangedBaseDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="20" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="[SP] RangedExtraDamage" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="15" thresholdFactor="1" direction="HigherIsBetter" />
+  </Configs>
+</StatCompressionPreset>
