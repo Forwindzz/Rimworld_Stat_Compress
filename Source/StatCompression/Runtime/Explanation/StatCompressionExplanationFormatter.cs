@@ -38,6 +38,15 @@ namespace StatCompression
                     "StatCompression_Explanation_RawScore",
                     config.baseline.ToString("0.###"))
                 : stat.ValueToString(config.baseline, stat.toStringNumberSense, true);
+            var compiled = StatCompressionRuntimeCompiler.CompileConfig(settings, config);
+            var thresholdText = usesRawCurveInput
+                ? StatCompressionText.T(
+                    "StatCompression_Explanation_RawScore",
+                    compiled.thresholdValue.ToString("0.###"))
+                : stat.ValueToString(
+                    compiled.thresholdValue,
+                    stat.toStringNumberSense,
+                    true);
             var actualParameter = StatCompressionRuntime.GetActualParameter(
                 config.method,
                 settings.method,
@@ -55,6 +64,10 @@ namespace StatCompression
                     StatCompressionText.MethodLabel(actualMethod),
                     actualParameter.ToString("0.###"),
                     baselineText);
+            text += "\n" + StatCompressionText.T(
+                "StatCompression_Explanation_ThresholdLine",
+                thresholdText,
+                (config.thresholdFactor * 100f).ToString("0.###") + "%");
             text += "\n" + StatCompressionText.T(
                 "StatCompression_Explanation_DirectionLine",
                 StatCompressionText.DirectionExplanation(config.direction));

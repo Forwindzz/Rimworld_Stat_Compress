@@ -208,6 +208,7 @@
   <StatCompression_Explanation_ValueLine>数值压缩（属性值）：{0} -> {1}</StatCompression_Explanation_ValueLine>
   <StatCompression_Explanation_RawValueLine>实际压缩输入（曲线前分数）：{0} -> {1}</StatCompression_Explanation_RawValueLine>
   <StatCompression_Explanation_MethodLine>压缩方式：{0} t={1}，基准值 {2}</StatCompression_Explanation_MethodLine>
+  <StatCompression_Explanation_ThresholdLine>触发阈值：{0}（阈值设置 {1}）</StatCompression_Explanation_ThresholdLine>
   <StatCompression_Explanation_DirectionLine>压缩方向：{0}</StatCompression_Explanation_DirectionLine>
   <StatCompression_Explanation_RawScore>曲线前分数 {0}</StatCompression_Explanation_RawScore>
   <StatCompression_Explanation_Hint_Power>指数压缩：乘法增益按比例削弱</StatCompression_Explanation_Hint_Power>

@@ -208,6 +208,7 @@
   <StatCompression_Explanation_ValueLine>Stat compression (displayed value): {0} -> {1}</StatCompression_Explanation_ValueLine>
   <StatCompression_Explanation_RawValueLine>Compressed input (pre-curve score): {0} -> {1}</StatCompression_Explanation_RawValueLine>
   <StatCompression_Explanation_MethodLine>Method: {0} t={1}, baseline {2}</StatCompression_Explanation_MethodLine>
+  <StatCompression_Explanation_ThresholdLine>Trigger threshold: {0} (threshold setting {1})</StatCompression_Explanation_ThresholdLine>
   <StatCompression_Explanation_DirectionLine>Direction: {0}</StatCompression_Explanation_DirectionLine>
   <StatCompression_Explanation_RawScore>raw score {0}</StatCompression_Explanation_RawScore>
   <StatCompression_Explanation_Hint_Power>Power compression: multiplicative gains are proportionally reduced</StatCompression_Explanation_Hint_Power>
