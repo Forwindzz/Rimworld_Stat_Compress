@@ -9,8 +9,14 @@ namespace StatCompression
 {
     internal sealed class AdvancedPresetComponent
     {
+        private readonly StatCompressionSettings settings;
         private StatCompressionPreset editingPreset;
         private int structureVersion;
+
+        public AdvancedPresetComponent(StatCompressionSettings settings)
+        {
+            this.settings = settings;
+        }
 
         public bool IsEditing => editingPreset != null;
         public float ToolbarWidth => IsEditing ? 184f : 150f;
@@ -93,7 +99,7 @@ namespace StatCompression
             {
                 StatCompressionPreset preset;
                 string error;
-                if (StatCompressionPresetManager.TryCreate(
+                if (StatCompressionPresetRepository.TryCreate(
                         name,
                         selectedConfigs,
                         out preset,
@@ -124,7 +130,7 @@ namespace StatCompression
             }
 
             string error;
-            if (StatCompressionPresetManager.TrySave(editingPreset, out error))
+            if (StatCompressionPresetRepository.TrySave(editingPreset, out error))
             {
                 Messages.Message(
                     StatCompressionText.T(
@@ -132,10 +138,11 @@ namespace StatCompression
                         editingPreset.DisplayName),
                     MessageTypeDefOf.TaskCompletion,
                     false);
-                var refreshed = StatCompressionPresetManager.Find(editingPreset.FileName);
+                var refreshed = StatCompressionPresetRepository.Find(editingPreset.FileName);
                 if (refreshed != null)
                 {
-                    editingPreset = StatCompressionPresetManager.Clone(refreshed);
+                    StatCompressionSettingsEditor.ApplyActivePresetUpdate(settings, refreshed);
+                    editingPreset = StatCompressionPresetRepository.Clone(refreshed);
                     structureVersion++;
                 }
             }
@@ -147,8 +154,8 @@ namespace StatCompression
 
         private void OpenPresetMenu()
         {
-            StatCompressionPresetManager.Refresh();
-            var options = StatCompressionPresetManager.Presets
+            StatCompressionPresetRepository.Refresh();
+            var options = StatCompressionPresetRepository.Presets
                 .Select(preset => new FloatMenuOption(
                     preset.DisplayName,
                     () => EnterPresetEditing(preset)))
@@ -167,7 +174,7 @@ namespace StatCompression
 
         private void EnterPresetEditing(StatCompressionPreset preset)
         {
-            editingPreset = StatCompressionPresetManager.Clone(preset);
+            editingPreset = StatCompressionPresetRepository.Clone(preset);
             structureVersion++;
         }
 

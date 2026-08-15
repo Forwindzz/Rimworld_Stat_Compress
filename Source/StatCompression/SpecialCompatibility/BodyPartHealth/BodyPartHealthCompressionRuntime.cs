@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using Verse;
@@ -11,8 +12,15 @@ namespace StatCompression
         private static bool active;
         private static CompressionMethod method;
         private static float actualParameter;
+        private static readonly HashSet<string> RawReadWarningKeys =
+            new HashSet<string>(StringComparer.Ordinal);
 
         public static bool Active => active;
+
+        public static void ResetRawReadWarnings()
+        {
+            RawReadWarningKeys.Clear();
+        }
 
         public static void Rebuild(StatCompressionSettings settings)
         {
@@ -47,6 +55,13 @@ namespace StatCompression
                 return rawValue;
             }
 
+            var targets = ObjectTargetFilterRuntime.Active;
+            if (!targets.matchAll &&
+                !ObjectTargetFilterRuntime.MatchesPawnFiltered(targets, pawn))
+            {
+                return rawValue;
+            }
+
             var baseline = NaturalBaseline(partDef, pawn);
             var normalized = rawValue / baseline;
             var compressed = StatCompressionRuntimeCompiler.ApplyStatic(ref activeConfig, normalized);
@@ -61,7 +76,19 @@ namespace StatCompression
         public static bool TryBuildExplanation(Pawn pawn, BodyPartRecord part, out string explanation)
         {
             explanation = null;
-            if (!active || part == null || pawn == null ||
+            if (!active || part == null || pawn == null)
+            {
+                return false;
+            }
+
+            var targets = ObjectTargetFilterRuntime.Active;
+            if (!targets.matchAll &&
+                !ObjectTargetFilterRuntime.MatchesPawnFiltered(targets, pawn))
+            {
+                return false;
+            }
+
+            if (
                 !BodyPartHealthCompressionModule.TryGetRawMaxHealth(part, pawn, out var rawValue))
             {
                 return false;
@@ -108,9 +135,7 @@ namespace StatCompression
             catch (Exception ex)
             {
                 value = 0f;
-                Log.Warning(
-                    $"[{StatCompressionConstants.DisplayName}] Failed to read uncompressed body-part health: " +
-                    $"{ex.GetType().Name}: {ex.Message}");
+                WarnRawReadFailure("Vanilla", ex);
                 return false;
             }
             finally
@@ -131,15 +156,27 @@ namespace StatCompression
             catch (Exception ex)
             {
                 value = 0f;
-                Log.Warning(
-                    $"[{StatCompressionConstants.DisplayName}] Failed to read uncompressed EBF body-part health: " +
-                    $"{ex.GetType().Name}: {ex.Message}");
+                WarnRawReadFailure("EBF", ex);
                 return false;
             }
             finally
             {
                 activeConfig.kernel = previousKernel;
             }
+        }
+
+        private static void WarnRawReadFailure(string backend, Exception exception)
+        {
+            var key = backend + "\n" + exception.GetType().FullName + "\n" + exception.Message;
+            if (!RawReadWarningKeys.Add(key))
+            {
+                return;
+            }
+
+            Log.Warning(
+                $"[{StatCompressionConstants.DisplayName}] Failed to read uncompressed " +
+                $"body-part health through {backend}: " +
+                $"{exception.GetType().Name}: {exception.Message}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

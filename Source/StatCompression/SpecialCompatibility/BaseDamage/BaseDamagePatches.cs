@@ -8,13 +8,21 @@ namespace StatCompression
     [HarmonyPatch(typeof(StaticConstructorOnStartupUtility), nameof(StaticConstructorOnStartupUtility.CallAll))]
     internal static class BaseDamageInitializationPatch
     {
+        private static StatCompressionSettings settings;
+
+        public static void Configure(StatCompressionSettings value)
+        {
+            settings = value;
+        }
+
         [HarmonyPostfix]
         private static void Postfix()
         {
             // Def post-processors registered by static constructors can replace verb/projectile objects.
             // Defer twice so direct and nested ExecuteWhenFinished callbacks complete before capture.
             LongEventHandler.ExecuteWhenFinished(() =>
-                LongEventHandler.ExecuteWhenFinished(BaseDamageCompressionModule.Initialize));
+                LongEventHandler.ExecuteWhenFinished(() =>
+                    BaseDamageCompressionModule.Initialize(settings)));
         }
     }
 

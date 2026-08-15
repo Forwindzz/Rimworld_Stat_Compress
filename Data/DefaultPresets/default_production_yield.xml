@@ -2,6 +2,11 @@
 <StatCompressionPreset name="Production Yield" labelKey="StatCompression_DefaultPreset_ProductionYield">
   <Configs>
     <Config defName="AnimalGatherYield" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="1" thresholdFactor="1.5" direction="HigherIsBetter" />
+    <Config defName="ButcheryFleshEfficiency" enabled="true" method="SoftCap" method_t="2" tScale="20" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="ButcheryMechanoidEfficiency" enabled="true" method="SoftCap" method_t="2" tScale="20" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
     <Config defName="DrugHarvestYield" enabled="true" method="FollowGlobal" method_t="2" tScale="2" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="FishingYield" enabled="true" method="SoftCap" method_t="2" tScale="100" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="MiningYield" enabled="true" method="SoftCap" method_t="2" tScale="40" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
+    <Config defName="PlantHarvestYield" enabled="true" method="SoftCap" method_t="2" tScale="20" baseline="1" thresholdFactor="1" direction="HigherIsBetter" />
   </Configs>
 </StatCompressionPreset>

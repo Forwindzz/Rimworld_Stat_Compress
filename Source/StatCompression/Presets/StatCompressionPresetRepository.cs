@@ -6,9 +6,8 @@ using Verse;
 
 namespace StatCompression
 {
-    internal static class StatCompressionPresetManager
+    internal static class StatCompressionPresetRepository
     {
-        private const float FloatTolerance = 0.000001f;
         private static readonly List<StatCompressionPreset> presets = new List<StatCompressionPreset>();
         private static bool loaded;
 
@@ -20,6 +19,8 @@ namespace StatCompression
                 return presets;
             }
         }
+
+        public static int Revision { get; private set; }
 
         public static string UserPresetDirectory =>
             Path.Combine(GenFilePaths.ConfigFolderPath, "StatCompression", "Presets");
@@ -38,6 +39,7 @@ namespace StatCompression
             LoadDirectory(UserPresetDirectory, false, names);
             presets.Sort((left, right) =>
                 string.Compare(left.DisplayName, right.DisplayName, StringComparison.CurrentCultureIgnoreCase));
+            Revision++;
         }
 
         public static StatCompressionPreset Find(string fileName)
@@ -248,93 +250,6 @@ namespace StatCompression
             }
         }
 
-        public static bool TryFindConflict(
-            StatCompressionSettings settings,
-            StatCompressionPreset candidate,
-            out StatCompressionPresetConflict conflict)
-        {
-            EnsureLoaded();
-            for (var i = 0; i < settings.activePresets.Count; i++)
-            {
-                var activeName = settings.activePresets[i];
-                if (string.Equals(activeName, candidate.FileName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var active = Find(activeName);
-                if (active == null)
-                {
-                    continue;
-                }
-
-                var activeByName = active.Configs.ToDictionary(config => config.defName, StringComparer.Ordinal);
-                for (var j = 0; j < candidate.Configs.Count; j++)
-                {
-                    var config = candidate.Configs[j];
-                    if (activeByName.TryGetValue(config.defName, out var other))
-                    {
-                        var fields = DifferentFields(config, other);
-                        if (fields.Length > 0)
-                        {
-                            conflict = new StatCompressionPresetConflict
-                            {
-                                PresetName = active.DisplayName,
-                                DefName = config.defName,
-                                Fields = string.Join(", ", fields)
-                            };
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            conflict = null;
-            return false;
-        }
-
-        public static void Apply(StatCompressionSettings settings, StatCompressionPreset preset)
-        {
-            for (var i = 0; i < preset.Configs.Count; i++)
-            {
-                var source = preset.Configs[i];
-                var target = settings.GetAdvancedConfig(source.defName);
-                if (target == null)
-                {
-                    Log.Warning($"[{StatCompressionConstants.DisplayName}] Preset {preset.DisplayName} skipped missing config {source.defName}.");
-                    continue;
-                }
-
-                target.CopyFrom(source);
-                StatCompressionSettings.NormalizeConfig(target);
-            }
-
-            if (!settings.activePresets.Any(name =>
-                    string.Equals(name, preset.FileName, StringComparison.OrdinalIgnoreCase)))
-            {
-                settings.activePresets.Add(preset.FileName);
-            }
-
-            settings.NormalizeParameters();
-            settings.RebuildLookup();
-        }
-
-        public static void Disable(StatCompressionSettings settings, StatCompressionPreset preset)
-        {
-            for (var i = 0; i < preset.Configs.Count; i++)
-            {
-                var target = settings.GetAdvancedConfig(preset.Configs[i].defName);
-                if (target != null)
-                {
-                    target.enabled = false;
-                }
-            }
-
-            settings.activePresets.RemoveAll(name =>
-                string.Equals(name, preset.FileName, StringComparison.OrdinalIgnoreCase));
-            settings.RebuildLookup();
-        }
-
         private static void EnsureLoaded()
         {
             if (!loaded)
@@ -373,26 +288,6 @@ namespace StatCompression
             var clone = new StatCompressionStatConfig();
             clone.CopyFrom(source);
             return clone;
-        }
-
-        internal static string[] DifferentFields(
-            StatCompressionStatConfig left,
-            StatCompressionStatConfig right)
-        {
-            var fields = new List<string>();
-            if (left.enabled != right.enabled) fields.Add("enabled");
-            if (left.method != right.method) fields.Add("method");
-            if (!NearlyEqual(left.method_t, right.method_t)) fields.Add("method_t");
-            if (!NearlyEqual(left.tScale, right.tScale)) fields.Add("tScale");
-            if (!NearlyEqual(left.baseline, right.baseline)) fields.Add("baseline");
-            if (!NearlyEqual(left.thresholdFactor, right.thresholdFactor)) fields.Add("thresholdFactor");
-            if (left.direction != right.direction) fields.Add("direction");
-            return fields.ToArray();
-        }
-
-        private static bool NearlyEqual(float left, float right)
-        {
-            return Math.Abs(left - right) <= FloatTolerance;
         }
 
         private static string SafeFileName(string name)

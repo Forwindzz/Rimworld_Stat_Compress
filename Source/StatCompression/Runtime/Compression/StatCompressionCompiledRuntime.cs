@@ -173,7 +173,7 @@ namespace StatCompression
             {
                 if (float.IsNaN(value))
                 {
-                    return true;
+                    return false;
                 }
 
                 return value >= 0f && value < config.thresholdValue;
@@ -189,6 +189,12 @@ namespace StatCompression
                 return value;
             }
 
+            return ApplyStaticUnchecked(ref config, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ApplyStaticUnchecked(ref CompiledStatConfig config, float value)
+        {
             switch (config.kernel)
             {
                 case CompressionKernel.HigherLinear:

@@ -25,7 +25,7 @@ namespace StatCompression
             settingsConfigs = settings.AdvancedConfigs().ToList();
             table = new AdvancedTableComponent(settings, focusDefName);
             preview = new AdvancedPreviewComponent(settings);
-            preset = new AdvancedPresetComponent();
+            preset = new AdvancedPresetComponent(settings);
 
             doCloseX = true;
             doCloseButton = false;
@@ -44,7 +44,7 @@ namespace StatCompression
 
         public override void DoWindowContents(Rect inRect)
         {
-            var helpRect = new Rect(inRect.x, inRect.y, inRect.width, 92f);
+            var helpRect = new Rect(inRect.x, inRect.y, inRect.width, 112f);
             var toggleWidth = Mathf.Min(230f, inRect.width * 0.24f);
             var toggleRect = new Rect(
                 helpRect.xMax - toggleWidth,
@@ -60,7 +60,8 @@ namespace StatCompression
                     helpRect.y,
                     helpRect.width - toggleWidth - 12f,
                     helpRect.height),
-                StatCompressionText.T("StatCompression_AdvancedSimpleHelp"));
+                StatCompressionText.T("StatCompression_AdvancedSimpleHelp") + "\n" +
+                StatCompressionText.T("StatCompression_ObjectFilter_SpecialScope"));
             Text.Font = GameFont.Small;
 
             var contentTop = helpRect.yMax + 6f;
@@ -87,8 +88,7 @@ namespace StatCompression
 
         public override void PostClose()
         {
-            settings.NormalizeParameters();
-            settings.RebuildLookup();
+            StatCompressionSettingsEditor.CommitPending(settings);
             base.PostClose();
         }
 
@@ -116,7 +116,11 @@ namespace StatCompression
                 searchRect.yMax + 10f,
                 rect.width,
                 rect.yMax - searchRect.yMax - 10f - footerHeight);
-            table.DrawTable(tableRect);
+            var interaction = table.DrawTable(tableRect);
+            if (interaction.ConfigChanged && !preset.IsEditing)
+            {
+                StatCompressionSettingsEditor.MarkRuntimeChanged();
+            }
 
             preset.DrawFooter(
                 new Rect(rect.x, rect.yMax - 34f, rect.width, 34f),

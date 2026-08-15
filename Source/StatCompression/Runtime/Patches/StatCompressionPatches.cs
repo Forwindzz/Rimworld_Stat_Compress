@@ -135,7 +135,7 @@ namespace StatCompression
                 return;
             }
 
-            StatCompressionRuntime.Compress(___stat, ref __result);
+            StatCompressionRuntime.Compress(___stat, req, ref __result);
         }
     }
 
@@ -145,15 +145,18 @@ namespace StatCompression
         public static void Prefix(
             StatDef ___stat,
             StatRequest req,
-            out StatCompressionRuntime.ExplanationContext __state)
+            out StatCompressionExplanationRuntime.ExplanationContext __state)
         {
-            __state = StatCompressionRuntime.BeginExplanation(___stat, req);
+            __state = StatCompressionExplanationRuntime.Begin(
+                StatCompressionMod.Settings,
+                ___stat,
+                req);
         }
 
         [HarmonyPriority(Priority.Last)]
         public static void Postfix(
             float finalVal,
-            StatCompressionRuntime.ExplanationContext __state,
+            StatCompressionExplanationRuntime.ExplanationContext __state,
             ref string __result)
         {
             if (__state == null)
@@ -161,7 +164,7 @@ namespace StatCompression
                 return;
             }
 
-            if (StatCompressionRuntime.TryBuildExplanation(__state, finalVal, out var explanation))
+            if (StatCompressionExplanationRuntime.TryBuild(__state, finalVal, out var explanation))
             {
                 __result += "\n" + explanation;
             }
@@ -169,11 +172,11 @@ namespace StatCompression
 
         public static Exception Finalizer(
             Exception __exception,
-            StatCompressionRuntime.ExplanationContext __state)
+            StatCompressionExplanationRuntime.ExplanationContext __state)
         {
             if (__state != null)
             {
-                StatCompressionRuntime.EndExplanation(__state);
+                StatCompressionExplanationRuntime.End(__state);
             }
 
             return __exception;

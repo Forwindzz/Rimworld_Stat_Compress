@@ -3,6 +3,31 @@
   <StatCompression_SettingsTitle>Stat Compression</StatCompression_SettingsTitle>
   <StatCompression_Enable>Enable stat compression</StatCompression_Enable>
   <StatCompression_ShowInfoCardSettingsButton>Show the "Compression settings" button on info cards</StatCompression_ShowInfoCardSettingsButton>
+  <StatCompression_ObjectFilter_Open>Filter races, factions, mods, and other targets for stat compression</StatCompression_ObjectFilter_Open>
+  <StatCompression_ObjectFilter_Title>Object filter settings</StatCompression_ObjectFilter_Title>
+  <StatCompression_ObjectFilter_Enable>Enable object filtering</StatCompression_ObjectFilter_Enable>
+  <StatCompression_ObjectFilter_Description>Items or pawns matching any selected condition will have their stats compressed. All conditions use OR logic.</StatCompression_ObjectFilter_Description>
+  <StatCompression_ObjectFilter_SpecialScope>Object filtering applies to regular Stats and [SP] Body Part HP. Shared base-damage and Hediff-stage fields remain global.</StatCompression_ObjectFilter_SpecialScope>
+  <StatCompression_ObjectFilter_StatusDisabled>Object filtering is disabled. All objects can be compressed.</StatCompression_ObjectFilter_StatusDisabled>
+  <StatCompression_ObjectFilter_StatusEmpty>Filtering is enabled, but no conditions are selected. No objects will be compressed.</StatCompression_ObjectFilter_StatusEmpty>
+  <StatCompression_ObjectFilter_StatusActive>{0} conditions selected. Matching any condition allows compression.</StatCompression_ObjectFilter_StatusActive>
+  <StatCompression_ObjectFilter_GroupPawn>Pawn types</StatCompression_ObjectFilter_GroupPawn>
+  <StatCompression_ObjectFilter_GroupRace>RaceDefs</StatCompression_ObjectFilter_GroupRace>
+  <StatCompression_ObjectFilter_GroupFaction>FactionDefs</StatCompression_ObjectFilter_GroupFaction>
+  <StatCompression_ObjectFilter_GroupMod>Source mods</StatCompression_ObjectFilter_GroupMod>
+  <StatCompression_ObjectFilter_SelectAll>Select all</StatCompression_ObjectFilter_SelectAll>
+  <StatCompression_ObjectFilter_ClearAll>Clear all</StatCompression_ObjectFilter_ClearAll>
+  <StatCompression_ObjectFilter_RaceFilter>Show</StatCompression_ObjectFilter_RaceFilter>
+  <StatCompression_ObjectFilter_RaceHumanlike>Humanlike</StatCompression_ObjectFilter_RaceHumanlike>
+  <StatCompression_ObjectFilter_RaceMechanoid>Mechanoid</StatCompression_ObjectFilter_RaceMechanoid>
+  <StatCompression_ObjectFilter_RaceAnimal>Animal</StatCompression_ObjectFilter_RaceAnimal>
+  <StatCompression_ObjectFilter_RaceOther>Other</StatCompression_ObjectFilter_RaceOther>
+  <StatCompression_ObjectFilter_PlayerColonists>Player colonists</StatCompression_ObjectFilter_PlayerColonists>
+  <StatCompression_ObjectFilter_PlayerOtherPawns>Other player-controlled or hosted pawns</StatCompression_ObjectFilter_PlayerOtherPawns>
+  <StatCompression_ObjectFilter_HostilePawns>Hostile pawns</StatCompression_ObjectFilter_HostilePawns>
+  <StatCompression_ObjectFilter_NonHostilePawns>Neutral or friendly faction pawns</StatCompression_ObjectFilter_NonHostilePawns>
+  <StatCompression_ObjectFilter_FactionlessPawns>Factionless pawns</StatCompression_ObjectFilter_FactionlessPawns>
+  <StatCompression_ObjectFilter_MissingEntry>Not currently loaded. The saved entry is preserved but inactive.</StatCompression_ObjectFilter_MissingEntry>
   <StatCompression_SP_BodyPartHealth_Label>Body-part HP</StatCompression_SP_BodyPartHealth_Label>
   <StatCompression_SP_BodyPartHealth_BaselineTooltip>This affects the HP of every body part. Baseline represents a pawn's unmodified base body-part HP for its race. For convenience, this value is normalized to 1 (100%); 2 means double HP.</StatCompression_SP_BodyPartHealth_BaselineTooltip>
   <StatCompression_SP_MeleeBaseDamage_Label>Melee base damage</StatCompression_SP_MeleeBaseDamage_Label>
@@ -87,7 +112,6 @@
   <StatCompression_DefaultPreset_DailyNeeds>Daily Needs</StatCompression_DefaultPreset_DailyNeeds>
   <StatCompression_DefaultPreset_SocialTradeCulture>Social, Trade &amp; Culture</StatCompression_DefaultPreset_SocialTradeCulture>
   <StatCompression_DefaultPreset_ProductionYield>Production Yield</StatCompression_DefaultPreset_ProductionYield>
-  <StatCompression_DefaultPreset_ProductionYieldSoftCap>Production Yield Soft Cap</StatCompression_DefaultPreset_ProductionYieldSoftCap>
   <StatCompression_DefaultPreset_TemperatureInsulation>Temperature &amp; Insulation</StatCompression_DefaultPreset_TemperatureInsulation>
   <StatCompression_DefaultPreset_MovementSpeed>Movement Speed</StatCompression_DefaultPreset_MovementSpeed>
   <StatCompression_DefaultPreset_Learning>Learning</StatCompression_DefaultPreset_Learning>
@@ -152,6 +176,9 @@
   <StatCompression_Group_Trigger>When compression starts</StatCompression_Group_Trigger>
   <StatCompression_Type_SpecialModule>Special module</StatCompression_Type_SpecialModule>
   <StatCompression_Type_Uncategorized>Uncategorized</StatCompression_Type_Uncategorized>
+  <StatCompression_Type_MissingStat>Missing stat</StatCompression_Type_MissingStat>
+  <StatCompression_MissingStat_Label>Not loaded by the current mod list</StatCompression_MissingStat_Label>
+  <StatCompression_MissingStat_Tooltip>This configuration is preserved, but its StatDef is not loaded by the current mod list and it has no runtime effect.</StatCompression_MissingStat_Tooltip>
   <StatCompression_ActualT_GlobalSource>Global t</StatCompression_ActualT_GlobalSource>
   <StatCompression_ActualT_DefaultSource>Method default t</StatCompression_ActualT_DefaultSource>
   <StatCompression_ActualT_MultiplyTooltip>{0} {1} × t Scale {2} = actual t {3}</StatCompression_ActualT_MultiplyTooltip>

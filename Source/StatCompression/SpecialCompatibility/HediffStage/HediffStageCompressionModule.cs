@@ -20,10 +20,12 @@ namespace StatCompression
         private static readonly List<FieldRecord> Records = new List<FieldRecord>();
         private static readonly Dictionary<HediffStage, List<FieldRecord>> RecordsByStage =
             new Dictionary<HediffStage, List<FieldRecord>>(ReferenceComparer<HediffStage>.Instance);
+        private static readonly Dictionary<HediffStage, HediffStageReportCache> ReportsByStage =
+            new Dictionary<HediffStage, HediffStageReportCache>(ReferenceComparer<HediffStage>.Instance);
 
         private static bool initialized;
 
-        public static void Initialize()
+        public static void Initialize(StatCompressionSettings settings)
         {
             if (initialized)
             {
@@ -34,7 +36,7 @@ namespace StatCompression
             try
             {
                 ScanDefs();
-                Rebuild(StatCompressionMod.Settings);
+                Rebuild(settings);
                 Log.Message(
                     $"[{StatCompressionConstants.DisplayName}] HediffStage Def module initialized: " +
                     $"fields={Records.Count}, stages={RecordsByStage.Count}, changed={CountChanged()}.");
@@ -42,6 +44,7 @@ namespace StatCompression
             catch (Exception ex)
             {
                 RestoreAll();
+                ReportsByStage.Clear();
                 Log.Error(
                     $"[{StatCompressionConstants.DisplayName}] Failed to initialize HediffStage Def compression. " +
                     $"All captured fields were restored.\n{ex}");
@@ -72,13 +75,7 @@ namespace StatCompression
                 yield break;
             }
 
-            var changed = ChangedRecords(stage);
-            if (changed.Count == 0)
-            {
-                yield break;
-            }
-
-            if (changed.Count == 0)
+            if (stage == null || !ReportsByStage.TryGetValue(stage, out var report))
             {
                 yield break;
             }
@@ -86,8 +83,10 @@ namespace StatCompression
             yield return new StatDrawEntry(
                 StatCategoryDefOf.CapacityEffects,
                 StatCompressionText.T("StatCompression_HediffStage_Info_Header"),
-                StatCompressionText.T("StatCompression_HediffStage_Info_Count", changed.Count),
-                BuildReport(changed),
+                StatCompressionText.T(
+                    "StatCompression_HediffStage_Info_Count",
+                    report.ChangedRecords.Count),
+                report.ReportText,
                 4010,
                 null,
                 null,
@@ -97,40 +96,20 @@ namespace StatCompression
 
         public static string AppendTooltipDetails(string original, HediffStage stage)
         {
-            var changed = ChangedRecords(stage);
-            if (changed.Count == 0)
+            if (stage == null || !ReportsByStage.TryGetValue(stage, out var report))
             {
                 return original;
             }
 
-            var details = BuildReport(changed);
             return original.NullOrEmpty()
-                ? details
-                : original.TrimEndNewlines() + "\n" + details;
-        }
-
-        private static List<FieldRecord> ChangedRecords(HediffStage stage)
-        {
-            var changed = new List<FieldRecord>();
-            if (stage == null || !RecordsByStage.TryGetValue(stage, out var records))
-            {
-                return changed;
-            }
-
-            for (var i = 0; i < records.Count; i++)
-            {
-                if (records[i].Changed)
-                {
-                    changed.Add(records[i]);
-                }
-            }
-
-            return changed;
+                ? report.ReportText
+                : original.TrimEndNewlines() + "\n" + report.ReportText;
         }
 
         private static void Rebuild(StatCompressionSettings settings)
         {
             RestoreAll();
+            ReportsByStage.Clear();
             if (settings == null || !settings.enabled)
             {
                 return;
@@ -150,12 +129,15 @@ namespace StatCompression
                 ref var config = ref compiled[(int)record.Field];
                 record.Apply(ref config);
             }
+
+            RebuildReportCache(settings);
         }
 
         private static void ScanDefs()
         {
             Records.Clear();
             RecordsByStage.Clear();
+            ReportsByStage.Clear();
             var defs = DefDatabase<HediffDef>.AllDefsListForReading;
             for (var defIndex = 0; defIndex < defs.Count; defIndex++)
             {
@@ -231,14 +213,40 @@ namespace StatCompression
             return count;
         }
 
-        private static string BuildReport(List<FieldRecord> records)
+        private static void RebuildReportCache(StatCompressionSettings settings)
+        {
+            foreach (var pair in RecordsByStage)
+            {
+                var records = pair.Value;
+                var changed = new List<FieldRecord>();
+                for (var i = 0; i < records.Count; i++)
+                {
+                    if (records[i].Changed)
+                    {
+                        changed.Add(records[i]);
+                    }
+                }
+
+                if (changed.Count == 0)
+                {
+                    continue;
+                }
+
+                ReportsByStage.Add(
+                    pair.Key,
+                    new HediffStageReportCache(changed, BuildReport(changed, settings)));
+            }
+        }
+
+        private static string BuildReport(
+            List<FieldRecord> records,
+            StatCompressionSettings settings)
         {
             var lines = new List<string>
             {
                 StatCompressionText.T("StatCompression_Explanation_Separator"),
                 StatCompressionText.T("StatCompression_HediffStage_Info_Header")
             };
-            var settings = StatCompressionMod.Settings;
             for (var i = 0; i < records.Count; i++)
             {
                 var record = records[i];
@@ -264,6 +272,20 @@ namespace StatCompression
             }
 
             return string.Join("\n", lines).Colorize(ColoredText.SubtleGrayColor);
+        }
+
+        private sealed class HediffStageReportCache
+        {
+            public HediffStageReportCache(
+                List<FieldRecord> changedRecords,
+                string reportText)
+            {
+                ChangedRecords = changedRecords;
+                ReportText = reportText;
+            }
+
+            public List<FieldRecord> ChangedRecords { get; }
+            public string ReportText { get; }
         }
 
         private sealed class FieldRecord

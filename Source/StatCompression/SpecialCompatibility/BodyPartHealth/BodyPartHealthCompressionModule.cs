@@ -20,7 +20,7 @@ namespace StatCompression
         private static bool initialized;
         private static BodyPartHealthBackend backend;
 
-        public static void Initialize()
+        public static void Initialize(StatCompressionSettings settings)
         {
             if (initialized)
             {
@@ -28,7 +28,8 @@ namespace StatCompression
             }
 
             initialized = true;
-            BodyPartHealthCompressionRuntime.Rebuild(StatCompressionMod.Settings);
+            BodyPartHealthCompressionRuntime.ResetRawReadWarnings();
+            BodyPartHealthCompressionRuntime.Rebuild(settings);
             var harmony = new Harmony(HarmonyId);
 
             try

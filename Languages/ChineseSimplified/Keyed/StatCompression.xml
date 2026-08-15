@@ -3,6 +3,31 @@
   <StatCompression_SettingsTitle>数值压缩</StatCompression_SettingsTitle>
   <StatCompression_Enable>启用数值压缩</StatCompression_Enable>
   <StatCompression_ShowInfoCardSettingsButton>在信息卡中显示"压缩属性设置"按钮</StatCompression_ShowInfoCardSettingsButton>
+  <StatCompression_ObjectFilter_Open>筛选应用数值压缩的种族、派系、Mod等条件</StatCompression_ObjectFilter_Open>
+  <StatCompression_ObjectFilter_Title>对象条件筛选</StatCompression_ObjectFilter_Title>
+  <StatCompression_ObjectFilter_Enable>启用条件筛选</StatCompression_ObjectFilter_Enable>
+  <StatCompression_ObjectFilter_Description>满足下面任意勾选条件的物品或者人物会被压缩属性。所有条件均使用“或者”逻辑。</StatCompression_ObjectFilter_Description>
+  <StatCompression_ObjectFilter_SpecialScope>对象筛选仅作用于普通属性和 [SP] 部位 HP；共享 Def 的基础伤害与 Hediff 阶段字段仍然全局生效。</StatCompression_ObjectFilter_SpecialScope>
+  <StatCompression_ObjectFilter_StatusDisabled>条件筛选未启用，所有对象都可以进行数值压缩。</StatCompression_ObjectFilter_StatusDisabled>
+  <StatCompression_ObjectFilter_StatusEmpty>条件筛选已启用，但尚未选择任何条件；当前不会压缩任何对象。</StatCompression_ObjectFilter_StatusEmpty>
+  <StatCompression_ObjectFilter_StatusActive>已选择 {0} 个条件；满足任意一项即可进行压缩。</StatCompression_ObjectFilter_StatusActive>
+  <StatCompression_ObjectFilter_GroupPawn>人物类型</StatCompression_ObjectFilter_GroupPawn>
+  <StatCompression_ObjectFilter_GroupRace>种族 RaceDef</StatCompression_ObjectFilter_GroupRace>
+  <StatCompression_ObjectFilter_GroupFaction>派系 FactionDef</StatCompression_ObjectFilter_GroupFaction>
+  <StatCompression_ObjectFilter_GroupMod>来源 Mod</StatCompression_ObjectFilter_GroupMod>
+  <StatCompression_ObjectFilter_SelectAll>全部选择</StatCompression_ObjectFilter_SelectAll>
+  <StatCompression_ObjectFilter_ClearAll>全部取消</StatCompression_ObjectFilter_ClearAll>
+  <StatCompression_ObjectFilter_RaceFilter>显示筛选</StatCompression_ObjectFilter_RaceFilter>
+  <StatCompression_ObjectFilter_RaceHumanlike>小人（人形）</StatCompression_ObjectFilter_RaceHumanlike>
+  <StatCompression_ObjectFilter_RaceMechanoid>机械体</StatCompression_ObjectFilter_RaceMechanoid>
+  <StatCompression_ObjectFilter_RaceAnimal>动物</StatCompression_ObjectFilter_RaceAnimal>
+  <StatCompression_ObjectFilter_RaceOther>其他</StatCompression_ObjectFilter_RaceOther>
+  <StatCompression_ObjectFilter_PlayerColonists>玩家殖民者</StatCompression_ObjectFilter_PlayerColonists>
+  <StatCompression_ObjectFilter_PlayerOtherPawns>玩家控制或关押的其他人物</StatCompression_ObjectFilter_PlayerOtherPawns>
+  <StatCompression_ObjectFilter_HostilePawns>敌对人物</StatCompression_ObjectFilter_HostilePawns>
+  <StatCompression_ObjectFilter_NonHostilePawns>中立或友好派系人物</StatCompression_ObjectFilter_NonHostilePawns>
+  <StatCompression_ObjectFilter_FactionlessPawns>无派系人物</StatCompression_ObjectFilter_FactionlessPawns>
+  <StatCompression_ObjectFilter_MissingEntry>当前未加载。该配置仍会保留，但本次运行不会生效。</StatCompression_ObjectFilter_MissingEntry>
   <StatCompression_SP_BodyPartHealth_Label>部位血量</StatCompression_SP_BodyPartHealth_Label>
   <StatCompression_SP_BodyPartHealth_BaselineTooltip>会影响每个部位的血量，Baseline基准值 是每个种族角色不吃任何增益时的基础血量，为方便起见我们将基准值视为1（也就是100%的意思，2表示双倍血量）。</StatCompression_SP_BodyPartHealth_BaselineTooltip>
   <StatCompression_SP_MeleeBaseDamage_Label>近战基础伤害</StatCompression_SP_MeleeBaseDamage_Label>
@@ -87,7 +112,6 @@
   <StatCompression_DefaultPreset_DailyNeeds>日常需求</StatCompression_DefaultPreset_DailyNeeds>
   <StatCompression_DefaultPreset_SocialTradeCulture>社交、交易与文化</StatCompression_DefaultPreset_SocialTradeCulture>
   <StatCompression_DefaultPreset_ProductionYield>生产产出</StatCompression_DefaultPreset_ProductionYield>
-  <StatCompression_DefaultPreset_ProductionYieldSoftCap>生产产出软上限</StatCompression_DefaultPreset_ProductionYieldSoftCap>
   <StatCompression_DefaultPreset_TemperatureInsulation>温度与隔热</StatCompression_DefaultPreset_TemperatureInsulation>
   <StatCompression_DefaultPreset_MovementSpeed>移动速度</StatCompression_DefaultPreset_MovementSpeed>
   <StatCompression_DefaultPreset_Learning>学习能力</StatCompression_DefaultPreset_Learning>
@@ -152,6 +176,9 @@
   <StatCompression_Group_Trigger>何时开启压缩</StatCompression_Group_Trigger>
   <StatCompression_Type_SpecialModule>特殊模块</StatCompression_Type_SpecialModule>
   <StatCompression_Type_Uncategorized>未分类</StatCompression_Type_Uncategorized>
+  <StatCompression_Type_MissingStat>缺失属性</StatCompression_Type_MissingStat>
+  <StatCompression_MissingStat_Label>当前 Mod 列表未加载</StatCompression_MissingStat_Label>
+  <StatCompression_MissingStat_Tooltip>该配置会继续保留，但当前 Mod 列表没有加载对应 StatDef，因此本次运行不会生效。</StatCompression_MissingStat_Tooltip>
   <StatCompression_ActualT_GlobalSource>全局 t</StatCompression_ActualT_GlobalSource>
   <StatCompression_ActualT_DefaultSource>方法默认 t</StatCompression_ActualT_DefaultSource>
   <StatCompression_ActualT_MultiplyTooltip>{0} {1} × t Scale {2} = 实际 t {3}</StatCompression_ActualT_MultiplyTooltip>

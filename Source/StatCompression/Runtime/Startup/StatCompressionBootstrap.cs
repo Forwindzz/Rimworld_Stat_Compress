@@ -21,22 +21,25 @@ namespace StatCompression
             }
 
             patched = true;
+            var settings = StatCompressionMod.Settings;
             var harmony = new Harmony(StatCompressionConstants.PackageId);
+            BaseDamageInitializationPatch.Configure(settings);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            PatchCompressionEntry(harmony);
-            BodyPartHealthCompressionModule.Initialize();
+            PatchCompressionEntry(harmony, settings);
+            BodyPartHealthCompressionModule.Initialize(settings);
             if (StaticConstructorOnStartupUtility.coreStaticAssetsLoaded)
             {
-                BaseDamageCompressionModule.Initialize();
-                HediffStageCompressionModule.Initialize();
+                BaseDamageCompressionModule.Initialize(settings);
+                HediffStageCompressionModule.Initialize(settings);
             }
 
             Log.Message($"[{StatCompressionConstants.DisplayName}] {StatCompressionConstants.Version} loaded.");
         }
 
-        private static void PatchCompressionEntry(Harmony harmony)
+        private static void PatchCompressionEntry(
+            Harmony harmony,
+            StatCompressionSettings settings)
         {
-            var settings = StatCompressionMod.Settings;
             if (settings.stage == CompressionStage.GlobalPostfix)
             {
                 PatchGlobalPostfix(harmony);

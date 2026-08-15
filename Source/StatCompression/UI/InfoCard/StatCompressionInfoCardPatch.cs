@@ -15,9 +15,41 @@ namespace StatCompression
         private const float ButtonHeight = 35f;
         private const float BottomMargin = 2f;
 
-        private static readonly FieldInfo TabField = AccessTools.Field(typeof(Dialog_InfoCard), "tab");
-        private static readonly FieldInfo VanillaSelectedEntryField =
-            AccessTools.Field(typeof(StatsReportUtility), "selectedEntry");
+        private static readonly AccessTools.FieldRef<Dialog_InfoCard, Dialog_InfoCard.InfoCardTab>
+            TabField;
+        private static readonly AccessTools.FieldRef<StatDrawEntry> VanillaSelectedEntryField;
+        private static readonly bool TabFieldAvailable;
+        private static readonly bool VanillaSelectedEntryAvailable;
+
+        static StatCompressionInfoCardPatch()
+        {
+            var tabInfo = AccessTools.Field(typeof(Dialog_InfoCard), "tab");
+            if (tabInfo != null)
+            {
+                TabField = AccessTools.FieldRefAccess<Dialog_InfoCard, Dialog_InfoCard.InfoCardTab>(tabInfo);
+                TabFieldAvailable = true;
+            }
+            else
+            {
+                Log.Warning(
+                    $"[{StatCompressionConstants.DisplayName}] Dialog_InfoCard.tab was not found. " +
+                    "The InfoCard stat-settings shortcut is disabled.");
+            }
+
+            var selectedInfo = AccessTools.Field(typeof(StatsReportUtility), "selectedEntry");
+            if (selectedInfo != null)
+            {
+                VanillaSelectedEntryField =
+                    AccessTools.StaticFieldRefAccess<StatDrawEntry>(selectedInfo);
+                VanillaSelectedEntryAvailable = true;
+            }
+            else
+            {
+                Log.Warning(
+                    $"[{StatCompressionConstants.DisplayName}] StatsReportUtility.selectedEntry was not found. " +
+                    "The vanilla InfoCard stat-settings shortcut is disabled.");
+            }
+        }
 
         [HarmonyPostfix]
         private static void Postfix(Dialog_InfoCard __instance, Rect inRect)
@@ -27,16 +59,19 @@ namespace StatCompression
                 return;
             }
 
-            if ((Dialog_InfoCard.InfoCardTab)TabField.GetValue(__instance) != Dialog_InfoCard.InfoCardTab.Stats)
+            if (!TabFieldAvailable || TabField(__instance) != Dialog_InfoCard.InfoCardTab.Stats)
             {
                 return;
             }
 
             var selectedEntry = BetterInfoCardSelection.IsAvailable
                 ? BetterInfoCardSelection.Get(__instance)
-                : VanillaSelectedEntryField.GetValue(null) as StatDrawEntry;
+                : VanillaSelectedEntryAvailable
+                    ? VanillaSelectedEntryField()
+                    : null;
             var stat = selectedEntry?.stat;
-            if (stat == null || StatCompressionMod.Settings.GetAdvancedConfig(stat.defName) == null)
+            if (stat == null ||
+                !StatCompressionMod.Settings.TryGetConfigFast(stat, out _))
             {
                 return;
             }

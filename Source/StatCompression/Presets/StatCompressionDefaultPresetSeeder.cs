@@ -21,6 +21,8 @@ namespace StatCompression
     internal static class StatCompressionDefaultPresetSeeder
     {
         private const string TemplateRelativePath = "Data/DefaultPresets";
+        private const string ProductionYieldFileName = "default_production_yield";
+        private const string LegacyProductionYieldFileName = "default_production_yield_soft_cap";
 
         private static readonly string[] DefaultFileNames =
         {
@@ -32,7 +34,6 @@ namespace StatCompression
             "default_daily_needs",
             "default_social_trade_culture",
             "default_production_yield",
-            "default_production_yield_soft_cap",
             "default_temperature_insulation",
             "default_movement_speed",
             "default_learning",
@@ -42,9 +43,30 @@ namespace StatCompression
 
         public static DefaultPresetSeedResult EnsureLocalTemplates()
         {
-            var targetDirectory = StatCompressionPresetManager.UserPresetDirectory;
+            var targetDirectory = StatCompressionPresetRepository.UserPresetDirectory;
+            var contentPack = StatCompressionMod.ContentPack;
+            if (contentPack == null)
+            {
+                Log.Error($"[{StatCompressionConstants.DisplayName}] Cannot create default presets before ModContentPack is available.");
+                return new DefaultPresetSeedResult(0, true);
+            }
+
+            var templateDirectory = Path.Combine(
+                contentPack.RootDir,
+                TemplateRelativePath.Replace('/', Path.DirectorySeparatorChar));
             try
             {
+                if (!TryMigrateProductionYieldPreset(
+                        targetDirectory,
+                        templateDirectory,
+                        out var migrationError))
+                {
+                    Log.Error(
+                        $"[{StatCompressionConstants.DisplayName}] Failed to merge the legacy production preset: " +
+                        migrationError);
+                    return new DefaultPresetSeedResult(0, true);
+                }
+
                 if (Directory.Exists(targetDirectory) &&
                     Directory.GetFiles(targetDirectory, "*.xml", SearchOption.TopDirectoryOnly).Length > 0)
                 {
@@ -57,16 +79,6 @@ namespace StatCompression
                 return new DefaultPresetSeedResult(0, true);
             }
 
-            var contentPack = StatCompressionMod.ContentPack;
-            if (contentPack == null)
-            {
-                Log.Error($"[{StatCompressionConstants.DisplayName}] Cannot create default presets before ModContentPack is available.");
-                return new DefaultPresetSeedResult(0, true);
-            }
-
-            var templateDirectory = Path.Combine(
-                contentPack.RootDir,
-                TemplateRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var sourcePaths = new string[DefaultFileNames.Length];
             var labelKeys = new HashSet<string>(StringComparer.Ordinal);
             for (var i = 0; i < DefaultFileNames.Length; i++)
@@ -155,7 +167,7 @@ namespace StatCompression
             var defaults = new List<StatCompressionPreset>(DefaultFileNames.Length);
             for (var i = 0; i < DefaultFileNames.Length; i++)
             {
-                var preset = StatCompressionPresetManager.Find(DefaultFileNames[i]);
+                var preset = StatCompressionPresetRepository.Find(DefaultFileNames[i]);
                 if (preset == null)
                 {
                     Log.Error($"[{StatCompressionConstants.DisplayName}] Cannot enable default presets; missing local preset {DefaultFileNames[i]}.");
@@ -174,8 +186,8 @@ namespace StatCompression
                 return false;
             }
 
-            settings.activePresets.Clear();
             var missingDefNames = new HashSet<string>(StringComparer.Ordinal);
+            var activePresetNames = new List<string>(defaults.Count);
             for (var i = 0; i < defaults.Count; i++)
             {
                 var preset = defaults[i];
@@ -192,13 +204,38 @@ namespace StatCompression
                     target.CopyFrom(source);
                 }
 
-                settings.activePresets.Add(preset.FileName);
+                activePresetNames.Add(preset.FileName);
             }
 
-            settings.NormalizeParameters();
-            settings.RebuildLookup();
+            StatCompressionSettingsEditor.ReplaceActivePresets(settings, activePresetNames);
+
             appliedCount = defaults.Count;
             skippedMissingConfigs = missingDefNames.Count;
+            return true;
+        }
+
+        public static bool MigrateLegacyActivePresetName(StatCompressionSettings settings)
+        {
+            var removed = settings.activePresets.RemoveAll(name =>
+                string.Equals(
+                    name,
+                    LegacyProductionYieldFileName,
+                    StringComparison.OrdinalIgnoreCase));
+            if (removed == 0)
+            {
+                return false;
+            }
+
+            if (!settings.activePresets.Any(name =>
+                    string.Equals(
+                        name,
+                        ProductionYieldFileName,
+                        StringComparison.OrdinalIgnoreCase)))
+            {
+                settings.activePresets.Add(ProductionYieldFileName);
+            }
+
+            StatCompressionPresetService.NotifyActivePresetsChanged();
             return true;
         }
 
@@ -215,7 +252,7 @@ namespace StatCompression
             error = null;
             try
             {
-                var directory = StatCompressionPresetManager.UserPresetDirectory;
+                var directory = StatCompressionPresetRepository.UserPresetDirectory;
                 if (Directory.Exists(directory))
                 {
                     var paths = Directory.GetFiles(
@@ -236,7 +273,7 @@ namespace StatCompression
                     return false;
                 }
 
-                StatCompressionPresetManager.Refresh();
+                StatCompressionPresetRepository.Refresh();
                 if (!TryApplyDefaults(
                         settings,
                         out appliedCount,
@@ -249,7 +286,7 @@ namespace StatCompression
                 var defaultDefNames = new HashSet<string>(StringComparer.Ordinal);
                 for (var i = 0; i < DefaultFileNames.Length; i++)
                 {
-                    var preset = StatCompressionPresetManager.Find(DefaultFileNames[i]);
+                    var preset = StatCompressionPresetRepository.Find(DefaultFileNames[i]);
                     for (var j = 0; j < preset.Configs.Count; j++)
                     {
                         defaultDefNames.Add(preset.Configs[j].defName);
@@ -264,7 +301,8 @@ namespace StatCompression
                     }
                 }
 
-                settings.RebuildLookup();
+                StatCompressionSettingsEditor.MarkRuntimeChanged();
+                StatCompressionSettingsEditor.CommitPending(settings);
                 return true;
             }
             catch (Exception ex)
@@ -297,7 +335,7 @@ namespace StatCompression
                             continue;
                         }
 
-                        var fields = StatCompressionPresetManager.DifferentFields(leftConfig, rightConfig);
+                        var fields = StatCompressionPresetService.DifferentFields(leftConfig, rightConfig);
                         if (fields.Length == 0)
                         {
                             continue;
@@ -315,6 +353,89 @@ namespace StatCompression
 
             conflict = default;
             return false;
+        }
+
+        private static bool TryMigrateProductionYieldPreset(
+            string targetDirectory,
+            string templateDirectory,
+            out string error)
+        {
+            error = null;
+            var legacyPath = Path.Combine(
+                targetDirectory,
+                LegacyProductionYieldFileName + ".xml");
+            if (!File.Exists(legacyPath))
+            {
+                return true;
+            }
+
+            var mergedPath = Path.Combine(
+                targetDirectory,
+                ProductionYieldFileName + ".xml");
+            var mergedSourcePath = File.Exists(mergedPath)
+                ? mergedPath
+                : Path.Combine(templateDirectory, ProductionYieldFileName + ".xml");
+            if (!StatCompressionPresetXml.TryLoad(
+                    mergedSourcePath,
+                    false,
+                    out var merged,
+                    out error) ||
+                !StatCompressionPresetXml.TryLoad(
+                    legacyPath,
+                    false,
+                    out var legacy,
+                    out error))
+            {
+                return false;
+            }
+
+            var configs = merged.Configs.ToDictionary(
+                config => config.defName,
+                StringComparer.Ordinal);
+            for (var i = 0; i < legacy.Configs.Count; i++)
+            {
+                var source = legacy.Configs[i];
+                if (configs.TryGetValue(source.defName, out var target))
+                {
+                    target.CopyFrom(source);
+                    continue;
+                }
+
+                target = new StatCompressionStatConfig();
+                target.CopyFrom(source);
+                merged.Configs.Add(target);
+                configs.Add(target.defName, target);
+            }
+
+            merged.Name = "Production Yield";
+            merged.LabelKey = "StatCompression_DefaultPreset_ProductionYield";
+            merged.FileName = ProductionYieldFileName;
+            merged.Path = mergedPath;
+            merged.BuiltIn = false;
+
+            Directory.CreateDirectory(targetDirectory);
+            var temporaryPath = Path.Combine(
+                targetDirectory,
+                "." + ProductionYieldFileName + ".merge-" + Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                StatCompressionPresetXml.Save(merged, temporaryPath);
+                File.Copy(temporaryPath, mergedPath, true);
+                File.Delete(legacyPath);
+                Log.Message(
+                    $"[{StatCompressionConstants.DisplayName}] Merged legacy preset " +
+                    $"{LegacyProductionYieldFileName} into {ProductionYieldFileName}.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.GetType().Name + ": " + ex.Message;
+                return false;
+            }
+            finally
+            {
+                TryDelete(temporaryPath);
+            }
         }
 
         private static void TryDelete(string path)
